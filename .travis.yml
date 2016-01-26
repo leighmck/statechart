@@ -30,4 +30,7 @@ env:
 - TOXENV=pypy
 install: pip install -U tox
 language: python
+# See https://github.com/travis-ci/travis-ci/issues/4794
+# and https://github.com/audreyr/cookiecutter/pull/540/files
+python: 3.5
 script: tox
