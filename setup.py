@@ -19,7 +19,7 @@ requirements = [
 ]
 
 test_requirements = [
-    # TODO: put package test requirements here
+    'pytest'
 ]
 
 setup(
@@ -28,7 +28,7 @@ setup(
     description="Python UML statechart framework",
     long_description=readme + '\n\n' + history,
     author="Leigh McKenzie",
-    author_email='maccarav0@hotmail.com',
+    author_email='maccarav0@gmail.com',
     url='https://github.com/leighmck/pystatechart',
     packages=[
         'pystatechart',

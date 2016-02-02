@@ -5,7 +5,7 @@ Credits
 Development Lead
 ----------------
 
-* Leigh McKenzie <maccarav0@hotmail.com>
+* Leigh McKenzie <maccarav0@gmail.com>
 
 Contributors
 ------------

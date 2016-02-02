@@ -8,23 +8,21 @@ test_pystatechart
 Tests for `pystatechart` module.
 """
 
-import unittest
+import pytest
 
 from pystatechart import pystatechart
 
 
-class TestPystatechart(unittest.TestCase):
+class TestPystatechart():
 
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
         pass
 
-    def tearDown(self):
+    def test_something(self):
         pass
 
-    def test_000_something(self):
+    @classmethod
+    def teardown_class(cls):
         pass
 
-
-if __name__ == '__main__':
-    import sys
-    sys.exit(unittest.main())
