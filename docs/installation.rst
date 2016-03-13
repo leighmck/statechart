@@ -6,9 +6,9 @@ Installation
 
 At the command line::
 
-    $ easy_install pystatechart
+    $ easy_install statechart
 
 Or, if you have virtualenvwrapper installed::
 
-    $ mkvirtualenv pystatechart
-    $ pip install pystatechart
+    $ mkvirtualenv statechart
+    $ pip install statechart

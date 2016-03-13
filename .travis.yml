@@ -2,7 +2,7 @@
 deploy:
   true:
     condition: $TOXENV == py27
-    repo: leighmck/pystatechart
+    repo: leighmck/statechart
     tags: true
   provider: pypi
   user: leighmck

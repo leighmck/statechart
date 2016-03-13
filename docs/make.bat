@@ -115,9 +115,9 @@ if "%1" == "qthelp" (
 	echo.
 	echo.Build finished; now you can run "qcollectiongenerator" with the ^
 .qhcp project file in %BUILDDIR%/qthelp, like this:
-	echo.^> qcollectiongenerator %BUILDDIR%\qthelp\pystatechart.qhcp
+	echo.^> qcollectiongenerator %BUILDDIR%\qthelp\statechart.qhcp
 	echo.To view the help file:
-	echo.^> assistant -collectionFile %BUILDDIR%\qthelp\pystatechart.ghc
+	echo.^> assistant -collectionFile %BUILDDIR%\qthelp\statechart.ghc
 	goto end
 )
 

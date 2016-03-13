@@ -23,23 +23,23 @@ test_requirements = [
 ]
 
 setup(
-    name='pystatechart',
+    name='statechart',
     version='0.1.0',
     description="Python UML statechart framework",
     long_description=readme + '\n\n' + history,
     author="Leigh McKenzie",
     author_email='maccarav0@gmail.com',
-    url='https://github.com/leighmck/pystatechart',
+    url='https://github.com/leighmck/statechart',
     packages=[
-        'pystatechart',
+        'statechart',
     ],
-    package_dir={'pystatechart':
-                 'pystatechart'},
+    package_dir={'statechart':
+                 'statechart'},
     include_package_data=True,
     install_requires=requirements,
     license="ISCL",
     zip_safe=False,
-    keywords='pystatechart',
+    keywords='statechart',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
