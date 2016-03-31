@@ -15,10 +15,11 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import abc
+import abc, six
 
 
-class Guard(metaclass=abc.ABCMeta):
+@six.add_metaclass(abc.ABCMeta)
+class Guard:
     """
     A guard is a boolean expression that is attached to a transition as a
     fine-grained control over its firing. The guard is evaluated when an event

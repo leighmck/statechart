@@ -15,10 +15,11 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import abc
+import abc, six
 
 
-class Action(metaclass=abc.ABCMeta):
+@six.add_metaclass(abc.ABCMeta)
+class Action:
     @abc.abstractmethod
     def execute(self, parameter):
         """
