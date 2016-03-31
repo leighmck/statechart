@@ -55,7 +55,7 @@ test-all:
 	tox
 
 coverage:
-	coverage run --source statechart setup.py test
+	coverage run --source statechart -m py.test
 	coverage report -m
 	coverage html
 	$(BROWSER) htmlcov/index.html

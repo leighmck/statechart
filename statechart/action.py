@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2016, Leigh McKenzie
@@ -16,28 +15,15 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-"""
-test_statechart
-----------------------------------
-
-Tests for `statechart` module.
-"""
-
-import pytest
-
-from statechart import statechart
+import abc
 
 
-class Teststatechart():
+class Action(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def execute(self, parameter):
+        """
+        Called by the transition.
 
-    @classmethod
-    def setup_class(cls):
-        pass
-
-    def test_something(self):
-        pass
-
-    @classmethod
-    def teardown_class(cls):
-        pass
-
+        :param param: The parameter for this action.
+        """
+        raise NotImplementedError

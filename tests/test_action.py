@@ -14,3 +14,25 @@
 # WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+import pytest
+from statechart import Action
+
+
+class MyAction(Action):
+    def execute(self, param):
+        pass
+
+
+@pytest.fixture
+def my_action():
+    return MyAction()
+
+
+class TestAction:
+    def test_abstract_instantiation_throws(self):
+        with pytest.raises(TypeError):
+            Action()
+
+    def test_execute_action(self, my_action):
+        my_action.execute(None)

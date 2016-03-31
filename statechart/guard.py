@@ -14,3 +14,27 @@
 # WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+import abc
+
+
+class Guard(metaclass=abc.ABCMeta):
+    """
+    A guard is a boolean expression that is attached to a transition as a
+    fine-grained control over its firing. The guard is evaluated when an event
+    instance is dispatched by the state machine. If the guard is true at that
+    time, the transition is enabled, otherwise, it is disabled.
+
+    Guards should be pure expressions without side effects.
+    """
+
+    @abc.abstractmethod
+    def check(self, metadata, param):
+        """
+        Called by the transition.
+
+        :param metadata: The metadata data object.
+        :param param: The parameter for this guard.
+        :return: Boolean result of expression.
+        """
+        raise NotImplementedError

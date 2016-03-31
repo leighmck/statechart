@@ -14,3 +14,27 @@
 # WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+import pytest
+from statechart import Guard
+
+
+class GreaterThanZero(Guard):
+    def check(self, metadata, param):
+        return param > 0
+
+
+class MockParam(object):
+    def __init__(self):
+        self.path = str()
+
+
+class TestGuard:
+    def test_abstract_instantiation_throws(self):
+        with pytest.raises(TypeError):
+            Guard()
+
+    @pytest.mark.parametrize("param, expected", [(0, False), (1, True)])
+    def test_guard_check(self, param, expected):
+        guard = GreaterThanZero()
+        assert guard.check(None, param) == expected

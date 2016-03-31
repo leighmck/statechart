@@ -14,3 +14,30 @@
 # WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+import pytest
+from statechart import Event
+
+
+@pytest.fixture
+def event():
+    return Event(name='event', param=0)
+
+
+class TestEvent:
+    def test_create_event(self):
+        Event(name='event', param=0)
+
+    def test_events_equal(self, event):
+        event = event
+        assert event is event
+
+    def test_compare_invalid_event(self, event):
+        assert event is not None
+
+    def test_events_not_equal(self, event):
+        diff_event = Event(name='diff_event', param='my_param')
+        assert diff_event is not event
+
+    def test_event_str(self, event):
+        assert str(event) == 'Event: event'

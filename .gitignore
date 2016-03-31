@@ -57,3 +57,10 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# IntelliJ Idea family of suites
+.idea
+*.iml
+*.ipr
+*.iws
+.idea_modules/
