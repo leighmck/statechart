@@ -16,7 +16,16 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import pytest
-from statechart import State, InitialState, Statechart, Transition
+from statechart import (Action, Event, State, InitialState, InternalTransition,
+                        Statechart, Transition)
+
+
+class ActionSpy(Action):
+    def __init__(self):
+        self.executed = False
+
+    def execute(self, param):
+        self.executed = True
 
 
 class MockParam(object):
@@ -59,3 +68,43 @@ class TestTransition:
         # next state and to re-activate it.
         assert next_state in transition.deactivate
         assert next_state in transition.activate
+
+
+class TestInternalTransition:
+    def test_execute(self, empty_statechart):
+        initial_state = InitialState(name='initial', context=empty_statechart)
+        entry_action = ActionSpy()
+        do_action = ActionSpy()
+        exit_action = ActionSpy()
+        default_state = State(name='next', context=empty_statechart,
+                              entry=entry_action, do=do_action,
+                              exit=exit_action)
+        Transition(name='name', start=initial_state,
+                   end=default_state)
+
+        internal_event = Event(name='internal-event', param='my-param')
+        internal_action = ActionSpy()
+        InternalTransition(name='internal',
+                           state=default_state,
+                           event=internal_event,
+                           guard=None,
+                           action=internal_action)
+        empty_statechart.start()
+
+        assert empty_statechart.metadata.is_active(default_state)
+        assert entry_action.executed is True
+        assert do_action.executed is True
+        assert exit_action.executed is False
+
+        # Ensure we don't leave and re-enter the default state after triggering
+        # the internal transition.
+        entry_action.executed = False
+        do_action.executed = False
+
+        empty_statechart.dispatch(internal_event)
+
+        assert entry_action.executed is False
+        assert do_action.executed is False
+        assert exit_action.executed is False
+
+        assert internal_action.executed is True

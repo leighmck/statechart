@@ -111,7 +111,7 @@ class Transition:
         :param metadata:
         :param event:
         :param param:
-        :return: True if the event was executed.
+        :return: True if the transition was executed.
         """
         if self.event and event is None:
             return False
@@ -136,5 +136,49 @@ class Transition:
 
         metadata.transition = None
         metadata.event = None
+
+        return True
+
+
+class InternalTransition(Transition):
+    """
+    A transition that executes without exiting or re-entering the state in
+    which it is defined. This is true even if the state machine is in a nested
+    state within this state.
+
+    :param name: An identifier for the Transition.
+    :param state: The containing state.
+    :param event: The event that fires the transition.
+    :param guard: A boolean predicate that  must be true for the transition to
+        be fired. It is evaluated at the time the event is dispatched.
+    :param action: An optional procedure to be performed when the transition
+       fires.
+    """
+
+    def __init__(self, name, state, event, guard, action):
+        Transition.__init__(self, name=name, start=state, end=state,
+                            event=event, guard=guard, action=action)
+        self.deactivate.clear()
+        self.activate.clear()
+
+    def execute(self, metadata, event, param):
+        """
+        Attempt to execute the transition.
+        Evaluate if the transition is allowed by checking the guard condition.
+        If the transition is allowed perform transition action.
+
+        :param metadata: The metadata data object.
+        :param event: The event that fires the transition.
+        :param param: The parameter for this transition.
+        :return: True if the transition was executed.
+        """
+        if self.event and event != self.event:
+            return False
+
+        if self.guard and not self.guard.check(metadata, param):
+            return False
+
+        if self.action:
+            self.action.execute(param)
 
         return True

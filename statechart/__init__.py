@@ -20,7 +20,7 @@ from statechart.event import Event  # NOQA
 from statechart.guard import Guard  # NOQA
 from statechart.states import CompositeState, FinalState, State, Statechart  # NOQA
 from statechart.pseudostates import InitialState  # NOQA
-from statechart.transition import Transition  # NOQA
+from statechart.transitions import InternalTransition, Transition  # NOQA
 
 __author__ = 'Leigh McKenzie'
 __copyright__ = "Copyright 2016, Leigh McKenzie"
