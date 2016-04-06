@@ -16,11 +16,9 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import abc
-import six
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Guard:
+class Guard(metaclass=abc.ABCMeta):
     """
     A guard is a boolean expression that is attached to a transition as a
     fine-grained control over its firing. The guard is evaluated when an event

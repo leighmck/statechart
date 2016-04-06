@@ -16,11 +16,9 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import abc
-import six
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Action:
+class Action(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def execute(self, parameter):
         """
