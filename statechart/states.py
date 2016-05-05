@@ -215,10 +215,14 @@ class CompositeState(Context):
     def __init__(self, name, context, entry=None, do=None, exit=None):
         Context.__init__(self, name=name, context=context, entry=entry, do=do,
                          exit=exit)
+        self.history = None
 
     def activate(self, metadata, param):
         """
         Activate the state.
+
+        If the transition being activated leads to this state, activate
+        the initial state.
 
         :param metadata: Statechart metadata data.
         :param param: Transition parameter passed to state entry and do
@@ -226,22 +230,27 @@ class CompositeState(Context):
         """
         Context.activate(self, metadata, param)
 
-        if metadata.transition and metadata.transition.end is self:
-            self.initial_state.activate(metadata, param)
+        # if metadata.transition and metadata.transition.end is self:
+        self.initial_state.activate(metadata=metadata, param=param)
 
     def deactivate(self, metadata, param):
         """
         Deactivate the state.
 
+        If this state contains a history state, store the currently active
+        state in history so it can be restored once the history state is
+        activated.
+
         :param metadata: Statechart metadata data.
         :param param: Transition parameter passed to state exit action.
         """
-        assert (self in metadata.active_states), self
+        state_runtime_data = metadata.active_states[self]
 
-        data = metadata.active_states[self]
+        if self.history:
+            metadata.store_history_info(self.history, state_runtime_data.current_state)
 
-        if metadata.is_active(data.current_state):
-            data.current_state.deactivate(metadata, param)
+        if metadata.is_active(state=state_runtime_data.current_state):
+            state_runtime_data.current_state.deactivate(metadata=metadata, param=param)
 
         Context.deactivate(self, metadata, param)
 

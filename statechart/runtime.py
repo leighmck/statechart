@@ -72,6 +72,31 @@ class Metadata:
             data = None
             del self.active_states[state]
 
+    def get_history_state(self, history_state):
+        """
+        Get the last active state when the history state context was
+        deactivated.
+
+        :param history_state: History state to lookup
+        :return: The most recent state remembered by the specified history
+            state.
+        """
+        return self.history_states[history_state]
+
+    def has_history_info(self, history_state):
+        """
+        Check if the active state runtime has history info to restore.
+
+        :param history_state: History state to lookup
+        :return: True if the history state has info of a state to be restored.
+        """
+        status = False
+
+        if history_state in self.history_states:
+            status = True
+
+        return status
+
     def is_active(self, state):
         """
         Checks whether the given state is active or not.
@@ -89,3 +114,6 @@ class Metadata:
     def reset(self):
         """Resets the metadata object for reuse."""
         self.active_states.clear()
+
+    def store_history_info(self, history_state, actual_state):
+        self.history_states[history_state] = actual_state

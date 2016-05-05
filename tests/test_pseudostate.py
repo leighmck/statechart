@@ -15,7 +15,9 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from statechart import InitialState, State, Statechart, Transition
+import pytest
+from statechart import CompositeState, Event, InitialState, ShallowHistoryState, State, Statechart, Transition
+from statechart.runtime import Metadata
 
 
 class TestInitialState:
@@ -33,3 +35,253 @@ class TestInitialState:
 
         initial_state.activate(metadata=startchart.metadata, param=0)
         assert startchart.metadata.is_active(state=default_state)
+
+
+class TestShallowHistoryState:
+    def test_create_shallow_history_state(self):
+        startchart = Statechart(name='statecart', param=0)
+        composite_state = CompositeState(name='composite', context=startchart)
+        ShallowHistoryState(name='history', context=composite_state)
+
+    def test_cannot_create_multiple_shallow_history_states(self):
+        startchart = Statechart(name='statecart', param=0)
+        composite_state = CompositeState(name='composite', context=startchart)
+
+        ShallowHistoryState(name='history', context=composite_state)
+
+        with pytest.raises(RuntimeError):
+            ShallowHistoryState(name='history', context=composite_state)
+
+    def test_activate_shallow_history_state(self):
+        """
+        statechart:
+
+        statechart_init
+                  |
+        *** csa **********************          *** csb *************
+        *                            *          *                   *
+        *  csa_init-csa_hist         *          *  csb_init         *
+        *              |             *  --J-->  *     |             *
+        *              A  --I-->  B  *  <--K--  *     C  --L-->  D  *
+        *                            *          *                   *
+        ******************************          *********************
+        """
+
+        # Top level states
+        statechart = Statechart(name='statecart', param=0)
+        csa = CompositeState(name='csa', context=statechart)
+        csb = CompositeState(name='csb', context=statechart)
+
+        # Child states
+        # statechart
+        statechart_init = InitialState(name='statechart_init', context=statechart)
+        # csa
+        csa_init = InitialState(name='csa_init', context=csa)
+        csa_hist = ShallowHistoryState(name='csa_hist', context=csa)
+        A = State(name='A', context=csa)
+        B = State(name='B', context=csa)
+        # csb
+        csb_init = InitialState(name='csb_init', context=csb)
+        C = State(name='C', context=csb)
+        D = State(name='D', context=csb)
+
+        # Events
+        I = Event(name='I', param=0)
+        J = Event(name='J', param=0)
+        K = Event(name='K', param=0)
+        L = Event(name='L', param=0)
+
+        # Transitions between states & event triggers
+        Transition(name='statechart_init_default', start=statechart_init, end=csa)
+        Transition(name='csa_init_default', start=csa_init, end=csa_hist)
+        Transition(name='csa_hist_default', start=csa_hist, end=A)
+        Transition(name='AtoB', start=A, end=B, event=I)
+        Transition(name='CsaToCsb', start=csa, end=csb, event=J)
+        Transition(name='CsbToCsa', start=csb, end=csa, event=K)
+        Transition(name='csb_init_default', start=csb_init, end=C)
+        Transition(name='CtoD', start=C, end=D, event=L)
+
+        # Execute statechart
+        statechart.start()
+        statechart.dispatch(I)
+
+        # Assert we have reached state B, history should restore this state
+        assert statechart.metadata.is_active(B)
+
+        statechart.dispatch(J)
+
+        # Assert we have reached state C
+        assert statechart.metadata.is_active(C)
+
+        statechart.dispatch(K)
+
+        # Assert the history state has restored state B
+        assert statechart.metadata.is_active(B)
+
+    def test_activate_shallow_history_given_deep_history_scenario(self):
+        """
+        statechart:
+
+        statechart_init
+               |
+        *** csa *******************************************          *** csc *************
+        *                                                 *          *                   *
+        *  csa_init--csa_hist                             *          *  csc_init         *
+        *               |                                 *  --K-->  *     |             *
+        *               A  --I-->  *** csb *************  *  <--L--  *     D  --M-->  E  *
+        *                          *                   *  *          *                   *
+        *                          *  csb_init         *  *          *********************
+        *                          *     |             *  *
+        *                          *     B  --J-->  C  *  *
+        *                          *                   *  *
+        *                          *********************  *
+        *                                                 *
+        ***************************************************
+        """
+        # Top level states
+        statechart = Statechart(name='statecart', param=0)
+        csa = CompositeState(name='csa', context=statechart)
+        csb = CompositeState(name='csb', context=csa)
+        csc = CompositeState(name='csc', context=statechart)
+
+        # Child states
+        # statechart
+        statechart_init = InitialState(name='statechart_init', context=statechart)
+
+        # csa
+        csa_init = InitialState(name='csa_init', context=csa)
+        csa_hist = ShallowHistoryState(name='csa_hist', context=csa)
+        A = State(name='A', context=csa)
+        # csb
+        csb_init = InitialState(name='csb_init', context=csb)
+        B = State(name='B', context=csb)
+        C = State(name='C', context=csb)
+        # csc
+        csc_init = InitialState(name='csc_init', context=csc)
+        D = State(name='D', context=csc)
+        E = State(name='E', context=csc)
+
+        # Events
+        I = Event(name='I', param=0)
+        J = Event(name='J', param=0)
+        K = Event(name='K', param=0)
+        L = Event(name='L', param=0)
+        M = Event(name='M', param=0)
+
+        # Transitions between states & event triggers
+        Transition(name='statechart_init_default', start=statechart_init, end=csa)
+        Transition(name='csa_init_default', start=csa_init, end=csa_hist)
+        Transition(name='csa_hist_default', start=csa_hist, end=A)
+        Transition(name='AtoCsb', start=A, end=csb, event=I)
+        Transition(name='csb_init_default', start=csb_init, end=B)
+        Transition(name='BtoC', start=B, end=C, event=J)
+        Transition(name='CsaToCsc', start=csa, end=csc, event=K)
+        Transition(name='CscToCsa', start=csc, end=csa, event=L)
+        Transition(name='csc_init_default', start=csc_init, end=D)
+        Transition(name='DtoE', start=D, end=E, event=M)
+
+        # Execute statechart
+        statechart.start()
+        statechart.dispatch(I)
+
+        assert statechart.metadata.is_active(B)
+
+        statechart.dispatch(J)
+
+        # Assert we have reached state C, history should restore C's parent state csb
+        assert statechart.metadata.is_active(C)
+
+        statechart.dispatch(K)
+
+        # Assert we have reached state D
+        assert statechart.metadata.is_active(D)
+
+        statechart.dispatch(L)
+
+        # Assert the history state has restored state csb
+        assert statechart.metadata.is_active(csb)
+
+    def test_activate_multiple_shallow_history_states(self):
+        """
+        statechart:
+
+        statechart_init
+               |
+        *** csa *****************************************************          *** csc *************
+        *                                                           *          *                   *
+        *  csa_init--csa_hist                                       *          *  csc_init         *
+        *               |                                           *  --K-->  *     |             *
+        *               A  --I-->  *** csb ***********************  *  <--L--  *     D  --M-->  E  *
+        *                          *                             *  *          *                   *
+        *                          *  csb_init--csb_hist         *  *          *********************
+        *                          *               |             *  *
+        *                          *               B  --J-->  C  *  *
+        *                          *                             *  *
+        *                          *******************************  *
+        *                                                           *
+        *************************************************************
+        """
+        # Top level states
+        statechart = Statechart(name='statecart', param=0)
+        csa = CompositeState(name='csa', context=statechart)
+        csb = CompositeState(name='csb', context=csa)
+        csc = CompositeState(name='csc', context=statechart)
+
+        # Child states
+        # statechart
+        statechart_init = InitialState(name='statechart_init', context=statechart)
+
+        # csa
+        csa_init = InitialState(name='csa_init', context=csa)
+        csa_hist = ShallowHistoryState(name='csa_hist', context=csa)
+        A = State(name='A', context=csa)
+        # csb
+        csb_init = InitialState(name='csb_init', context=csb)
+        csb_hist = ShallowHistoryState(name='csb_hist', context=csb)
+        B = State(name='B', context=csb)
+        C = State(name='C', context=csb)
+        # csc
+        csc_init = InitialState(name='csc_init', context=csc)
+        D = State(name='D', context=csc)
+        E = State(name='E', context=csc)
+
+        # Events
+        I = Event(name='I', param=0)
+        J = Event(name='J', param=0)
+        K = Event(name='K', param=0)
+        L = Event(name='L', param=0)
+        M = Event(name='M', param=0)
+
+        # Transitions between states & event triggers
+        Transition(name='statechart_init_default', start=statechart_init, end=csa)
+        Transition(name='csa_init_default', start=csa_init, end=csa_hist)
+        Transition(name='csa_hist_default', start=csa_hist, end=A)
+        Transition(name='AtoCsb', start=A, end=csb, event=I)
+        Transition(name='csb_init_default', start=csb_init, end=csb_hist)
+        Transition(name='csb_hist_default', start=csb_hist, end=B)
+        Transition(name='BtoC', start=B, end=C, event=J)
+        Transition(name='CsaToCsc', start=csa, end=csc, event=K)
+        Transition(name='CscToCsa', start=csc, end=csa, event=L)
+        Transition(name='csc_init_default', start=csc_init, end=D)
+        Transition(name='DtoE', start=D, end=E, event=M)
+
+        # Execute statechart
+        statechart.start()
+        statechart.dispatch(I)
+
+        assert statechart.metadata.is_active(B)
+
+        statechart.dispatch(J)
+
+        # Assert we have reached state C, csb's history state should restore this state
+        assert statechart.metadata.is_active(C)
+
+        statechart.dispatch(K)
+
+        # Assert we have reached state D
+        assert statechart.metadata.is_active(D)
+
+        statechart.dispatch(L)
+
+        # Assert the history state has restored state C
+        assert statechart.metadata.is_active(C)

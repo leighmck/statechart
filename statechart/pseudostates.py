@@ -15,7 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from statechart import State
+from statechart import CompositeState, State
 
 
 class PseudoState(State):
@@ -42,7 +42,7 @@ class PseudoState(State):
         metadata.activate(self)
 
         if self.entry:
-            self.entry.execute(metadata, param)
+            self.entry.execute(metadata=metadata, param=param)
 
         return True
 
@@ -56,7 +56,7 @@ class PseudoState(State):
         :return: True if transition executed, False if transition not allowed
             due to mismatched event trigger or failed guard condition.
         """
-        return State.dispatch(self, metadata, event, param)
+        return State.dispatch(self, metadata=metadata, event=event, param=param)
 
 
 class InitialState(PseudoState):
@@ -84,4 +84,45 @@ class InitialState(PseudoState):
         :param metadata: Statechart metadata data
         :param param: Transition parameter passed to state entry and do actions
         """
-        self.dispatch(metadata, None, param)
+        self.dispatch(metadata=metadata, event=None, param=param)
+
+
+class ShallowHistoryState(PseudoState):
+    def __init__(self, name, context):
+        """
+        A special kind of state signifying the source for a single transition
+        to the most recent active state of its containing composite state (but
+        not the substates of that substate).
+        There can only be one history state per context.
+
+        :param name: An identifier for the model element.
+        :param context: The parent context that contains this state.
+        """
+
+        PseudoState.__init__(self, name=name, context=context)
+        self.state = None
+
+        if isinstance(self.context, CompositeState):
+            if self.context.history:
+                raise RuntimeError("History state already present")
+            else:
+                self.context.history = self
+        else:
+            raise RuntimeError("Parent not a composite state")
+
+    def activate(self, metadata, param):
+        """
+        Activate the state and dispatch transition to the default state of the
+        composite state.
+
+        :param metadata: Statechart metadata data
+        :param param: Transition parameter passed to state entry and do actions
+        """
+        if len(self.transitions) > 1:
+            raise RuntimeError("History state cannot have more than 1 transition")
+
+        if metadata.has_history_info(self):
+            state = metadata.get_history_state(self)
+            state.activate(metadata=metadata, param=param)
+        else:
+            self.dispatch(metadata=metadata, event=None, param=param)
