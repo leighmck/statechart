@@ -116,7 +116,7 @@ class Transition:
         if self.event and event is None:
             return False
 
-        if self.event and self.event is not event:
+        if self.event and self.event != event:
             return False
 
         if self.guard and not self.guard.check(metadata, param):

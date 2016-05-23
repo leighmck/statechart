@@ -29,9 +29,8 @@ class ActionSpy(Action):
 
 
 class StateSpy(State):
-    def __init__(self, name, context, entry=None, do=None, exit=None):
-        State.__init__(self, name=name, context=context, entry=entry, do=do,
-                       exit=exit)
+    def __init__(self, name, context):
+        State.__init__(self, name=name, context=context)
         self.dispatch_called = False
         self.metadata = None
         self.event = None

@@ -28,6 +28,23 @@ class ActionSpy(Action):
         self.executed = True
 
 
+class StateSpy(State):
+    def __init__(self, name, context):
+        super().__init__(name=name, context=context)
+        self.entry_executed = False
+        self.do_executed = False
+        self.exit_executed = False
+
+    def entry(self, param):
+        self.entry_executed = True
+
+    def do(self, param):
+        self.do_executed = True
+
+    def exit(self, param):
+        self.exit_executed = True
+
+
 class MockParam(object):
     def __init__(self):
         self.path = str()
@@ -73,12 +90,7 @@ class TestTransition:
 class TestInternalTransition:
     def test_execute(self, empty_statechart):
         initial_state = InitialState(name='initial', context=empty_statechart)
-        entry_action = ActionSpy()
-        do_action = ActionSpy()
-        exit_action = ActionSpy()
-        default_state = State(name='next', context=empty_statechart,
-                              entry=entry_action, do=do_action,
-                              exit=exit_action)
+        default_state = StateSpy(name='next', context=empty_statechart)
         Transition(name='name', start=initial_state,
                    end=default_state)
 
@@ -92,19 +104,19 @@ class TestInternalTransition:
         empty_statechart.start()
 
         assert empty_statechart.metadata.is_active(default_state)
-        assert entry_action.executed is True
-        assert do_action.executed is True
-        assert exit_action.executed is False
+        assert default_state.entry_executed is True
+        assert default_state.do_executed is True
+        assert default_state.exit_executed is False
 
         # Ensure we don't leave and re-enter the default state after triggering
         # the internal transition.
-        entry_action.executed = False
-        do_action.executed = False
+        default_state.entry_executed = False
+        default_state.do_executed = False
 
         empty_statechart.dispatch(internal_event)
 
-        assert entry_action.executed is False
-        assert do_action.executed is False
-        assert exit_action.executed is False
+        assert default_state.entry_executed is False
+        assert default_state.do_executed is False
+        assert default_state.exit_executed is False
 
         assert internal_action.executed is True

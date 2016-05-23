@@ -29,8 +29,7 @@ class PseudoState(State):
     """
 
     def __init__(self, name, context):
-        State.__init__(self, name=name, context=context, entry=None, do=None,
-                       exit=None)
+        State.__init__(self, name=name, context=context)
 
     def activate(self, metadata, param):
         """
@@ -56,7 +55,8 @@ class PseudoState(State):
         :return: True if transition executed, False if transition not allowed
             due to mismatched event trigger or failed guard condition.
         """
-        return State.dispatch(self, metadata=metadata, event=event, param=param)
+        return State.dispatch(self, metadata=metadata, event=event,
+                              param=param)
 
 
 class InitialState(PseudoState):
@@ -119,7 +119,8 @@ class ShallowHistoryState(PseudoState):
         :param param: Transition parameter passed to state entry and do actions
         """
         if len(self.transitions) > 1:
-            raise RuntimeError("History state cannot have more than 1 transition")
+            raise RuntimeError("History state cannot have more than 1 "
+                               "transition")
 
         if metadata.has_history_info(self):
             state = metadata.get_history_state(self)

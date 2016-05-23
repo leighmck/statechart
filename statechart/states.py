@@ -15,6 +15,9 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import asyncio
+from collections import deque
+
 from statechart.runtime import Metadata
 
 
@@ -24,20 +27,9 @@ class State:
 
     :param name: An identifier for the model element.
     :param context: The parent context that contains this state.
-    :param entry: An optional procedure that is executed whenever this state is
-        entered regardless of the transition taken to reach the state. If
-        defined, entry actions are always executed to completion prior to any
-        internal activity or transitions performed within the state.
-    :param do: An optional activity that is executed while being in the state.
-        The execution starts when this state is entered, and stops either by
-        itself, or when the state is exited, whichever comes first.
-    :param exit: An optional procedure that is executed whenever this state is
-        exited regardless of which transition was taken out of the state. If
-        defined, exit actions are always executed to completion only after all
-        internal activities and transition actions have completed execution.
     """
 
-    def __init__(self, name, context, entry=None, do=None, exit=None):
+    def __init__(self, name, context):
         self.name = name
 
         """ Context can be null only for the statechart """
@@ -63,10 +55,39 @@ class State:
             else:
                 raise RuntimeError("Statechart not found - check hierarchy")
 
-        self.entry = entry
-        self.do = do
-        self.exit = exit
         self.transitions = []
+
+    def entry(self, param):
+        """
+        An optional procedure that is executed whenever this state is
+        entered regardless of the transition taken to reach the state. If
+        defined, entry actions are always executed to completion prior to any
+        internal activity or transitions performed within the state.
+
+        :param param: The parameter for this action.
+        """
+        pass
+
+    def do(self, param):
+        """
+        An optional activity that is executed while being in the state.
+        The execution starts when this state is entered, and stops either by
+        itself, or when the state is exited, whichever comes first.
+
+        :param param: The parameter for this action.
+        """
+        pass
+
+    def exit(self, param):
+        """
+        An optional procedure that is executed whenever this state is
+        exited regardless of which transition was taken out of the state. If
+        defined, exit actions are always executed to completion only after all
+        internal activities and transition actions have completed execution.
+
+        :param param: The parameter for this action.
+        """
+        pass
 
     def add_transition(self, transition):
         """
@@ -100,10 +121,10 @@ class State:
             metadata.activate(self)
 
             if self.entry:
-                self.entry.execute(param)
+                self.entry(param)
 
             if self.do:
-                self.do.execute(param)
+                self.do(param)
 
             activated = True
 
@@ -120,7 +141,7 @@ class State:
         if metadata.is_active(self):
 
             if self.exit:
-                self.exit.execute(param)
+                self.exit(param)
 
             metadata.deactivate(self)
 
@@ -151,22 +172,10 @@ class Context(State):
 
     :param name: An identifier for the model element.
     :param context: The parent context that contains this state.
-    :param entry: An optional procedure that is executed whenever this state is
-        entered regardless of the transition taken to reach the state. If
-        defined, entry actions are always executed to completion prior to any
-        internal activity or transitions performed within the state.
-    :param do: An optional activity that is executed while being in the state.
-        The execution starts when this state is entered, and stops either by
-        itself, or when the state is exited, whichever comes first.
-    :param exit: An optional procedure that is executed whenever this state is
-        exited regardless of which transition was taken out of the state. If
-        defined, exit actions are always executed to completion only after all
-        internal activities and transition actions have completed execution.
     """
 
-    def __init__(self, name, context, entry=None, do=None, exit=None):
-        State.__init__(self, name=name, context=context, entry=entry, do=do,
-                       exit=exit)
+    def __init__(self, name, context):
+        State.__init__(self, name=name, context=context)
         self.initial_state = None
 
 
@@ -199,22 +208,10 @@ class CompositeState(Context):
 
     :param name: An identifier for the model element.
     :param context: The parent context that contains this state.
-    :param entry: An optional procedure that is executed whenever this state is
-        entered regardless of the transition taken to reach the state. If
-        defined, entry actions are always executed to completion prior to any
-        internal activity or transitions performed within the state.
-    :param do: An optional activity that is executed while being in the state.
-        The execution starts when this state is entered, and stops either by
-        itself, or when the state is exited, whichever comes first.
-    :param exit: An optional procedure that is executed whenever this state is
-        exited regardless of which transition was taken out of the state. If
-        defined, exit actions are always executed to completion only after all
-        internal activities and transition actions have completed execution.
     """
 
-    def __init__(self, name, context, entry=None, do=None, exit=None):
-        Context.__init__(self, name=name, context=context, entry=entry, do=do,
-                         exit=exit)
+    def __init__(self, name, context):
+        Context.__init__(self, name=name, context=context)
         self.history = None
 
     def activate(self, metadata, param):
@@ -297,8 +294,8 @@ class Statechart(Context):
     """
 
     def __init__(self, name, param):
-        Context.__init__(self, name=name, context=None, entry=None, do=None,
-                         exit=None)
+        Context.__init__(self, name=name, context=None)
+        self.event_queue = deque([])
         self.param = param
         self.metadata = Metadata()
 
@@ -313,6 +310,16 @@ class Statechart(Context):
         self.metadata.activate(self.initial_state)
         self.dispatch(None)
 
+    def async_handle_event(self, event):
+        """
+        Handle asyncio statechart event.
+
+        Adds event to queue for future processing.
+
+        :param event: Transition event trigger.
+        """
+        self.event_queue.append(event)
+
     def dispatch(self, event):
         """
         Calls the dispatch method on the current state.
@@ -325,3 +332,15 @@ class Statechart(Context):
 
     def add_transition(self, transition):
         raise RuntimeError("Cannot add transition to a statechart")
+
+    async def sc_loop(self):
+        """
+        Run asyncio statechart event loop.
+
+        Dispatches events in queue in FIDO order.
+        """
+        while True:
+            if len(self.event_queue):
+                event = self.event_queue.popleft()
+                self.dispatch(event)
+            await asyncio.sleep(0)
