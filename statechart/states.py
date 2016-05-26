@@ -201,6 +201,96 @@ class FinalState(State):
         raise RuntimeError("Cannot dispatch an event to the final state")
 
 
+class ConcurrentState(Context):
+    """
+    A concurrent state is a state that contains composite state regions,
+    activated concurrently.
+    """
+
+    def __init__(self, name, context):
+        Context.__init__(self, name, context)
+        self.regions = []
+
+    def add_region(self, region):
+        """
+        Add a new region to the concurrent state.
+
+        :param region: region to add.
+        """
+        self.regions.append(region)
+
+    def activate(self, metadata, param):
+        """
+        Activate the state.
+
+        :param metadata: Statechart metadata data.
+        :param param: Transition parameter passed to state entry and do
+            actions.
+        :return: True if state activated, False if already active.
+        """
+        status = False
+
+        if Context.activate(self, metadata, param):
+            rdata = metadata.active_states[self]
+
+            for region in self.regions:
+                if not (region in rdata.state_set):
+                    # Check if region is activated implicitly via incoming
+                    # transition.
+                    region.activate(metadata, param)
+                    region.initial_state.activate(metadata, param)
+
+            status = True
+
+        return status
+
+    def deactivate(self, metadata, param):
+        """
+        Deactivate child states within regions, then overall state.
+
+        :param metadata: Statechart metadata data.
+        :param param: Transition parameter passed to state exit action.
+        :return: True if state deactivated, False if already inactive.
+        """
+        for region in self.regions:
+            if metadata.is_active(region):
+                region.deactivate(metadata, param)
+
+        Context.deactivate(self, metadata, param)
+
+    def dispatch(self, metadata, event, param):
+        """
+        Dispatch transition.
+
+        :param metadata: Statechart metadata data.
+        :param event: Transition event trigger.
+        :param param: Transition parameter passed to transition action.
+        :return: True if transition executed, False if transition not allowed,
+            due to mismatched event trigger or failed guard condition.
+        """
+        if not metadata.active_states[self]:
+            raise RuntimeError('Inactive composite state attempting to'
+                               'dispatch transition')
+
+        dispatched = False
+
+        """ Check if any of the child regions can handle the event """
+        for region in self.regions:
+            if region.dispatch(metadata, event, param):
+                dispatched = True
+
+        if dispatched:
+            return True
+
+        """ Check if this state can handle the event by itself """
+        for transition in self.transitions:
+            if transition.execute(metadata, event, param):
+                dispatched = True
+                break
+
+        return dispatched
+
+
 class CompositeState(Context):
     """
     A composite state is a state that contains other state vertices (states,
@@ -213,6 +303,9 @@ class CompositeState(Context):
     def __init__(self, name, context):
         Context.__init__(self, name=name, context=context)
         self.history = None
+
+        if isinstance(context, ConcurrentState):
+            context.add_region(self)
 
     def activate(self, metadata, param):
         """
@@ -227,8 +320,10 @@ class CompositeState(Context):
         """
         Context.activate(self, metadata, param)
 
-        # if metadata.transition and metadata.transition.end is self:
-        self.initial_state.activate(metadata=metadata, param=param)
+        # TODO(lam) review scenario where there is a transition directly
+        # into sub state - shouldn't activate initial state
+        if metadata.transition and metadata.transition.end is self:
+            self.initial_state.activate(metadata=metadata, param=param)
 
     def deactivate(self, metadata, param):
         """
