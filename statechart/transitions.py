@@ -119,12 +119,15 @@ class Transition:
         self._logger.info('execute %s', self.name)
 
         if self.event and event is None:
+            self._logger.info('default transition not activated')
             return False
 
         if self.event and self.event != event:
+            self._logger.info('transition not triggered by event %s', event)
             return False
 
         if self.guard and not self.guard.check(metadata, param):
+            self._logger.info('transition blocked by guard condition %s', event)
             return False
 
         metadata.event = event
