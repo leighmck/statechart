@@ -221,8 +221,9 @@ class TestShallowHistoryState:
         *                                                           *
         *************************************************************
         """
+        param = ''
         # Top level states
-        statechart = Statechart(name='statecart', param=0)
+        statechart = Statechart(name='statecart', param=param)
         csa = CompositeState(name='csa', context=statechart)
         csb = CompositeState(name='csb', context=csa)
         csc = CompositeState(name='csc', context=statechart)
@@ -246,11 +247,11 @@ class TestShallowHistoryState:
         E = State(name='E', context=csc)
 
         # Events
-        I = Event(name='I', param=0)
-        J = Event(name='J', param=0)
-        K = Event(name='K', param=0)
-        L = Event(name='L', param=0)
-        M = Event(name='M', param=0)
+        I = Event(name='I', param='')
+        J = Event(name='J', param='')
+        K = Event(name='K', param='')
+        L = Event(name='L', param='')
+        M = Event(name='M', param='')
 
         # Transitions between states & event triggers
         Transition(name='statechart_init_default', start=statechart_init, end=csa)

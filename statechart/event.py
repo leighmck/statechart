@@ -15,6 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import logging
 
 class Event:
     """
@@ -29,6 +30,7 @@ class Event:
     def __init__(self, name, param):
         self.name = name
         self.param = param
+        self._logger = logging.getLogger(__name__)
 
     def __eq__(self, event):
         """
@@ -54,6 +56,6 @@ class Event:
     def __str__(self):
         """
         Returns a string representation the event.
-        :return: "Event: " followed by the event name.
+        :return: "Event: {'name'}" including the instance's name.
         """
         return "Event: {name}".format(name=str(self.name))

@@ -15,8 +15,8 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import logging
 from statechart import CompositeState, State
-
 
 class PseudoState(State):
     """
@@ -30,6 +30,7 @@ class PseudoState(State):
 
     def __init__(self, name, context):
         State.__init__(self, name=name, context=context)
+        self._logger = logging.getLogger(__name__)
 
     def activate(self, metadata, param):
         """
@@ -38,10 +39,11 @@ class PseudoState(State):
         :param metadata: Statechart metadata data
         :param param: Transition parameter passed to state entry and do actions
         """
+        self._logger.info('activate %s', self.name)
         metadata.activate(self)
 
         if self.entry:
-            self.entry.execute(metadata=metadata, param=param)
+            self.entry(param=param)
 
         return True
 
@@ -55,6 +57,7 @@ class PseudoState(State):
         :return: True if transition executed, False if transition not allowed
             due to mismatched event trigger or failed guard condition.
         """
+        self._logger.info('dispatch %s', self.name)
         return State.dispatch(self, metadata=metadata, event=event,
                               param=param)
 
@@ -70,6 +73,7 @@ class InitialState(PseudoState):
 
     def __init__(self, name, context):
         PseudoState.__init__(self, name=name, context=context)
+        self._logger = logging.getLogger(__name__)
 
         if self.context.initial_state:
             raise RuntimeError("Initial state already present")
@@ -84,22 +88,28 @@ class InitialState(PseudoState):
         :param metadata: Statechart metadata data
         :param param: Transition parameter passed to state entry and do actions
         """
+        self._logger.info('activate %s', self.name)
         self.dispatch(metadata=metadata, event=None, param=param)
 
 
 class ShallowHistoryState(PseudoState):
     def __init__(self, name, context):
         """
-        A special kind of state signifying the source for a single transition
-        to the most recent active state of its containing composite state (but
-        not the substates of that substate).
-        There can only be one history state per context.
+        Shallow history is a pseudo state representing the most recent
+        substate of a submachine.
+
+        A submachine can have at most one
+        shallow history. A transition with a history pseudo state as
+        target is equivalent to a transition with the most recent substate
+        as target. And very importantly, only one transition may originate
+        from the history.
 
         :param name: An identifier for the model element.
         :param context: The parent context that contains this state.
         """
-
         PseudoState.__init__(self, name=name, context=context)
+        self._logger = logging.getLogger(__name__)
+
         self.state = None
 
         if isinstance(self.context, CompositeState):
@@ -118,12 +128,18 @@ class ShallowHistoryState(PseudoState):
         :param metadata: Statechart metadata data
         :param param: Transition parameter passed to state entry and do actions
         """
+        self._logger.info('activate %s', self.name)
+
         if len(self.transitions) > 1:
             raise RuntimeError("History state cannot have more than 1 "
                                "transition")
 
         if metadata.has_history_info(self):
             state = metadata.get_history_state(self)
+            # Setup transition to the history's target state
+            metadata.transition.start = self
+            metadata.transition.end = state
+
             state.activate(metadata=metadata, param=param)
         else:
             self.dispatch(metadata=metadata, event=None, param=param)

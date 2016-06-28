@@ -15,6 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import logging
 from statechart import Statechart
 
 
@@ -43,6 +44,8 @@ class Transition:
         self.event = event
         self.guard = guard
         self.action = action
+
+        self._logger = logging.getLogger(name)
 
         """ Used to store the states that will get activated """
         self.activate = list()
@@ -113,6 +116,8 @@ class Transition:
         :param param:
         :return: True if the transition was executed.
         """
+        self._logger.info('execute %s', self.name)
+
         if self.event and event is None:
             return False
 

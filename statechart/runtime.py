@@ -15,6 +15,8 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import logging
+
 
 class StateRuntimeData:
     """
@@ -24,6 +26,7 @@ class StateRuntimeData:
     def __init__(self):
         self.current_state = None
         self.state_set = list()
+        self._logger = logging.getLogger(__name__)
 
 
 class Metadata:
@@ -39,6 +42,7 @@ class Metadata:
         self.event = None
         self.history_states = {}
         self.transition = None
+        self._logger = logging.getLogger(__name__)
 
     def activate(self, state):
         """
@@ -47,6 +51,7 @@ class Metadata:
 
         :param state: State to activate.
         """
+        self._logger.info('activate %s', state.name)
         if not (state in self.active_states):
             self.active_states[state] = StateRuntimeData()
 
@@ -66,6 +71,8 @@ class Metadata:
 
         :param state: State to deactivate.
         """
+        self._logger.info('deactivate %s', state.name)
+
         if state in self.active_states:
             data = self.active_states[state]
             data.current_state = None
@@ -81,6 +88,7 @@ class Metadata:
         :return: The most recent state remembered by the specified history
             state.
         """
+        self._logger.info('get history state %s', history_state.name)
         return self.history_states[history_state]
 
     def has_history_info(self, history_state):
@@ -95,6 +103,7 @@ class Metadata:
         if history_state in self.history_states:
             status = True
 
+        self._logger.info('has history info %s? %s', history_state.name, str(status))
         return status
 
     def is_active(self, state):
@@ -109,11 +118,15 @@ class Metadata:
         if state in self.active_states:
             status = True
 
+        self._logger.info('is %s active? %s', state.name, str(status))
         return status
 
     def reset(self):
         """Resets the metadata object for reuse."""
+        self._logger.info('reset active states & history')
         self.active_states.clear()
+        self.history_states.clear()
 
     def store_history_info(self, history_state, actual_state):
+        self._logger.info('store history state %s for actual state %s', history_state.name, actual_state.name)
         self.history_states[history_state] = actual_state
