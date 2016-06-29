@@ -27,19 +27,19 @@ from statechart import CompositeState, Event, InitialState, State, Statechart, T
 
     statechart_init
            |
-    *** csa *****************************************************          *** csc *************
-    *                                                           *          *                   *
-    *  csa_init--csa_hist                                       *          *  csc_init         *
-    *               |                                           *  --K-->  *     |             *
-    *               A  --I-->  *** csb ***********************  *  <--L--  *     D  --M-->  E  *
-    *                          *                             *  *          *                   *
-    *                          *  csb_init--csb_hist         *  *          *********************
-    *                          *               |             *  *
-    *                          *               B  --J-->  C  *  *
-    *                          *                             *  *
-    *                          *******************************  *
-    *                                                           *
-    *************************************************************
+    *** csa ***********************************          *** csc **************
+    *                                         *          *                    *
+    *  csa_init                               *          *  csc_init          *
+    *      |                                  *  --K-->  *      |             *
+    *      A  --I-->  *** csb **************  *  <--L--  *      D  --M-->  E  *
+    *                 *                    *  *          *                    *
+    *                 *  csb_init          *  *          **********************
+    *                 *      |             *  *
+    *                 *      B  --J-->  C  *  *
+    *                 *                    *  *
+    *                 **********************  *
+    *                                         *
+    *******************************************
     """
 
 # Top level states
@@ -93,13 +93,20 @@ async def hello(websocket, path):
     while True:
         event = await websocket.recv()
         statechart.async_handle_event(Event(name=event, param=0))
-        print("< {}".format(event))
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    handler = logging.FileHandler('statechart.log')
-    handler.setLevel(logging.INFO)
+    # create logger
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    # add a file handler
+    file_handler = logging.FileHandler('web_app.log')
+    file_handler.setLevel(logging.INFO)
+    # create a formatter and set the formatter for the handler.
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    # add the Handler to the logger
+    logger.addHandler(file_handler)
 
     loop = asyncio.get_event_loop()
     app_server = websockets.serve(hello, 'localhost', 8888)

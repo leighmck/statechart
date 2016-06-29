@@ -45,7 +45,7 @@ class Transition:
         self.guard = guard
         self.action = action
 
-        self._logger = logging.getLogger(name)
+        self._logger = logging.getLogger(__name__)
 
         """ Used to store the states that will get activated """
         self.activate = list()
