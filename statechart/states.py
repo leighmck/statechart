@@ -32,6 +32,8 @@ class State:
 
     def __init__(self, name, context):
         self.name = name
+
+        self._do_task = None
         self._logger = logging.getLogger(__name__)
 
         """ Context can be null only for the statechart """
@@ -80,6 +82,50 @@ class State:
         """
         self._logger.info('do %s', self.name)
 
+        #if self._do_task is not None:
+        #    raise RuntimeError("Task has already been started. "
+        #                       "Cannot start task more than once")
+
+        # Schedule controller to run when event loop is started.
+        self._do_task = asyncio.ensure_future(self._run())
+        self._do_task.add_done_callback(self._do_task_done)
+
+    async def _run(self):
+        while True:
+            print(self.name + ' working', )
+            await asyncio.sleep(1.0)
+
+    def _do_task_done(self, future):
+        """Handler for when _run method finishes or becomes cancelled."""
+        result = None
+        exception = None
+        is_cancelled = False
+
+        try:
+            # Task has completed.  Find out manner in which it completed, eg
+            # success, cancelled, exception.
+            result = future.result()
+        except asyncio.CancelledError as arg:
+            is_cancelled = True
+        except Exception as arg:
+            exception = arg
+            self._logger.exception('Exception from future:')
+
+        self._do_task = None
+
+        # Provide support to allow event driven components a chance to know
+        # that task has completed.
+        self.statechart.async_handle_event('do-done')
+
+    def _cancel(self):
+        """Request orderly shutdown of task."""
+
+        # Cancelling the task future will cause a CancelledError to be
+        # thrown inside the task coroutine.
+        if self._do_task is not None:
+            self._do_task.remove_done_callback(self._do_task_done)
+            self._do_task.cancel()
+
     def exit(self, param):
         """
         An optional procedure that is executed whenever this state is
@@ -90,6 +136,7 @@ class State:
         :param param: The parameter for this action.
         """
         self._logger.info('exit %s', self.name)
+        self._cancel()
 
     def add_transition(self, transition):
         """
