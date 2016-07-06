@@ -23,17 +23,40 @@ from statechart.runtime import Metadata
 
 
 class State:
-    """
-    A State is a simple state that has no regions or submachine states.
+    """A State is a simple state that has no regions or submachine states.
 
-    :param name: An identifier for the model element.
-    :param context: The parent context that contains this state.
+    Args:
+        name (str): State name used to identify this instance for logging.
+           A unique name is recommended although not enforced.
+        context (Context): The parent context that contains this state.
+
+    Attributes:
+        name (str): State name used to identify this instance.
+        context (Context): State's parent context.
+
+    Examples:
+        * First create the parent context
+        statechart = Statechart(name='statechart', param=0)
+
+        * Then create the states
+        a = State(name='a', context=statechart)
+        b = State(name='b', context=statechart)
+
+        * Finally create the transitions between states with any associated
+        event triggers, actions or guard conditions.
+        Transition(name='a to b', start=a, end=b)
+
+    Raises:
+        RuntimeError: If the parent context is invalid.
+            Only a state chart can have no parent context.
     """
 
     def __init__(self, name, context):
         self.name = name
 
+        # Handle to currently running asyncio Task.
         self._do_task = None
+
         self._logger = logging.getLogger(__name__)
 
         """ Context can be null only for the statechart """
@@ -59,36 +82,58 @@ class State:
             else:
                 raise RuntimeError("Statechart not found - check hierarchy")
 
-        self.transitions = []
+        self._transitions = []
 
     def entry(self, param):
         """
-        An optional procedure that is executed whenever this state is
-        entered regardless of the transition taken to reach the state. If
+        An optional action that is executed whenever this state is
+        entered, regardless of the transition taken to reach the state. If
         defined, entry actions are always executed to completion prior to any
         internal activity or transitions performed within the state.
 
-        :param param: The parameter for this action.
+        Args:
+            param: The parameter for this action. Comes from the transition
+                which triggered the activation of this state.
         """
-        self._logger.info('enter %s', self.name)
+        self._logger.info('Entry action for %s', self.name)
 
     def do(self, param):
         """
-        An optional activity that is executed while being in the state.
-        The execution starts when this state is entered, and stops either by
+        An optional action that is executed whilst this state is active.
+        The execution starts after this state is entered, and stops either by
         itself, or when the state is exited, whichever comes first.
 
-        :param param: The parameter for this action.
+        Starts an async task. When the task is finished, it may fire an event
+        to trigger a state transition. If the task is still in progress when
+        this state is deactivated it will be cancelled.
+
+        Args:
+            param: The parameter for this action. Comes from the transition
+                which triggered the activation of this state.
         """
-        self._logger.info('do %s', self.name)
+        self._logger.info('Do action for %s', self.name)
 
         #if self._do_task is not None:
         #    raise RuntimeError("Task has already been started. "
         #                       "Cannot start task more than once")
 
-        # Schedule controller to run when event loop is started.
         self._do_task = asyncio.async(self._run())
         self._do_task.add_done_callback(self._do_task_done)
+
+    def exit(self, param):
+        """
+        An optional action that is executed upon deactivation of this state
+        regardless of which transition was taken out of the state. If defined,
+        exit actions are always executed to completion only after all
+        internal activities and transition actions have completed execution.
+        Initiates cancellation of the state do action if it is still running.
+
+        Args:
+            param: The parameter for this action. Comes from the transition
+                which triggered the deactivation of this state.
+        """
+        self._logger.info('Exit action for %s', self.name)
+        self._cancel()
 
     @asyncio.coroutine
     def _run(self):
@@ -127,34 +172,25 @@ class State:
             self._do_task.remove_done_callback(self._do_task_done)
             self._do_task.cancel()
 
-    def exit(self, param):
-        """
-        An optional procedure that is executed whenever this state is
-        exited regardless of which transition was taken out of the state. If
-        defined, exit actions are always executed to completion only after all
-        internal activities and transition actions have completed execution.
-
-        :param param: The parameter for this action.
-        """
-        self._logger.info('exit %s', self.name)
-        self._cancel()
-
     def add_transition(self, transition):
-        """
-        Add a transition from this state
+        """Add a transition from this state.
 
         Transitions with guards are checked first.
 
-        :param transition: transition to add, can be a normal or internal
-            transition.
+        Args:
+            transition (Transition): Transition to add, can be a normal or
+                internal transition.
+
+        Raises:
+            RuntimeError: If transition is invalid.
         """
         if transition is None:
             raise RuntimeError("Cannot add null transition")
 
         if transition.guard:
-            self.transitions.insert(0, transition)
+            self._transitions.insert(0, transition)
         else:
-            self.transitions.append(transition)
+            self._transitions.append(transition)
 
     def activate(self, metadata, param):
         """
@@ -213,7 +249,7 @@ class State:
 
         status = False
 
-        for transition in self.transitions:
+        for transition in self._transitions:
             if transition.execute(metadata, event, param):
                 status = True
                 break
@@ -348,7 +384,7 @@ class ConcurrentState(Context):
             return True
 
         """ Check if this state can handle the event by itself """
-        for transition in self.transitions:
+        for transition in self._transitions:
             if transition.execute(metadata, event, param):
                 dispatched = True
                 break
@@ -443,7 +479,7 @@ class CompositeState(Context):
 
         # Since none of the child states can handle the event, let this state
         # try handling the event.
-        for transition in self.transitions:
+        for transition in self._transitions:
             if transition.execute(metadata, event, param):
                 return True
 

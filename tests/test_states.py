@@ -94,7 +94,7 @@ class TestState:
         default_transition = Transition(name='default', start=initial_state,
                                         end=default_state)
 
-        assert default_transition in initial_state.transitions
+        assert default_transition in initial_state._transitions
 
     def test_activate(self):
         statechart = Statechart(name='statechart', param=0)

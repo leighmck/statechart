@@ -130,7 +130,7 @@ class ShallowHistoryState(PseudoState):
         """
         self._logger.info('activate %s', self.name)
 
-        if len(self.transitions) > 1:
+        if len(self._transitions) > 1:
             raise RuntimeError("History state cannot have more than 1 "
                                "transition")
 
