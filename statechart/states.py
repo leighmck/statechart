@@ -54,10 +54,11 @@ class State:
     def __init__(self, name, context):
         self.name = name
 
-        # Handle to currently running asyncio Task.
-        self._do_task = None
-
         self._logger = logging.getLogger(__name__)
+
+        # We could subclass a dict and add support for 'dot' access
+        # for improved usability?
+        self._scope = {}
 
         """ Context can be null only for the statechart """
         if context is None and (not isinstance(self, Statechart)):
@@ -83,6 +84,10 @@ class State:
                 raise RuntimeError("Statechart not found - check hierarchy")
 
         self._transitions = []
+
+    @property
+    def scope(self):
+        return self._scope
 
     def entry(self, param):
         """
@@ -113,13 +118,6 @@ class State:
         """
         self._logger.info('Do action for %s', self.name)
 
-        #if self._do_task is not None:
-        #    raise RuntimeError("Task has already been started. "
-        #                       "Cannot start task more than once")
-
-        self._do_task = asyncio.async(self._run())
-        self._do_task.add_done_callback(self._do_task_done)
-
     def exit(self, param):
         """
         An optional action that is executed upon deactivation of this state
@@ -133,44 +131,7 @@ class State:
                 which triggered the deactivation of this state.
         """
         self._logger.info('Exit action for %s', self.name)
-        self._cancel()
 
-    @asyncio.coroutine
-    def _run(self):
-        while True:
-            print(self.name + ' working', )
-            yield from asyncio.sleep(1.0)
-
-    def _do_task_done(self, future):
-        """Handler for when _run method finishes or becomes cancelled."""
-        result = None
-        exception = None
-        is_cancelled = False
-
-        try:
-            # Task has completed.  Find out manner in which it completed, eg
-            # success, cancelled, exception.
-            result = future.result()
-        except asyncio.CancelledError as arg:
-            is_cancelled = True
-        except Exception as arg:
-            exception = arg
-            self._logger.exception('Exception from future:')
-
-        self._do_task = None
-
-        # Provide support to allow event driven components a chance to know
-        # that task has completed.
-        self.statechart.async_handle_event('do-done')
-
-    def _cancel(self):
-        """Request orderly shutdown of task."""
-
-        # Cancelling the task future will cause a CancelledError to be
-        # thrown inside the task coroutine.
-        if self._do_task is not None:
-            self._do_task.remove_done_callback(self._do_task_done)
-            self._do_task.cancel()
 
     def add_transition(self, transition):
         """Add a transition from this state.

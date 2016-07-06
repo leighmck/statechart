@@ -16,6 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import logging
+from collections import ChainMap
 
 
 class StateRuntimeData:
@@ -130,3 +131,16 @@ class Metadata:
     def store_history_info(self, history_state, actual_state):
         self._logger.info('store history state %s for actual state %s', history_state.name, actual_state.name)
         self.history_states[history_state] = actual_state
+
+    @property
+    def root_scope(self):
+        # TODO(lam) active states is a dict. Order of scopes is important when
+        # constructing the chainmap in the case of duplicate scope attributes.
+        # When accessing scope attributes it should work in order of nearest
+        # ancestor.
+
+        scopes = []
+        for state in self.active_states:
+            scopes.append(state.scope)
+        root_scope = ChainMap(*scopes)
+        return root_scope
