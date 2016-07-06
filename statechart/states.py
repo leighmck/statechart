@@ -87,13 +87,14 @@ class State:
         #                       "Cannot start task more than once")
 
         # Schedule controller to run when event loop is started.
-        self._do_task = asyncio.ensure_future(self._run())
+        self._do_task = asyncio.async(self._run())
         self._do_task.add_done_callback(self._do_task_done)
 
-    async def _run(self):
+    @asyncio.coroutine
+    def _run(self):
         while True:
             print(self.name + ' working', )
-            await asyncio.sleep(1.0)
+            yield from asyncio.sleep(1.0)
 
     def _do_task_done(self, future):
         """Handler for when _run method finishes or becomes cancelled."""
@@ -503,7 +504,8 @@ class Statechart(Context):
     def add_transition(self, transition):
         raise RuntimeError("Cannot add transition to a statechart")
 
-    async def sc_loop(self):
+    @asyncio.coroutine
+    def async_event_loop(self):
         """
         Run asyncio statechart event loop.
 
@@ -513,4 +515,4 @@ class Statechart(Context):
             if len(self.event_queue):
                 event = self.event_queue.popleft()
                 self.dispatch(event)
-            await asyncio.sleep(0)
+                yield from asyncio.sleep(0)

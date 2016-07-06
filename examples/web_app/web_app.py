@@ -84,14 +84,14 @@ Transition(name='DtoE', start=D, end=E, event=M)
 
 statechart.start()
 
+@asyncio.coroutine
+def web_app():
+    yield from statechart.async_event_loop()
 
-async def web_app():
-    await statechart.sc_loop()
-
-
-async def hello(websocket, path):
+@asyncio.coroutine
+def hello(websocket, path):
     while True:
-        event = await websocket.recv()
+        event = yield from websocket.recv()
         statechart.async_handle_event(Event(name=event, param=0))
 
 
