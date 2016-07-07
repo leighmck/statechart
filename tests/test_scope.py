@@ -37,9 +37,9 @@ class MiddleState(CompositeState):
         middle_init = InitialState(name='middle_init', context=self)
         self.bottom_a = BottomStateA(name='bottom_a', context=self)
         self.bottom_b = BottomStateB(name='bottom_b', context=self)
-        self.a_to_b = Event(name='AB', param=None)
+        a_to_b = Event(name='AB', param=None)
         Transition('middle_default', start=middle_init, end=self.bottom_a)
-        Transition(name='AB', start=self.bottom_a, end=self.bottom_b, event=self.a_to_b)
+        Transition(name='AB', start=self.bottom_a, end=self.bottom_b, event=a_to_b)
 
         self.scope['middle_int'] = 5
         self.scope['middle_str'] = 'middle'
@@ -116,7 +116,8 @@ class TestScope:
         # The entry action of bottom state B should assign a value of 2
         # to the top level statechart to verify the rootscope is
         # mutable.
-        statechart.dispatch(event=top_state.middle_state.a_to_b)
+        a_to_b = Event(name='AB', param=None)
+        statechart.dispatch(event=a_to_b)
 
         assert statechart.metadata.is_active(top_state.middle_state.bottom_b)
 
