@@ -21,6 +21,11 @@ from statechart import (CompositeState, Event, InitialState, State, Statechart, 
 class TopState(CompositeState):
     def __init__(self, name, context):
         CompositeState.__init__(self, name=name, context=context)
+
+        top_init = InitialState(name='top_init', context=self)
+        self.middle_state = MiddleState(name='middle', context=self)
+        Transition('top_default', start=top_init, end=self.middle_state)
+
         self.scope['top_int'] = 1
         self.scope['top_str'] = 'top'
 
@@ -28,6 +33,14 @@ class TopState(CompositeState):
 class MiddleState(CompositeState):
     def __init__(self, name, context):
         CompositeState.__init__(self, name=name, context=context)
+
+        middle_init = InitialState(name='middle_init', context=self)
+        self.bottom_a = BottomStateA(name='bottom_a', context=self)
+        self.bottom_b = BottomStateB(name='bottom_b', context=self)
+        self.a_to_b = Event(name='AB', param=None)
+        Transition('middle_default', start=middle_init, end=self.bottom_a)
+        Transition(name='AB', start=self.bottom_a, end=self.bottom_b, event=self.a_to_b)
+
         self.scope['middle_int'] = 5
         self.scope['middle_str'] = 'middle'
 
@@ -78,34 +91,18 @@ class TestScope:
                                        context=statechart)
 
         top_state = TopState(name='top', context=statechart)
-        top_init = InitialState(name='top_init', context=top_state)
-
-        middle_state = MiddleState(name='middle', context=top_state)
-        middle_init = InitialState(name='middle_init', context=middle_state)
-
-        bottom_a = BottomStateA(name='bottom_a', context=middle_state)
-        bottom_b = BottomStateB(name='bottom_b', context=middle_state)
-
-        AB = Event(name='AB', param=None)
-
-        Transition(name='statechart_default', start=statechart_init,
-                   end=top_state)
-        Transition('top_default', start=top_init,
-                   end=middle_state)
-        Transition('middle_default', start=middle_init,
-                   end=bottom_a)
-        Transition(name='AB', start=bottom_a, end=bottom_b, event=AB)
+        Transition(name='statechart_default', start=statechart_init, end=top_state)
 
         statechart.start()
 
-        assert statechart.metadata.is_active(bottom_a)
+        assert statechart.metadata.is_active(top_state.middle_state.bottom_a)
         assert dict(top_state.scope) == {
             'top_int': 1,
             'top_str': 'top',
         }
 
         # Assert the bottom a scope includes all parent scopes as well as it's own.
-        assert bottom_a.scope == {
+        assert top_state.middle_state.bottom_a.scope == {
             'top_int': 1,
             'top_str': 'top',
             'middle_int': 5,
@@ -119,9 +116,9 @@ class TestScope:
         # The entry action of bottom state B should assign a value of 2
         # to the top level statechart to verify the rootscope is
         # mutable.
-        statechart.dispatch(event=AB)
+        statechart.dispatch(event=top_state.middle_state.a_to_b)
 
-        assert statechart.metadata.is_active(bottom_b)
+        assert statechart.metadata.is_active(top_state.middle_state.bottom_b)
 
         # Assert the top state's scope was mutated by the bottom_b entry action.
         assert top_state.scope == {
@@ -131,7 +128,7 @@ class TestScope:
 
         # Assert the bottom b scope includes all parent scopes as well as it's own.
         # Also ensure there is no carry-over from deactivated state a.
-        assert bottom_b.scope == {
+        assert top_state.middle_state.bottom_b.scope == {
             'top_int': 2,
             'top_str': 'top',
             'middle_int': 5,
