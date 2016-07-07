@@ -92,7 +92,7 @@ def web_app():
 def hello(websocket, path):
     while True:
         event = yield from websocket.recv()
-        statechart.async_handle_event(Event(name=event, param=0))
+        statechart.async_dispatch(Event(name=event, param=0))
 
 
 if __name__ == "__main__":

@@ -265,3 +265,48 @@ class TestConcurrentState:
 
         statechart.dispatch(event=scroll_lock_pressed)
         assert statechart.metadata.is_active(scroll_lock_off)
+
+
+class TestCompositeState:
+    class Submachine(CompositeState):
+        def __init__(self, name, context):
+            CompositeState.__init__(self, name=name, context=context)
+
+            init = InitialState(name='init submachine', context=self)
+            self.state_a = State(name='sub state a', context=self)
+            self.state_b = State(name='sub state b', context=self)
+
+            self.sub_a_to_b = Event('sub cd', None)
+            Transition(name='init', start=init, end=self.state_a)
+            Transition(name='sub_cd', start=self.state_a, end=self.state_b, event=self.sub_a_to_b)
+
+    def test_submachines(self):
+        statechart = Statechart(name='statechart', param=0)
+
+        init = InitialState(name='init a', context=statechart)
+        top_a = self.Submachine('top a', statechart)
+        top_b = self.Submachine('top b', statechart)
+
+        top_a_to_b = Event('top_ab', None)
+        Transition(name='init', start=init, end=top_a)
+        Transition(name='init', start=top_a, end=top_b, event=top_a_to_b)
+
+        statechart.start()
+
+        assert statechart.metadata.is_active(top_a)
+        assert statechart.metadata.is_active(top_a.state_a)
+
+        statechart.dispatch(top_a.sub_a_to_b)
+
+        assert statechart.metadata.is_active(top_a)
+        assert statechart.metadata.is_active(top_a.state_b)
+
+        statechart.dispatch(top_a_to_b)
+
+        assert statechart.metadata.is_active(top_b)
+        assert statechart.metadata.is_active(top_b.state_a)
+
+        statechart.dispatch(top_a.sub_a_to_b)
+
+        assert statechart.metadata.is_active(top_b)
+        assert statechart.metadata.is_active(top_b.state_b)

@@ -476,7 +476,7 @@ class Statechart(Context):
         self.metadata.activate(self.initial_state)
         self.dispatch(None)
 
-    def async_handle_event(self, event):
+    def async_dispatch(self, event):
         """
         Handle asyncio statechart event.
 
