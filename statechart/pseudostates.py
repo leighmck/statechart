@@ -16,7 +16,9 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import logging
+
 from statechart import CompositeState, State
+
 
 class PseudoState(State):
     """
@@ -24,8 +26,9 @@ class PseudoState(State):
     transient states. They are used, typically, to connect multiple transitions
     into more complex state transitions paths.
 
-    :param name: An identifier for the model element.
-    :param context: The parent context that contains this state.
+    Args:
+        name (str): An identifier for the model element.
+        context (Context): The parent context that contains this state.
     """
 
     def __init__(self, name, context):
@@ -36,8 +39,12 @@ class PseudoState(State):
         """
         Activate the state.
 
-        :param metadata: Statechart metadata data
-        :param param: Transition parameter passed to state entry and do actions
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            param: Transition parameter passed to state entry and do actions.
+
+        Returns:
+            True if the state was activated.
         """
         self._logger.info('activate %s', self.name)
         metadata.activate(self)
@@ -51,11 +58,14 @@ class PseudoState(State):
         """
         Dispatch transition.
 
-        :param metadata: Statechart metadata data
-        :param event: Transition event trigger
-        :param param: Transition parameter passed to transition action
-        :return: True if transition executed, False if transition not allowed
-            due to mismatched event trigger or failed guard condition.
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            event (Event): Transition event trigger.
+            param: Transition parameter passed to transition action.
+
+        Returns:
+            True if the transition was executed, False if transition was not
+            triggered for this event or if the guard condition failed.
         """
         self._logger.info('dispatch %s', self.name)
         return State.dispatch(self, metadata=metadata, event=event,
@@ -67,8 +77,9 @@ class InitialState(PseudoState):
     A special kind of state signifying the source for a single transition to
     the default state of the composite state.
 
-    :param name: An identifier for the model element.
-    :param context: The parent context that contains this state.
+    Args:
+        name (str): An identifier for the model element.
+        context (Context): The parent context that contains this state.
     """
 
     def __init__(self, name, context):
@@ -85,11 +96,16 @@ class InitialState(PseudoState):
         Activate the state and dispatch transition to the default state of the
         composite state.
 
-        :param metadata: Statechart metadata data
-        :param param: Transition parameter passed to state entry and do actions
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            param: Transition parameter passed to state entry and do actions.
+
+        Returns:
+            True if the state was activated.
         """
         self._logger.info('activate %s', self.name)
         self.dispatch(metadata=metadata, event=None, param=param)
+        return True
 
 
 class ShallowHistoryState(PseudoState):
@@ -104,8 +120,9 @@ class ShallowHistoryState(PseudoState):
         as target. And very importantly, only one transition may originate
         from the history.
 
-        :param name: An identifier for the model element.
-        :param context: The parent context that contains this state.
+        Args:
+            name (str): An identifier for the model element.
+            context (Context): The parent context that contains this state.
         """
         PseudoState.__init__(self, name=name, context=context)
         self._logger = logging.getLogger(__name__)
@@ -125,8 +142,12 @@ class ShallowHistoryState(PseudoState):
         Activate the state and dispatch transition to the default state of the
         composite state.
 
-        :param metadata: Statechart metadata data
-        :param param: Transition parameter passed to state entry and do actions
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            param: Transition parameter passed to state entry and do actions.
+
+        Returns:
+            True if the state was activated.
         """
         self._logger.info('activate %s', self.name)
 
@@ -143,3 +164,5 @@ class ShallowHistoryState(PseudoState):
             state.activate(metadata=metadata, param=param)
         else:
             self.dispatch(metadata=metadata, event=None, param=param)
+
+        return True

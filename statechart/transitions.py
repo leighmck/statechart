@@ -111,9 +111,9 @@ class Transition:
         If the transition is allowed, deactivate source states, perform
         transition action and activate all target states.
 
-        :param metadata:
-        :param event:
-        :param param:
+        :param metadata: The metadata data object.
+        :param event: The event that fires the transition.
+        :param param: The parameter for this transition.
         :return: True if the transition was executed.
         """
         self._logger.info('execute %s', self.name)

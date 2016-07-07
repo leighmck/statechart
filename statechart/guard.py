@@ -29,12 +29,22 @@ class Guard(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def check(self, metadata, param):
+    def check(self, param):
         """
-        Called by the transition.
+        Called by the transition, override for specific behaviour
 
-        :param metadata: The metadata data object.
-        :param param: The parameter for this guard.
-        :return: Boolean result of expression.
+        Args:
+            param: The parameter for this guard.
+
+        Note:
+            Checking a guard should not have any side effects, therefore don't
+            set param data.
+            The evaluation must always be a boolean expression.
+
+        Returns:
+            Boolean result of expression.
+
+        Raises:
+            Not implemented error for abstract class.
         """
         raise NotImplementedError

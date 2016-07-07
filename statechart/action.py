@@ -20,10 +20,14 @@ import abc
 
 class Action(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def execute(self, parameter):
+    def execute(self, param):
         """
-        Called by the transition.
+        Called by the transition, override for specific behaviour.
 
-        :param param: The parameter for this action.
+        Args:
+            param: The parameter for this action.
+
+        Raises:
+            Not implemented error for abstract class.
         """
         raise NotImplementedError

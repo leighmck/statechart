@@ -50,9 +50,10 @@ class Metadata:
         Activates a state for this Metadata. If the state is not already
         active, it will be added and a new StateRuntimeData created.
 
-        :param state: State to activate.
+        Args:
+            state (State): State to activate.
         """
-        self._logger.info('activate %s', state.name)
+        self._logger.info('Activate %s', state.name)
         if not (state in self.active_states):
             self.active_states[state] = StateRuntimeData()
 
@@ -70,9 +71,10 @@ class Metadata:
         """
         Deactivates the state and frees the allocated resources.
 
-        :param state: State to deactivate.
+        Args:
+            state (State): State to dactivate.
         """
-        self._logger.info('deactivate %s', state.name)
+        self._logger.info('Deactivate %s', state.name)
 
         if state in self.active_states:
             data = self.active_states[state]
@@ -85,51 +87,69 @@ class Metadata:
         Get the last active state when the history state context was
         deactivated.
 
-        :param history_state: History state to lookup
-        :return: The most recent state remembered by the specified history
-            state.
+        Args:
+            history_state (HistoryState): History state to lookup
+
+        Returns:
+            The most recent state remembered by the specified history state.
         """
-        self._logger.info('get history state %s', history_state.name)
+        self._logger.info('Get history state %s', history_state.name)
         return self.history_states[history_state]
 
     def has_history_info(self, history_state):
         """
         Check if the active state runtime has history info to restore.
 
-        :param history_state: History state to lookup
-        :return: True if the history state has info of a state to be restored.
+        Args:
+            history_state (HistoryState): History state to lookup.
+
+        Returns:
+            True if the history state has info of a state to be restored.
         """
         status = False
 
         if history_state in self.history_states:
             status = True
 
-        self._logger.info('has history info %s? %s', history_state.name, str(status))
+        self._logger.info('Has history info %s? %s', history_state.name, str(status))
         return status
 
     def is_active(self, state):
         """
         Checks whether the given state is active or not.
 
-        :param state: State to check.
-        :return: True is the state is active.
+        Args:
+            state (State): State to check.
+
+        Returns:
+            True if the state is active.
         """
         status = False
 
         if state in self.active_states:
             status = True
 
-        self._logger.info('is %s active? %s', state.name, str(status))
+        self._logger.info('Is %s active? %s', state.name, str(status))
         return status
 
     def reset(self):
         """Resets the metadata object for reuse."""
-        self._logger.info('reset active states & history')
+        self._logger.info('Reset active states & history')
         self.active_states.clear()
         self.history_states.clear()
 
     def store_history_info(self, history_state, actual_state):
-        self._logger.info('store history state %s for actual state %s', history_state.name, actual_state.name)
+        """"
+        Store history for history state when leaving context.
+
+        Args:
+            history_state (HistoryState): History state to store.
+                When this state's context is reactivated, the history state
+                can be restored in order to recall the actual state to recall.
+            actual_state: (State): State to recall.
+        """
+        self._logger.info('Store history state %s for actual state %s',
+                          history_state.name, actual_state.name)
         self.history_states[history_state] = actual_state
 
 

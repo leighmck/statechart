@@ -17,14 +17,29 @@
 
 import logging
 
+
 class Event:
     """
     An event is a specification of a type of observable occurrence. The
     occurrence that generates an event instance is assumed to take place at an
     instant in time with no duration.
 
-    :param name: An identifier for the event.
-    :param param: The parameter for this event.
+    Example:
+        Create an instance of an event:
+        my_event = Event(name='my event', param=event_data)
+
+        Add the event trigger to a transition:
+        Transition(name='e', start=a, end=b, event=my_event)
+
+        Fire the event:
+        statechart.dispatch(event=a_to_b)
+
+        If the current state has an outgoing transition associated
+        with the event, it may be fired if the guard condition allows.
+
+    Args:
+        name (str): An identifier for the event.
+        param: The parameter for this event.
     """
 
     def __init__(self, name, param):
@@ -36,8 +51,11 @@ class Event:
         """
         Determine if an event is equal to this event by comparing names.
 
-        :param event: Event to compare.
-        :return: True if events are equal.
+        Args:
+            event (Event): Event to compare.
+
+        Returns:
+            True if events are equal.
         """
         if event is None:
             return False
@@ -48,14 +66,10 @@ class Event:
         """
         Determine if an event is not equal to this event by comparing names.
 
-        :param event:
-        :return: True if events are not equal.
+        Args:
+            event (Event): Event to compare.
+
+        Returns:
+            True if events are not equal.
         """
         return not self.__eq__(event)
-
-    def __str__(self):
-        """
-        Returns a string representation the event.
-        :return: "Event: {'name'}" including the instance's name.
-        """
-        return "Event: {name}".format(name=str(self.name))

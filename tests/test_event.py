@@ -38,6 +38,3 @@ class TestEvent:
     def test_events_not_equal(self, event):
         diff_event = Event(name='diff_event', param='my_param')
         assert diff_event is not event
-
-    def test_event_str(self, event):
-        assert str(event) == 'Event: event'

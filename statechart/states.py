@@ -46,6 +46,11 @@ class State:
         event triggers, actions or guard conditions.
         Transition(name='a to b', start=a, end=b)
 
+    Note:
+        Do not dispatch a synchronous event within the action (enter, do or
+        exit) functions. If you need to dispatch an event, do so using the
+        async_dispatch function of the statechart.
+
     Raises:
         RuntimeError: If the parent context is invalid.
             Only a state chart can have no parent context.
