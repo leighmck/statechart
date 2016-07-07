@@ -47,11 +47,11 @@ class BottomStateB(State):
 
     def entry(self, param):
         super().entry(param=param)
-        self.statechart.metadata.root_scope['top_int'] = 2
+        self.scope['top_int'] = 2
 
 
-class TestRootScope:
-    def test_root_scope(self):
+class TestScope:
+    def test_scope(self):
         """
         statechart:
 
@@ -99,7 +99,13 @@ class TestRootScope:
         statechart.start()
 
         assert statechart.metadata.is_active(bottom_a)
-        assert dict(statechart.metadata.root_scope) == {
+        assert dict(top_state.scope) == {
+            'top_int': 1,
+            'top_str': 'top',
+        }
+
+        # Assert the bottom a scope includes all parent scopes as well as it's own.
+        assert bottom_a.scope == {
             'top_int': 1,
             'top_str': 'top',
             'middle_int': 5,
@@ -116,7 +122,16 @@ class TestRootScope:
         statechart.dispatch(event=AB)
 
         assert statechart.metadata.is_active(bottom_b)
-        assert statechart.metadata.root_scope == {
+
+        # Assert the top state's scope was mutated by the bottom_b entry action.
+        assert top_state.scope == {
+            'top_int': 2,
+            'top_str': 'top',
+        }
+
+        # Assert the bottom b scope includes all parent scopes as well as it's own.
+        # Also ensure there is no carry-over from deactivated state a.
+        assert bottom_b.scope == {
             'top_int': 2,
             'top_str': 'top',
             'middle_int': 5,
@@ -124,4 +139,3 @@ class TestRootScope:
             'bottom_b_int': 9,
             'bottom_b_str': 'bottom b',
         }
-

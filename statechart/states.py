@@ -19,7 +19,7 @@ import asyncio
 import logging
 from collections import deque
 
-from statechart.runtime import Metadata
+from statechart.runtime import Metadata, Scope
 
 
 class State:
@@ -56,10 +56,6 @@ class State:
 
         self._logger = logging.getLogger(__name__)
 
-        # We could subclass a dict and add support for 'dot' access
-        # for improved usability?
-        self._scope = {}
-
         """ Context can be null only for the statechart """
         if context is None and (not isinstance(self, Statechart)):
             raise RuntimeError("Context cannot be null")
@@ -69,6 +65,10 @@ class State:
 
         """ Recursively move up to get the statechart object """
         if parent is not None:
+
+            # Create a new child scope subcontext to existing scopes.
+            self._scope = context.scope.new_child()
+
             while 1:
                 if isinstance(parent, Statechart):
                     break
@@ -131,7 +131,6 @@ class State:
                 which triggered the deactivation of this state.
         """
         self._logger.info('Exit action for %s', self.name)
-
 
     def add_transition(self, transition):
         """Add a transition from this state.
@@ -459,6 +458,8 @@ class Statechart(Context):
     def __init__(self, name, param):
         Context.__init__(self, name=name, context=None)
         self._logger = logging.getLogger(__name__)
+        self._scope = Scope()
+
         self.event_queue = deque([])
         self.param = param
         self.metadata = Metadata()
