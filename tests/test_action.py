@@ -20,7 +20,7 @@ from statechart import Action
 
 
 class MyAction(Action):
-    def execute(self, param):
+    def execute(self, event):
         pass
 
 
@@ -35,4 +35,4 @@ class TestAction:
             Action()
 
     def test_execute_action(self, my_action):
-        my_action.execute(None)
+        my_action.execute(event=None)

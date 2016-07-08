@@ -20,12 +20,12 @@ import abc
 
 class Action(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def execute(self, param):
+    def execute(self, event):
         """
         Called by the transition, override for specific behaviour.
 
         Args:
-            param: The parameter for this action.
+            event: The event which triggered this action.
 
         Raises:
             Not implemented error for abstract class.

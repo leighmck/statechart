@@ -104,7 +104,7 @@ class Transition:
             self.activate.append(end_states[i])
             i += 1
 
-    def execute(self, metadata, event, param):
+    def execute(self, metadata, event):
         """
         Attempt to execute the transition.
         Evaluate if the transition is allowed by checking the guard condition.
@@ -113,7 +113,6 @@ class Transition:
 
         :param metadata: The metadata data object.
         :param event: The event that fires the transition.
-        :param param: The parameter for this transition.
         :return: True if the transition was executed.
         """
         self._logger.info('execute %s', self.name)
@@ -126,7 +125,7 @@ class Transition:
             self._logger.info('transition not triggered by event %s', event)
             return False
 
-        if self.guard and not self.guard.check(metadata, param):
+        if self.guard and not self.guard.check(metadata, event):
             self._logger.info('transition blocked by guard condition %s', event)
             return False
 
@@ -134,13 +133,13 @@ class Transition:
         metadata.transition = self
 
         for state in self.deactivate:
-            state.deactivate(metadata, param)
+            state.deactivate(metadata, event)
 
         if self.action:
-            self.action.execute(param)
+            self.action.execute(event)
 
         for state in self.activate:
-            state.activate(metadata, param)
+            state.activate(metadata, event)
 
         metadata.transition = None
         metadata.event = None
@@ -169,7 +168,7 @@ class InternalTransition(Transition):
         self.deactivate.clear()
         self.activate.clear()
 
-    def execute(self, metadata, event, param):
+    def execute(self, metadata, event):
         """
         Attempt to execute the transition.
         Evaluate if the transition is allowed by checking the guard condition.
@@ -177,16 +176,15 @@ class InternalTransition(Transition):
 
         :param metadata: The metadata data object.
         :param event: The event that fires the transition.
-        :param param: The parameter for this transition.
         :return: True if the transition was executed.
         """
         if self.event and event != self.event:
             return False
 
-        if self.guard and not self.guard.check(metadata, param):
+        if self.guard and not self.guard.check(metadata, event):
             return False
 
         if self.action:
-            self.action.execute(param)
+            self.action.execute(event)
 
         return True

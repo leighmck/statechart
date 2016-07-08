@@ -24,7 +24,7 @@ class ActionSpy(Action):
     def __init__(self):
         self.executed = False
 
-    def execute(self, param):
+    def execute(self, event):
         self.executed = True
 
 
@@ -35,24 +35,19 @@ class StateSpy(State):
         self.do_executed = False
         self.exit_executed = False
 
-    def entry(self, param):
+    def entry(self, event):
         self.entry_executed = True
 
-    def do(self, param):
+    def do(self, event):
         self.do_executed = True
 
-    def exit(self, param):
+    def exit(self, event):
         self.exit_executed = True
-
-
-class MockParam(object):
-    def __init__(self):
-        self.path = str()
 
 
 @pytest.fixture
 def empty_statechart():
-    statechart = Statechart(name='statechart', param=0)
+    statechart = Statechart(name='statechart')
     return statechart
 
 
@@ -94,7 +89,7 @@ class TestInternalTransition:
         Transition(name='name', start=initial_state,
                    end=default_state)
 
-        internal_event = Event(name='internal-event', param='my-param')
+        internal_event = Event(name='internal-event')
         internal_action = ActionSpy()
         InternalTransition(name='internal',
                            state=default_state,

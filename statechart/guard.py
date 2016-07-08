@@ -29,16 +29,16 @@ class Guard(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def check(self, param):
+    def check(self, event):
         """
         Called by the transition, override for specific behaviour
 
         Args:
-            param: The parameter for this guard.
+            event: The event which fired the transition associated this guard.
 
         Note:
             Checking a guard should not have any side effects, therefore don't
-            set param data.
+            mutate event parameter data.
             The evaluation must always be a boolean expression.
 
         Returns:

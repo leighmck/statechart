@@ -25,7 +25,7 @@ class ActionSpy(Action):
     def __init__(self):
         self.executed = False
 
-    def execute(self, param):
+    def execute(self, event):
         self.executed = True
 
 
@@ -36,7 +36,7 @@ class StateSpy(State):
         self.metadata = None
         self.event = None
 
-    def dispatch(self, metadata, event, param):
+    def dispatch(self, metadata, event):
         self.dispatch_called = True
         self.metadata = metadata
         self.event = event
@@ -45,20 +45,20 @@ class StateSpy(State):
 
 class TestStatechart:
     def test_create_statechart(self):
-        Statechart(name='statechart', param=0)
+        Statechart(name='statechart')
 
     def test_start(self):
-        statechart = Statechart(name='statechart', param=0)
+        statechart = Statechart(name='statechart')
         initial_state = InitialState(name='initial', context=statechart)
         statechart.start()
         assert statechart.initial_state is initial_state
 
     def test_dispatch(self):
-        statechart = Statechart(name='statechart', param=0)
+        statechart = Statechart(name='statechart')
         initial_state = InitialState(name='initial', context=statechart)
         default_state = StateSpy(name='default', context=statechart)
         next_state = State(name='next', context=statechart)
-        test_event = Event(name='test_event', param=123)
+        test_event = Event(name='test_event')
         Transition('default_transition', start=initial_state,
                    end=default_state)
         Transition(name='test_transition', start=default_state, end=next_state,
@@ -69,7 +69,7 @@ class TestStatechart:
         assert default_state.event == test_event
 
     def test_add_transition(self):
-        statechart = Statechart(name='statechart', param=0)
+        statechart = Statechart(name='statechart')
         initial_state = InitialState(name='initial', context=statechart)
 
         with pytest.raises(RuntimeError):
@@ -79,7 +79,7 @@ class TestStatechart:
 
 class TestState:
     def test_create_state(self):
-        statechart = Statechart(name='statechart', param=0)
+        statechart = Statechart(name='statechart')
         State(name='anon', context=statechart)
 
     def test_create_state_without_parent(self):
@@ -87,7 +87,7 @@ class TestState:
             State(name='anon', context=None)
 
     def test_add_transition(self):
-        statechart = Statechart(name='statechart', param=0)
+        statechart = Statechart(name='statechart')
         initial_state = InitialState(name='initial', context=statechart)
         default_state = State(name='default', context=statechart)
 
@@ -97,7 +97,7 @@ class TestState:
         assert default_transition in initial_state._transitions
 
     def test_activate(self):
-        statechart = Statechart(name='statechart', param=0)
+        statechart = Statechart(name='statechart')
         InitialState(name='initial', context=statechart)
         default_state = State(name='default', context=statechart)
         statechart.start()
@@ -107,7 +107,7 @@ class TestState:
         assert statechart.metadata.is_active(default_state)
 
     def test_deactivate(self):
-        statechart = Statechart(name='statechart', param=0)
+        statechart = Statechart(name='statechart')
         InitialState(name='initial', context=statechart)
         default_state = State(name='default', context=statechart)
         statechart.start()
@@ -119,7 +119,7 @@ class TestState:
         assert not statechart.metadata.is_active(default_state)
 
     def test_dispatch(self):
-        statechart = Statechart(name='statechart', param=0)
+        statechart = Statechart(name='statechart')
         initial_state = InitialState(name='initial', context=statechart)
         default_state = State(name='default', context=statechart)
         statechart.start()
@@ -129,26 +129,26 @@ class TestState:
                    event=default_trigger)
 
         assert initial_state.dispatch(metadata=statechart.metadata,
-                                      event=default_trigger, param=0)
+                                      event=default_trigger)
 
         assert statechart.metadata.is_active(default_state)
 
 
 class TestFinalState:
     def test_add_transition(self):
-        statechart = Statechart(name='statechart', param=0)
+        statechart = Statechart(name='statechart')
         final_state = FinalState(name='final', context=statechart)
 
         with pytest.raises(RuntimeError):
             Transition(name='final', start=final_state, end=statechart)
 
     def test_dispatch(self):
-        statechart = Statechart(name='statechart', param=0)
+        statechart = Statechart(name='statechart')
         final_state = FinalState(name='final', context=statechart)
-        final_trigger = Event(name='final_trigger', param=0)
+        final_trigger = Event(name='final_trigger')
         with pytest.raises(RuntimeError):
             final_state.dispatch(metadata=statechart.metadata,
-                                 event=final_trigger, param=0)
+                                 event=final_trigger)
 
 
 # TODO(lam) Add test with final states - state shouldn't dispatch default
@@ -196,7 +196,7 @@ class TestConcurrentState:
         |                                                |
         --------------------------------------------------
         """
-        statechart = Statechart(name='statechart', param=0)
+        statechart = Statechart(name='statechart')
 
         start_state = InitialState(name='start_state', context=statechart)
         keyboard = ConcurrentState(name='keyboard', context=statechart)
@@ -207,7 +207,7 @@ class TestConcurrentState:
                                          context=caps_lock)
         caps_lock_on = State(name='caps_lock_on', context=caps_lock)
         caps_lock_off = State(name='caps_lock_off', context=caps_lock)
-        caps_lock_pressed = Event(name='caps_lock_pressed', param=None)
+        caps_lock_pressed = Event(name='caps_lock_pressed')
         Transition(name='caps_lock_default_off', start=caps_lock_initial,
                    end=caps_lock_off)
         Transition(name='caps_lock_on', start=caps_lock_on, end=caps_lock_off,
@@ -220,7 +220,7 @@ class TestConcurrentState:
                                         context=num_lock)
         num_lock_on = State(name='num_lock_on', context=num_lock)
         num_lock_off = State(name='num_lock_off', context=num_lock)
-        num_lock_pressed = Event(name='num_lock_pressed', param=None)
+        num_lock_pressed = Event(name='num_lock_pressed')
         Transition(name='num_lock_default_off', start=num_lock_initial,
                    end=num_lock_off)
         Transition(name='num_lock_on', start=num_lock_on, end=num_lock_off,
@@ -233,7 +233,7 @@ class TestConcurrentState:
                                            context=scroll_lock)
         scroll_lock_on = State(name='scroll_lock_on', context=scroll_lock)
         scroll_lock_off = State(name='scroll_lock_off', context=scroll_lock)
-        scroll_lock_pressed = Event(name='scroll_lock_pressed', param=None)
+        scroll_lock_pressed = Event(name='scroll_lock_pressed')
         Transition(name='scroll_lock_default_off', start=scroll_lock_initial,
                    end=scroll_lock_off)
         Transition(name='scroll_lock_on', start=scroll_lock_on,
@@ -281,7 +281,7 @@ class TestCompositeState:
             Transition(name='sub_cd', start=self.state_a, end=self.state_b, event=self.sub_a_to_b)
 
     def test_submachines(self):
-        statechart = Statechart(name='statechart', param=0)
+        statechart = Statechart(name='statechart')
 
         init = InitialState(name='init a', context=statechart)
         top_a = self.Submachine('top a', statechart)

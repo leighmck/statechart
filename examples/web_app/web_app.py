@@ -43,7 +43,7 @@ from statechart import CompositeState, Event, InitialState, State, Statechart, T
     """
 
 # Top level states
-statechart = Statechart(name='statecart', param=0)
+statechart = Statechart(name='statecart')
 csa = CompositeState(name='csa', context=statechart)
 csb = CompositeState(name='csb', context=csa)
 csc = CompositeState(name='csc', context=statechart)

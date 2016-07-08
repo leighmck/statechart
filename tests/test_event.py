@@ -21,12 +21,12 @@ from statechart import Event
 
 @pytest.fixture
 def event():
-    return Event(name='event', param=0)
+    return Event(name='event')
 
 
 class TestEvent:
     def test_create_event(self):
-        Event(name='event', param=0)
+        Event(name='event')
 
     def test_events_equal(self, event):
         event = event
@@ -36,5 +36,5 @@ class TestEvent:
         assert event is not None
 
     def test_events_not_equal(self, event):
-        diff_event = Event(name='diff_event', param='my_param')
+        diff_event = Event(name='diff_event')
         assert diff_event is not event

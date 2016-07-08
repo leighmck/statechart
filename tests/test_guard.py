@@ -16,25 +16,22 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import pytest
-from statechart import Guard
+from statechart import Guard, KwEvent
 
 
 class GreaterThanZero(Guard):
-    def check(self, metadata, param):
-        return param > 0
-
-
-class MockParam(object):
-    def __init__(self):
-        self.path = str()
-
+    def check(self, event):
+        if 'value' in event.kwargs and event.kwargs['value'] > 0:
+            return True
+        else:
+            return False
 
 class TestGuard:
     def test_abstract_instantiation_throws(self):
         with pytest.raises(TypeError):
             Guard()
 
-    @pytest.mark.parametrize("param, expected", [(0, False), (1, True)])
-    def test_guard_check(self, param, expected):
+    @pytest.mark.parametrize("event, expected", [(KwEvent(name='a', value=0), False), (KwEvent(name='a', value=1), True)])
+    def test_guard_check(self, event, expected):
         guard = GreaterThanZero()
-        assert guard.check(None, param) == expected
+        assert guard.check(event) == expected

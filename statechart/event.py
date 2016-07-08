@@ -26,25 +26,23 @@ class Event:
 
     Example:
         Create an instance of an event:
-        my_event = Event(name='my event', param=event_data)
+        my_event = Event(name='my event')
 
         Add the event trigger to a transition:
         Transition(name='e', start=a, end=b, event=my_event)
 
         Fire the event:
-        statechart.dispatch(event=a_to_b)
+        statechart.dispatch(event=my_event)
 
         If the current state has an outgoing transition associated
         with the event, it may be fired if the guard condition allows.
 
     Args:
         name (str): An identifier for the event.
-        param: The parameter for this event.
     """
 
-    def __init__(self, name, param):
+    def __init__(self, name):
         self.name = name
-        self.param = param
         self._logger = logging.getLogger(__name__)
 
     def __eq__(self, event):
@@ -73,3 +71,35 @@ class Event:
             True if events are not equal.
         """
         return not self.__eq__(event)
+
+
+class KwEvent(Event):
+    """
+    Extension of the Event base class to facilitate passing kwargs with event.
+
+    When an event is fired, it's data is made available to transition guard and
+    actions. If the transition is executed the event data is also made
+    available to state entry, do and exit actions.
+
+    Generally, specialised Event classes should be defined to define the data
+    structure as actions & guards need to unpack it.
+
+    Example:
+        Create an instance of an event:
+        my_event = Event(name='my event', a=1, b='2', c=[])
+
+        Add the event trigger to a transition:
+        Transition(name='e', start=a, end=b, event=my_event)
+
+        Fire the event:
+        statechart.dispatch(event=my_event)
+
+    Args:
+        name (str): An identifier for the event.
+        **kwargs: Arbitrary keyword arguments.
+    """
+
+    def __init__(self, name, **kwargs):
+        Event.__init__(self, name=name)
+        self.kwargs = kwargs
+        self._logger = logging.getLogger(__name__)

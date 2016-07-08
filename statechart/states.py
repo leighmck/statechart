@@ -36,7 +36,7 @@ class State:
 
     Examples:
         * First create the parent context
-        statechart = Statechart(name='statechart', param=0)
+        statechart = Statechart(name='statechart')
 
         * Then create the states
         a = State(name='a', context=statechart)
@@ -94,7 +94,7 @@ class State:
     def scope(self):
         return self._scope
 
-    def entry(self, param):
+    def entry(self, event):
         """
         An optional action that is executed whenever this state is
         entered, regardless of the transition taken to reach the state. If
@@ -102,12 +102,11 @@ class State:
         internal activity or transitions performed within the state.
 
         Args:
-            param: The parameter for this action. Comes from the transition
-                which triggered the activation of this state.
+            event: Event which led to the transition into this state.
         """
         self._logger.info('Entry action for %s', self.name)
 
-    def do(self, param):
+    def do(self, event):
         """
         An optional action that is executed whilst this state is active.
         The execution starts after this state is entered, and stops either by
@@ -118,12 +117,11 @@ class State:
         this state is deactivated it will be cancelled.
 
         Args:
-            param: The parameter for this action. Comes from the transition
-                which triggered the activation of this state.
+            event: Event which led to the transition into this state.
         """
         self._logger.info('Do action for %s', self.name)
 
-    def exit(self, param):
+    def exit(self, event):
         """
         An optional action that is executed upon deactivation of this state
         regardless of which transition was taken out of the state. If defined,
@@ -132,8 +130,7 @@ class State:
         Initiates cancellation of the state do action if it is still running.
 
         Args:
-            param: The parameter for this action. Comes from the transition
-                which triggered the deactivation of this state.
+            event: Event which led to the transition into this state.
         """
         self._logger.info('Exit action for %s', self.name)
 
@@ -157,14 +154,16 @@ class State:
         else:
             self._transitions.append(transition)
 
-    def activate(self, metadata, param):
+    def activate(self, metadata, event):
         """
         Activate the state.
 
-        :param metadata: Statechart metadata data.
-        :param param: Transition parameter passed to state entry and do
-            actions.
-        :return: True if state activated, False if already active.
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            event: Event which led to the transition into this state.
+
+        Returns:
+            True if the state was activated.
         """
         self._logger.info('activate %s', self.name)
 
@@ -174,40 +173,45 @@ class State:
             metadata.activate(self)
 
             if self.entry:
-                self.entry(param)
+                self.entry(event)
 
             if self.do:
-                self.do(param)
+                self.do(event)
 
             activated = True
 
         return activated
 
-    def deactivate(self, metadata, param):
+    def deactivate(self, metadata, event):
         """
         Deactivate the state.
 
-        :param metadata: Statechart metadata data.
-        :param param: Transition parameter passed to state exit action.
-        :return: True if state deactivated, False if already inactive.
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            event: Event which led to the transition out of this state.
+
+        Returns:
+            True if state deactivated, False if already inactive.
         """
         self._logger.info('deactivate %s', self.name)
 
         if metadata.is_active(self):
 
             if self.exit:
-                self.exit(param)
+                self.exit(event)
 
             metadata.deactivate(self)
 
-    def dispatch(self, metadata, event, param):
+    def dispatch(self, metadata, event):
         """
         Dispatch transition.
 
-        :param metadata: Statechart metadata data.
-        :param event: Transition event trigger.
-        :param param: Transition parameter passed to transition action.
-        :return: True if transition executed, False if transition not allowed,
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            event: Transition event trigger.
+
+        Returns:
+            True if transition executed, False if transition not allowed,
             due to mismatched event trigger or failed guard condition.
         """
         self._logger.info('dispatch %s', event)
@@ -215,7 +219,7 @@ class State:
         status = False
 
         for transition in self._transitions:
-            if transition.execute(metadata, event, param):
+            if transition.execute(metadata, event):
                 status = True
                 break
 
@@ -227,8 +231,9 @@ class Context(State):
     Domain of the state. Needed for setting up the hierarchy. This class
     needn't be instantiated directly.
 
-    :param name: An identifier for the model element.
-    :param context: The parent context that contains this state.
+        Args:
+            name (str): An identifier for the model element.
+            context (Context): The parent context that contains this state.
     """
 
     def __init__(self, name, context):
@@ -244,8 +249,9 @@ class FinalState(State):
 
     A final state cannot have transitions or dispatch other transitions.
 
-    :param name: An identifier for the model element.
-    :param context: The parent context that contains this state.
+    Args:
+        name (str): An identifier for the model element.
+        context (Context): The parent context that contains this state.
     """
 
     def __init__(self, name, context):
@@ -256,7 +262,7 @@ class FinalState(State):
         raise RuntimeError(
             "Cannot add a transition from the final state")
 
-    def dispatch(self, metadata, event, param):
+    def dispatch(self, metadata, event):
         raise RuntimeError("Cannot dispatch an event to the final state")
 
 
@@ -264,6 +270,10 @@ class ConcurrentState(Context):
     """
     A concurrent state is a state that contains composite state regions,
     activated concurrently.
+
+    Args:
+        name (str): An identifier for the model element.
+        context (Context): The parent context that contains this state.
     """
 
     def __init__(self, name, context):
@@ -283,10 +293,12 @@ class ConcurrentState(Context):
         """
         Activate the state.
 
-        :param metadata: Statechart metadata data.
-        :param param: Transition parameter passed to state entry and do
-            actions.
-        :return: True if state activated, False if already active.
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            event: Event which led to the transition into this state.
+
+        Returns:
+            True if state activated, False if already active.
         """
         self._logger.info('activate %s', self.name)
 
@@ -310,9 +322,12 @@ class ConcurrentState(Context):
         """
         Deactivate child states within regions, then overall state.
 
-        :param metadata: Statechart metadata data.
-        :param param: Transition parameter passed to state exit action.
-        :return: True if state deactivated, False if already inactive.
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            event: Event which led to the transition out of this state.
+
+        Returns:
+            True if state deactivated, False if already inactive.
         """
         self._logger.info('deactivate %s', self.name)
 
@@ -322,14 +337,16 @@ class ConcurrentState(Context):
 
         Context.deactivate(self, metadata, param)
 
-    def dispatch(self, metadata, event, param):
+    def dispatch(self, metadata, event):
         """
         Dispatch transition.
 
-        :param metadata: Statechart metadata data.
-        :param event: Transition event trigger.
-        :param param: Transition parameter passed to transition action.
-        :return: True if transition executed, False if transition not allowed,
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            event: Transition event trigger.
+
+        Returns:
+            True if transition executed, False if transition not allowed,
             due to mismatched event trigger or failed guard condition.
         """
         self._logger.info('dispatch %s', event)
@@ -342,7 +359,7 @@ class ConcurrentState(Context):
 
         """ Check if any of the child regions can handle the event """
         for region in self.regions:
-            if region.dispatch(metadata, event, param):
+            if region.dispatch(metadata, event):
                 dispatched = True
 
         if dispatched:
@@ -350,7 +367,7 @@ class ConcurrentState(Context):
 
         """ Check if this state can handle the event by itself """
         for transition in self._transitions:
-            if transition.execute(metadata, event, param):
+            if transition.execute(metadata, event):
                 dispatched = True
                 break
 
@@ -362,8 +379,9 @@ class CompositeState(Context):
     A composite state is a state that contains other state vertices (states,
     pseudostates, etc.).
 
-    :param name: An identifier for the model element.
-    :param context: The parent context that contains this state.
+    Args:
+        name (str): An identifier for the model element.
+        context (Context): The parent context that contains this state.
     """
 
     def __init__(self, name, context):
@@ -374,26 +392,26 @@ class CompositeState(Context):
         if isinstance(context, ConcurrentState):
             context.add_region(self)
 
-    def activate(self, metadata, param):
+    def activate(self, metadata, event):
         """
         Activate the state.
 
         If the transition being activated leads to this state, activate
         the initial state.
 
-        :param metadata: Statechart metadata data.
-        :param param: Transition parameter passed to state entry and do
-            actions.
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            event: Event which led to the transition into this state.
         """
         self._logger.info('activate %s', self.name)
 
-        Context.activate(self, metadata, param)
+        Context.activate(self, metadata, event)
 
         if metadata.transition and metadata.transition.end is self:
             self._logger.info('activate initial state %s', self.initial_state.name)
-            self.initial_state.activate(metadata=metadata, param=param)
+            self.initial_state.activate(metadata=metadata, event=event)
 
-    def deactivate(self, metadata, param):
+    def deactivate(self, metadata, event):
         """
         Deactivate the state.
 
@@ -401,8 +419,9 @@ class CompositeState(Context):
         state in history so it can be restored once the history state is
         activated.
 
-        :param metadata: Statechart metadata data.
-        :param param: Transition parameter passed to state exit action.
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            event: Event which led to the transition out of this state.
         """
         self._logger.info('deactivate %s', self.name)
 
@@ -412,18 +431,20 @@ class CompositeState(Context):
             metadata.store_history_info(self.history, state_runtime_data.current_state)
 
         if metadata.is_active(state=state_runtime_data.current_state):
-            state_runtime_data.current_state.deactivate(metadata=metadata, param=param)
+            state_runtime_data.current_state.deactivate(metadata=metadata, event=event)
 
-        Context.deactivate(self, metadata, param)
+        Context.deactivate(self, metadata, event)
 
-    def dispatch(self, metadata, event, param):
+    def dispatch(self, metadata, event):
         """
         Dispatch transition.
 
-        :param metadata: Statechart metadata data.
-        :param event: Transition event trigger.
-        :param param: Transition parameter passed to transition action.
-        :return: True if transition executed, False if transition not allowed,
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            event: Transition event trigger.
+
+        Returns:
+            True if transition executed, False if transition not allowed,
             due to mismatched event trigger or failed guard condition.
         """
         self._logger.info('dispatch %s', event)
@@ -436,16 +457,15 @@ class CompositeState(Context):
         data = metadata.active_states[self]
         if data.current_state is None and self.initial_state:
             metadata.activate(self.initial_state)
-            data.current_state.activate(metadata, param)
+            data.current_state.activate(metadata, event)
 
-        if data.current_state and data.current_state.dispatch(metadata, event,
-                                                              param):
+        if data.current_state and data.current_state.dispatch(metadata, event):
             return True
 
         # Since none of the child states can handle the event, let this state
         # try handling the event.
         for transition in self._transitions:
-            if transition.execute(metadata, event, param):
+            if transition.execute(metadata, event):
                 return True
 
         return False
@@ -456,17 +476,16 @@ class Statechart(Context):
     The main entry point for using the statechart framework. Contains all
     necessary methods for delegating incoming events to the substates.
 
-    :param name: An identifier for the model element.
-    :param param: The parent context that contains this state.
+    Args:
+        name (str): An identifier for the model element.
     """
 
-    def __init__(self, name, param):
+    def __init__(self, name):
         Context.__init__(self, name=name, context=None)
         self._logger = logging.getLogger(__name__)
         self._scope = Scope()
 
         self.event_queue = deque([])
-        self.param = param
         self.metadata = Metadata()
 
     def start(self):
@@ -502,7 +521,7 @@ class Statechart(Context):
         """
         self._logger.info('dispatch event %s', event)
         current_state = self.metadata.active_states[self].current_state
-        return current_state.dispatch(self.metadata, event, self.param)
+        return current_state.dispatch(self.metadata, event)
 
     def add_transition(self, transition):
         raise RuntimeError("Cannot add transition to a statechart")

@@ -35,13 +35,13 @@ class PseudoState(State):
         State.__init__(self, name=name, context=context)
         self._logger = logging.getLogger(__name__)
 
-    def activate(self, metadata, param):
+    def activate(self, metadata, event):
         """
         Activate the state.
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            param: Transition parameter passed to state entry and do actions.
+            event: Event which led to the transition into this state.
 
         Returns:
             True if the state was activated.
@@ -50,26 +50,24 @@ class PseudoState(State):
         metadata.activate(self)
 
         if self.entry:
-            self.entry(param=param)
+            self.entry(event=event)
 
         return True
 
-    def dispatch(self, metadata, event, param):
+    def dispatch(self, metadata, event):
         """
         Dispatch transition.
 
         Args:
             metadata (Metadata): Statechart metadata data.
             event (Event): Transition event trigger.
-            param: Transition parameter passed to transition action.
 
         Returns:
             True if the transition was executed, False if transition was not
             triggered for this event or if the guard condition failed.
         """
         self._logger.info('dispatch %s', self.name)
-        return State.dispatch(self, metadata=metadata, event=event,
-                              param=param)
+        return State.dispatch(self, metadata=metadata, event=event)
 
 
 class InitialState(PseudoState):
@@ -91,20 +89,20 @@ class InitialState(PseudoState):
         else:
             self.context.initial_state = self
 
-    def activate(self, metadata, param):
+    def activate(self, metadata, event):
         """
         Activate the state and dispatch transition to the default state of the
         composite state.
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            param: Transition parameter passed to state entry and do actions.
+            event: Event which led to the transition into this state.
 
         Returns:
             True if the state was activated.
         """
         self._logger.info('activate %s', self.name)
-        self.dispatch(metadata=metadata, event=None, param=param)
+        self.dispatch(metadata=metadata, event=None)
         return True
 
 
@@ -137,14 +135,14 @@ class ShallowHistoryState(PseudoState):
         else:
             raise RuntimeError("Parent not a composite state")
 
-    def activate(self, metadata, param):
+    def activate(self, metadata, event):
         """
         Activate the state and dispatch transition to the default state of the
         composite state.
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            param: Transition parameter passed to state entry and do actions.
+            event: Event which led to the transition into this state.
 
         Returns:
             True if the state was activated.
@@ -161,8 +159,8 @@ class ShallowHistoryState(PseudoState):
             metadata.transition.start = self
             metadata.transition.end = state
 
-            state.activate(metadata=metadata, param=param)
+            state.activate(metadata=metadata, event=event)
         else:
-            self.dispatch(metadata=metadata, event=None, param=param)
+            self.dispatch(metadata=metadata, event=None)
 
         return True
