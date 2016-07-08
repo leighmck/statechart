@@ -112,11 +112,10 @@ class ShallowHistoryState(PseudoState):
         Shallow history is a pseudo state representing the most recent
         substate of a submachine.
 
-        A submachine can have at most one
-        shallow history. A transition with a history pseudo state as
-        target is equivalent to a transition with the most recent substate
-        as target. And very importantly, only one transition may originate
-        from the history.
+        A submachine can have at most one shallow history state. A transition
+        with a history pseudo state as target is equivalent to a transition
+        with the most recent substate as target. And very importantly, only
+        one transition may originate from the history.
 
         Args:
             name (str): An identifier for the model element.

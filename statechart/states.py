@@ -231,9 +231,9 @@ class Context(State):
     Domain of the state. Needed for setting up the hierarchy. This class
     needn't be instantiated directly.
 
-        Args:
-            name (str): An identifier for the model element.
-            context (Context): The parent context that contains this state.
+    Args:
+        name (str): An identifier for the model element.
+        context (Context): The parent context that contains this state.
     """
 
     def __init__(self, name, context):
@@ -507,7 +507,8 @@ class Statechart(Context):
 
         Adds event to queue for future processing.
 
-        :param event: Transition event trigger.
+        Args:
+            event: Transition event trigger.
         """
         self._logger.info('handle async event %s', event)
         self.event_queue.append(event)
@@ -516,8 +517,11 @@ class Statechart(Context):
         """
         Calls the dispatch method on the current state.
 
-        :param event: Transition event trigger.
-        :return: True if transition executed.
+        Args:
+            event: Transition event trigger.
+
+        Returns:
+            True if transition executed.
         """
         self._logger.info('dispatch event %s', event)
         current_state = self.metadata.active_states[self].current_state
@@ -531,7 +535,7 @@ class Statechart(Context):
         """
         Run asyncio statechart event loop.
 
-        Dispatches events in queue in FIDO order.
+        Dispatches events in queue in FIFO order.
         """
         while True:
             if len(self.event_queue):

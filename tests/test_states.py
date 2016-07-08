@@ -124,7 +124,7 @@ class TestState:
         default_state = State(name='default', context=statechart)
         statechart.start()
 
-        default_trigger = Event('default_trigger', 0)
+        default_trigger = Event('default_trigger')
         Transition(name='default', start=initial_state, end=default_state,
                    event=default_trigger)
 
@@ -276,7 +276,7 @@ class TestCompositeState:
             self.state_a = State(name='sub state a', context=self)
             self.state_b = State(name='sub state b', context=self)
 
-            self.sub_a_to_b = Event('sub cd', None)
+            self.sub_a_to_b = Event('sub cd')
             Transition(name='init', start=init, end=self.state_a)
             Transition(name='sub_cd', start=self.state_a, end=self.state_b, event=self.sub_a_to_b)
 
@@ -287,7 +287,7 @@ class TestCompositeState:
         top_a = self.Submachine('top a', statechart)
         top_b = self.Submachine('top b', statechart)
 
-        top_a_to_b = Event('top_ab', None)
+        top_a_to_b = Event('top_ab')
         Transition(name='init', start=init, end=top_a)
         Transition(name='init', start=top_a, end=top_b, event=top_a_to_b)
 

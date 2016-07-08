@@ -26,6 +26,20 @@ class Guard(metaclass=abc.ABCMeta):
     time, the transition is enabled, otherwise, it is disabled.
 
     Guards should be pure expressions without side effects.
+
+    Example:
+        Create a derived class of Guard:
+
+        class GreaterThanZero(Guard):
+            def check(self, event):
+                return event.value > 0
+
+        Add guard to transition:
+
+        Transition(name='e', start=a, end=b, event=my_event, guard=GreaterThanZero())
+
+        Fire the event. If the state has a transition that :
+        statechart.dispatch(event=Event(name='my event', value=10)
     """
 
     @abc.abstractmethod

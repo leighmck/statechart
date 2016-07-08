@@ -144,8 +144,8 @@ class Metadata:
 
         Args:
             history_state (HistoryState): History state to store.
-                When this state's context is reactivated, the history state
-                can be restored in order to recall the actual state to recall.
+            When this state's context is reactivated, the history state
+            can be restored in order to recall the actual state to recall.
             actual_state: (State): State to recall.
         """
         self._logger.info('Store history state %s for actual state %s',

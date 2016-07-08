@@ -26,15 +26,18 @@ class Transition:
     machine from one state configuration to another, representing the complete
     response of the state machine to a particular event instance.
 
-    :param name: An identifier for the Transition.
-    :param start: The originating state (or pseudostate) of the transition.
-    :param end: The target state (or pseudostate) that is reached when the
+    Args:
+        name (start): An identifier for the Transition.
+        start (State): The originating state (or pseudostate) of the
+            transition.
+        end (State): The target state (or pseudostate) that is reached when the
         transition is executed.
-    :param event: The event that fires the transition.
-    :param guard: A boolean predicate that  must be true for the transition to
-        be fired. It is evaluated at the time the event is dispatched.
-    :param action: An optional procedure to be performed when the transition
-       fires.
+        event (Event): The event that fires the transition.
+        guard (Guard): A boolean predicate that  must be true for the
+            transition to be fired. It is evaluated at the time the event is
+            dispatched.
+        action (Action): An optional procedure to be performed when the
+            transition fires.
     """
 
     def __init__(self, name, start, end, event=None, guard=None, action=None):
@@ -58,6 +61,16 @@ class Transition:
         start.add_transition(self)
 
     def _calculate_state_set(self, start, end):
+        """
+        Calculate all the states which must be deactivated and then activated
+        when triggering the transition.
+
+        Args:
+            start (State): The originating state (or pseudostate) of the
+                transition.
+            end (State): The target state (or pseudostate) that is reached
+                when the transition is executed.
+        """
         start_states = list()
         end_states = list()
 
@@ -111,9 +124,12 @@ class Transition:
         If the transition is allowed, deactivate source states, perform
         transition action and activate all target states.
 
-        :param metadata: The metadata data object.
-        :param event: The event that fires the transition.
-        :return: True if the transition was executed.
+        Args:
+            metadata (Metadata): The metadata data object.
+            event (Event): The event that fires the transition.
+
+        Returns:
+            True if the transition was executed.
         """
         self._logger.info('execute %s', self.name)
 
@@ -153,13 +169,18 @@ class InternalTransition(Transition):
     which it is defined. This is true even if the state machine is in a nested
     state within this state.
 
-    :param name: An identifier for the Transition.
-    :param state: The containing state.
-    :param event: The event that fires the transition.
-    :param guard: A boolean predicate that  must be true for the transition to
-        be fired. It is evaluated at the time the event is dispatched.
-    :param action: An optional procedure to be performed when the transition
-       fires.
+    Args:
+        name (start): An identifier for the Transition.
+        start (State): The originating state (or pseudostate) of the
+            transition.
+        end (State): The target state (or pseudostate) that is reached when the
+        transition is executed.
+        event (Event): The event that fires the transition.
+        guard (Guard): A boolean predicate that  must be true for the
+            transition to be fired. It is evaluated at the time the event is
+            dispatched.
+        action (Action): An optional procedure to be performed when the
+            transition fires.
     """
 
     def __init__(self, name, state, event, guard, action):
@@ -174,9 +195,12 @@ class InternalTransition(Transition):
         Evaluate if the transition is allowed by checking the guard condition.
         If the transition is allowed perform transition action.
 
-        :param metadata: The metadata data object.
-        :param event: The event that fires the transition.
-        :return: True if the transition was executed.
+        Args:
+            metadata (Metadata): The metadata data object.
+            event (Event): The event that fires the transition.
+
+        Returns:
+            True if the transition was executed.
         """
         if self.event and event != self.event:
             return False
