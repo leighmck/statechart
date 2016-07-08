@@ -41,7 +41,7 @@ class PseudoState(State):
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event: Event which led to the transition into this state.
+            event (Event): Event which led to the transition into this state.
 
         Returns:
             True if the state was activated.
@@ -96,13 +96,14 @@ class InitialState(PseudoState):
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event: Event which led to the transition into this state.
+            event (Event): Event which led to the transition into this state.
 
         Returns:
             True if the state was activated.
         """
         self._logger.info('activate %s', self.name)
         self.dispatch(metadata=metadata, event=None)
+
         return True
 
 
@@ -141,7 +142,7 @@ class ShallowHistoryState(PseudoState):
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event: Event which led to the transition into this state.
+            event (Event): Event which led to the transition into this state.
 
         Returns:
             True if the state was activated.
@@ -149,11 +150,11 @@ class ShallowHistoryState(PseudoState):
         self._logger.info('activate %s', self.name)
 
         if len(self._transitions) > 1:
-            raise RuntimeError("History state cannot have more than 1 "
-                               "transition")
+            raise RuntimeError("History state cannot have more than 1 transition")
 
         if metadata.has_history_info(self):
             state = metadata.get_history_state(self)
+
             # Setup transition to the history's target state
             metadata.transition.start = self
             metadata.transition.end = state

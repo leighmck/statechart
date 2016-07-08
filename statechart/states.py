@@ -102,7 +102,7 @@ class State:
         internal activity or transitions performed within the state.
 
         Args:
-            event: Event which led to the transition into this state.
+            event (Event): Event which led to the transition into this state.
         """
         self._logger.info('Entry action for %s', self.name)
 
@@ -117,7 +117,7 @@ class State:
         this state is deactivated it will be cancelled.
 
         Args:
-            event: Event which led to the transition into this state.
+            event (Event): Event which led to the transition into this state.
         """
         self._logger.info('Do action for %s', self.name)
 
@@ -130,7 +130,7 @@ class State:
         Initiates cancellation of the state do action if it is still running.
 
         Args:
-            event: Event which led to the transition into this state.
+            event (Event): Event which led to the transition into this state.
         """
         self._logger.info('Exit action for %s', self.name)
 
@@ -160,7 +160,7 @@ class State:
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event: Event which led to the transition into this state.
+            event (Event): Event which led to the transition into this state.
 
         Returns:
             True if the state was activated.
@@ -188,7 +188,7 @@ class State:
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event: Event which led to the transition out of this state.
+            event (Event): Event which led to the transition out of this state.
 
         Returns:
             True if state deactivated, False if already inactive.
@@ -295,7 +295,7 @@ class ConcurrentState(Context):
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event: Event which led to the transition into this state.
+            event (Event): Event which led to the transition into this state.
 
         Returns:
             True if state activated, False if already active.
@@ -324,7 +324,7 @@ class ConcurrentState(Context):
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event: Event which led to the transition out of this state.
+            event (Event): Event which led to the transition out of this state.
 
         Returns:
             True if state deactivated, False if already inactive.
@@ -401,7 +401,7 @@ class CompositeState(Context):
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event: Event which led to the transition into this state.
+            event (Event): Event which led to the transition into this state.
         """
         self._logger.info('activate %s', self.name)
 
@@ -421,7 +421,7 @@ class CompositeState(Context):
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event: Event which led to the transition out of this state.
+            event (Event): Event which led to the transition out of this state.
         """
         self._logger.info('deactivate %s', self.name)
 

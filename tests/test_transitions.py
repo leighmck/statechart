@@ -55,8 +55,7 @@ class TestTransition:
     def test_create_transition(self, empty_statechart):
         initial_state = InitialState(name='initial', context=empty_statechart)
         next_state = State(name='next', context=empty_statechart)
-        transition = Transition(name='name', start=initial_state,
-                                end=next_state)
+        transition = Transition(name='name', start=initial_state, end=next_state)
 
         # The transition should be added to the initial state's list of
         # outgoing transitions
@@ -69,8 +68,7 @@ class TestTransition:
 
     def test_create_cyclic_transition(self, empty_statechart):
         next_state = State(name='next', context=empty_statechart)
-        transition = Transition(name='name', start=next_state,
-                                end=next_state)
+        transition = Transition(name='name', start=next_state, end=next_state)
 
         # The transition should be added to the initial state's list of
         # outgoing transitions.
@@ -86,8 +84,7 @@ class TestInternalTransition:
     def test_execute(self, empty_statechart):
         initial_state = InitialState(name='initial', context=empty_statechart)
         default_state = StateSpy(name='next', context=empty_statechart)
-        Transition(name='name', start=initial_state,
-                   end=default_state)
+        Transition(name='name', start=initial_state, end=default_state)
 
         internal_event = Event(name='internal-event')
         internal_action = ActionSpy()

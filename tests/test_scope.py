@@ -15,7 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from statechart import (CompositeState, Event, InitialState, State, Statechart, Transition)
+from statechart import CompositeState, Event, InitialState, State, Statechart, Transition
 
 
 class TopState(CompositeState):
