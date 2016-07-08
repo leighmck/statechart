@@ -32,7 +32,7 @@ class TestGuard:
         with pytest.raises(TypeError):
             Guard()
 
-    @pytest.mark.parametrize("event, expected",
+    @pytest.mark.parametrize('event, expected',
                              [(KwEvent(name='a', value=0), False),
                               (KwEvent(name='a', value=1), True)])
     def test_guard_check(self, event, expected):

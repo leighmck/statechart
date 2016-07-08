@@ -23,7 +23,7 @@ from statechart.pseudostates import InitialState, ShallowHistoryState  # NOQA
 from statechart.transitions import InternalTransition, Transition  # NOQA
 
 __author__ = 'Leigh McKenzie'
-__copyright__ = "Copyright 2016, Leigh McKenzie"
+__copyright__ = 'Copyright 2016, Leigh McKenzie'
 __email__ = 'maccarav0@gmail.com'
-__license__ = "ISCL"
+__license__ = 'ISCL'
 __version__ = '0.1.0'

@@ -63,7 +63,7 @@ class State:
 
         """ Context can be null only for the statechart """
         if context is None and (not isinstance(self, Statechart)):
-            raise RuntimeError("Context cannot be null")
+            raise RuntimeError('Context cannot be null')
 
         self.context = context
         parent = context
@@ -86,7 +86,7 @@ class State:
             if isinstance(parent, Statechart):
                 self.statechart = parent
             else:
-                raise RuntimeError("Statechart not found - check hierarchy")
+                raise RuntimeError('Statechart not found - check hierarchy')
 
         self._transitions = []
 
@@ -147,7 +147,7 @@ class State:
             RuntimeError: If transition is invalid.
         """
         if transition is None:
-            raise RuntimeError("Cannot add null transition")
+            raise RuntimeError('Cannot add null transition')
 
         if transition.guard:
             self._transitions.insert(0, transition)
@@ -259,11 +259,10 @@ class FinalState(State):
         self._logger = logging.getLogger(__name__)
 
     def add_transition(self, transition):
-        raise RuntimeError(
-            "Cannot add a transition from the final state")
+        raise RuntimeError('Cannot add a transition from the final state')
 
     def dispatch(self, metadata, event):
-        raise RuntimeError("Cannot dispatch an event to the final state")
+        raise RuntimeError('Cannot dispatch an event to the final state')
 
 
 class ConcurrentState(Context):
@@ -285,9 +284,13 @@ class ConcurrentState(Context):
         """
         Add a new region to the concurrent state.
 
-        :param region: region to add.
+        Arsg:
+            region (CompositeState): Region to add.
         """
-        self.regions.append(region)
+        if isinstance(region, CompositeState):
+            self.regions.append(region)
+        else:
+            raise RuntimeError('A concurrent state can only add composite state regions')
 
     def activate(self, metadata, param):
         """
@@ -324,7 +327,7 @@ class ConcurrentState(Context):
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event (Event): Event which led to the transition out of this state.
+            event: Event which led to the transition out of this state.
 
         Returns:
             True if state deactivated, False if already inactive.
@@ -352,8 +355,7 @@ class ConcurrentState(Context):
         self._logger.info('dispatch %s', event)
 
         if not metadata.active_states[self]:
-            raise RuntimeError('Inactive composite state attempting to'
-                               'dispatch transition')
+            raise RuntimeError('Inactive composite state attempting to dispatch transition')
 
         dispatched = False
 
@@ -401,7 +403,7 @@ class CompositeState(Context):
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event (Event): Event which led to the transition into this state.
+            event: Event which led to the transition into this state.
         """
         self._logger.info('activate %s', self.name)
 
@@ -421,7 +423,7 @@ class CompositeState(Context):
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event (Event): Event which led to the transition out of this state.
+            event: Event which led to the transition out of this state.
         """
         self._logger.info('deactivate %s', self.name)
 
@@ -450,8 +452,7 @@ class CompositeState(Context):
         self._logger.info('dispatch %s', event)
 
         if not metadata.active_states[self]:
-            raise RuntimeError('Inactive composite state attempting to'
-                               'dispatch transition')
+            raise RuntimeError('Inactive composite state attempting to dispatch transition')
 
         # See if the current child state can handle the event
         data = metadata.active_states[self]
@@ -528,7 +529,7 @@ class Statechart(Context):
         return current_state.dispatch(self.metadata, event)
 
     def add_transition(self, transition):
-        raise RuntimeError("Cannot add transition to a statechart")
+        raise RuntimeError('Cannot add transition to a statechart')
 
     @asyncio.coroutine
     def async_event_loop(self):

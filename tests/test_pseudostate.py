@@ -23,7 +23,7 @@ from statechart import (CompositeState, Event, InitialState,
 
 class TestInitialState:
     def test_create_initial_state(self):
-        startchart = Statechart(name='statecart')
+        startchart = Statechart(name='statechart')
         InitialState(name='initial', context=startchart)
 
     def test_activate_initial_state(self):
@@ -39,12 +39,12 @@ class TestInitialState:
 
 class TestShallowHistoryState:
     def test_create_shallow_history_state(self):
-        startchart = Statechart(name='statecart')
+        startchart = Statechart(name='statechart')
         composite_state = CompositeState(name='composite', context=startchart)
         ShallowHistoryState(name='history', context=composite_state)
 
     def test_cannot_create_multiple_shallow_history_states(self):
-        startchart = Statechart(name='statecart')
+        startchart = Statechart(name='statechart')
         composite_state = CompositeState(name='composite', context=startchart)
 
         ShallowHistoryState(name='history', context=composite_state)
@@ -68,7 +68,7 @@ class TestShallowHistoryState:
         """
 
         # Top level states
-        statechart = Statechart(name='statecart')
+        statechart = Statechart(name='statechart')
         csa = CompositeState(name='csa', context=statechart)
         csb = CompositeState(name='csb', context=statechart)
 
@@ -139,7 +139,7 @@ class TestShallowHistoryState:
         ***************************************************
         """
         # Top level states
-        statechart = Statechart(name='statecart')
+        statechart = Statechart(name='statechart')
         csa = CompositeState(name='csa', context=statechart)
         csb = CompositeState(name='csb', context=csa)
         csc = CompositeState(name='csc', context=statechart)
@@ -223,7 +223,7 @@ class TestShallowHistoryState:
         *************************************************************
         """
         # Top level states
-        statechart = Statechart(name='statecart')
+        statechart = Statechart(name='statechart')
         csa = CompositeState(name='csa', context=statechart)
         csb = CompositeState(name='csb', context=csa)
         csc = CompositeState(name='csc', context=statechart)
@@ -254,7 +254,8 @@ class TestShallowHistoryState:
         M = Event(name='M')
 
         # Transitions between states & event triggers
-        Transition(name='statechart_init_default', start=statechart_init, end=csa)
+        Transition(name='statechart_init_default', start=statechart_init,
+                   end=csa)
         Transition(name='csa_init_default', start=csa_init, end=csa_hist)
         Transition(name='csa_hist_default', start=csa_hist, end=A)
         Transition(name='AtoCsb', start=A, end=csb, event=I)

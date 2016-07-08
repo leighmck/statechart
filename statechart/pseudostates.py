@@ -17,7 +17,7 @@
 
 import logging
 
-from statechart import CompositeState, State
+from statechart import CompositeState, State, Statechart
 
 
 class PseudoState(State):
@@ -84,10 +84,13 @@ class InitialState(PseudoState):
         PseudoState.__init__(self, name=name, context=context)
         self._logger = logging.getLogger(__name__)
 
-        if self.context.initial_state:
-            raise RuntimeError("Initial state already present")
+        if isinstance(self.context, CompositeState) or isinstance(self.context, Statechart):
+            if self.context.initial_state:
+                raise RuntimeError('Initial state already present')
+            else:
+                self.context.initial_state = self
         else:
-            self.context.initial_state = self
+            raise RuntimeError('Parent not a composite state or statechart')
 
     def activate(self, metadata, event):
         """
@@ -129,11 +132,11 @@ class ShallowHistoryState(PseudoState):
 
         if isinstance(self.context, CompositeState):
             if self.context.history:
-                raise RuntimeError("History state already present")
+                raise RuntimeError('"History state already present')
             else:
                 self.context.history = self
         else:
-            raise RuntimeError("Parent not a composite state")
+            raise RuntimeError('Parent not a composite state')
 
     def activate(self, metadata, event):
         """
@@ -150,7 +153,7 @@ class ShallowHistoryState(PseudoState):
         self._logger.info('activate %s', self.name)
 
         if len(self._transitions) > 1:
-            raise RuntimeError("History state cannot have more than 1 transition")
+            raise RuntimeError('History state cannot have more than 1 transition')
 
         if metadata.has_history_info(self):
             state = metadata.get_history_state(self)
