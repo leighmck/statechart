@@ -26,12 +26,15 @@ class GreaterThanZero(Guard):
         else:
             return False
 
+
 class TestGuard:
     def test_abstract_instantiation_throws(self):
         with pytest.raises(TypeError):
             Guard()
 
-    @pytest.mark.parametrize("event, expected", [(KwEvent(name='a', value=0), False), (KwEvent(name='a', value=1), True)])
+    @pytest.mark.parametrize("event, expected",
+                             [(KwEvent(name='a', value=0), False),
+                              (KwEvent(name='a', value=1), True)])
     def test_guard_check(self, event, expected):
         guard = GreaterThanZero()
         assert guard.check(event) == expected

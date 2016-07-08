@@ -16,8 +16,9 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import pytest
-from statechart import CompositeState, Event, InitialState, ShallowHistoryState, State, Statechart, Transition
-from statechart.runtime import Metadata
+
+from statechart import (CompositeState, Event, InitialState,
+                        ShallowHistoryState, State, Statechart, Transition)
 
 
 class TestInitialState:
@@ -74,7 +75,8 @@ class TestShallowHistoryState:
 
         # Child states
         # statechart
-        statechart_init = InitialState(name='statechart_init', context=statechart)
+        statechart_init = InitialState(name='statechart_init',
+                                       context=statechart)
         # csa
         csa_init = InitialState(name='csa_init', context=csa)
         csa_hist = ShallowHistoryState(name='csa_hist', context=csa)
@@ -92,7 +94,8 @@ class TestShallowHistoryState:
         L = Event(name='L')
 
         # Transitions between states & event triggers
-        Transition(name='statechart_init_default', start=statechart_init, end=csa)
+        Transition(name='statechart_init_default', start=statechart_init,
+                   end=csa)
         Transition(name='csa_init_default', start=csa_init, end=csa_hist)
         Transition(name='csa_hist_default', start=csa_hist, end=A)
         Transition(name='AtoB', start=A, end=B, event=I)
@@ -146,7 +149,8 @@ class TestShallowHistoryState:
 
         # Child states
         # statechart
-        statechart_init = InitialState(name='statechart_init', context=statechart)
+        statechart_init = InitialState(name='statechart_init',
+                                       context=statechart)
 
         # csa
         csa_init = InitialState(name='csa_init', context=csa)
@@ -169,7 +173,8 @@ class TestShallowHistoryState:
         M = Event(name='M')
 
         # Transitions between states & event triggers
-        Transition(name='statechart_init_default', start=statechart_init, end=csa)
+        Transition(name='statechart_init_default', start=statechart_init,
+                   end=csa)
         Transition(name='csa_init_default', start=csa_init, end=csa_hist)
         Transition(name='csa_hist_default', start=csa_hist, end=A)
         Transition(name='AtoCsb', start=A, end=csb, event=I)
@@ -188,7 +193,8 @@ class TestShallowHistoryState:
 
         statechart.dispatch(J)
 
-        # Assert we have reached state C, history should restore C's parent state csb
+        # Assert we have reached state C, history should restore C's parent
+        # state csb
         assert statechart.metadata.is_active(C)
 
         statechart.dispatch(K)
@@ -229,7 +235,8 @@ class TestShallowHistoryState:
 
         # Child states
         # statechart
-        statechart_init = InitialState(name='statechart_init', context=statechart)
+        statechart_init = InitialState(name='statechart_init',
+                                       context=statechart)
 
         # csa
         csa_init = InitialState(name='csa_init', context=csa)
@@ -253,7 +260,8 @@ class TestShallowHistoryState:
         M = Event(name='M')
 
         # Transitions between states & event triggers
-        Transition(name='statechart_init_default', start=statechart_init, end=csa)
+        Transition(name='statechart_init_default', start=statechart_init,
+                   end=csa)
         Transition(name='csa_init_default', start=csa_init, end=csa_hist)
         Transition(name='csa_hist_default', start=csa_hist, end=A)
         Transition(name='AtoCsb', start=A, end=csb, event=I)
@@ -273,7 +281,8 @@ class TestShallowHistoryState:
 
         statechart.dispatch(J)
 
-        # Assert we have reached state C, csb's history state should restore this state
+        # Assert we have reached state C, csb's history state should restore
+        # this state
         assert statechart.metadata.is_active(C)
 
         statechart.dispatch(K)

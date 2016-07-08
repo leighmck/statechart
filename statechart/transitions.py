@@ -174,7 +174,7 @@ class InternalTransition(Transition):
         start (State): The originating state (or pseudostate) of the
             transition.
         end (State): The target state (or pseudostate) that is reached when the
-        transition is executed.
+            transition is executed.
         event (Event): The event that fires the transition.
         guard (Guard): A boolean predicate that  must be true for the
             transition to be fired. It is evaluated at the time the event is
