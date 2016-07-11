@@ -484,9 +484,9 @@ class Statechart(Context):
     def __init__(self, name):
         Context.__init__(self, name=name, context=None)
         self._logger = logging.getLogger(__name__)
+        self._running = False
         self._scope = Scope()
-
-        self.event_queue = deque([])
+        self._event_queue = deque([])
         self.metadata = Metadata()
 
     def start(self):
@@ -494,13 +494,29 @@ class Statechart(Context):
         Initialises the Statechart in the metadata. Sets the start state.
 
         Ensure the statechart has at least an initial state.
+
+        Raises:
+            RuntimeError if the statechart had already been started.
         """
         self._logger.info('start %s', self.name)
 
-        self.metadata.reset()
-        self.metadata.activate(self)
-        self.metadata.activate(self.initial_state)
-        self.dispatch(None)
+        if self._running is True:
+            raise RuntimeError('Cannot start Statechart once already running.')
+        else:
+            self.metadata.reset()
+            self.metadata.activate(self)
+            self.metadata.activate(self.initial_state)
+            self.dispatch(None)
+            self._running = True
+
+    def stop(self):
+        """
+        Stops the statemachine by deactivating statechart and thus all it's child states.
+        """
+        self._logger.info('stop %s', self.name)
+
+        self._running = False
+        self.deactivate(self.metadata, event=None)
 
     def async_dispatch(self, event):
         """
@@ -512,7 +528,7 @@ class Statechart(Context):
             event (Event): Transition event trigger.
         """
         self._logger.info('handle async event %s', event)
-        self.event_queue.append(event)
+        self._event_queue.append(event)
 
     def dispatch(self, event):
         """
@@ -538,8 +554,8 @@ class Statechart(Context):
 
         Dispatches events in queue in FIFO order.
         """
-        while True:
-            if len(self.event_queue):
-                event = self.event_queue.popleft()
+        while self._running is True:
+            if len(self._event_queue):
+                event = self._event_queue.popleft()
                 self.dispatch(event)
                 yield from asyncio.sleep(0)
