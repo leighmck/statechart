@@ -141,7 +141,7 @@ class Transition:
             self._logger.info('transition not triggered by event %s', event)
             return False
 
-        if self.guard and not self.guard.check(metadata, event):
+        if self.guard and not self.guard.check(self.start.scope, event):
             self._logger.info('transition blocked by guard condition %s', event)
             return False
 
@@ -152,9 +152,11 @@ class Transition:
             state.deactivate(metadata, event)
 
         if self.action:
-            self.action.execute(event)
+            # TODO(lam): pass read-only scope, as it is accessed concurrently
+            self.action.execute(self.start.scope, event)
 
         for state in self.activate:
+            # TODO(lam): pass read-only scope, as it is accessed concurrently
             state.activate(metadata, event)
 
         metadata.transition = None
@@ -205,7 +207,7 @@ class InternalTransition(Transition):
         if self.event and event != self.event:
             return False
 
-        if self.guard and not self.guard.check(metadata, event):
+        if self.guard and not self.guard.check(self.start.scope, event):
             return False
 
         if self.action:

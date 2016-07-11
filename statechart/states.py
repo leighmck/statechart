@@ -208,7 +208,7 @@ class State:
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event: Transition event trigger.
+            event (Event): Transition event trigger.
 
         Returns:
             True if transition executed, False if transition not allowed,
@@ -346,7 +346,7 @@ class ConcurrentState(Context):
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event: Transition event trigger.
+            event (Event): Transition event trigger.
 
         Returns:
             True if transition executed, False if transition not allowed,
@@ -443,7 +443,7 @@ class CompositeState(Context):
 
         Args:
             metadata (Metadata): Statechart metadata data.
-            event: Transition event trigger.
+            event (Event): Transition event trigger.
 
         Returns:
             True if transition executed, False if transition not allowed,
@@ -509,7 +509,7 @@ class Statechart(Context):
         Adds event to queue for future processing.
 
         Args:
-            event: Transition event trigger.
+            event (Event): Transition event trigger.
         """
         self._logger.info('handle async event %s', event)
         self.event_queue.append(event)
@@ -519,7 +519,7 @@ class Statechart(Context):
         Calls the dispatch method on the current state.
 
         Args:
-            event: Transition event trigger.
+            event (Event): Transition event trigger.
 
         Returns:
             True if transition executed.

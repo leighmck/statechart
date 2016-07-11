@@ -43,12 +43,13 @@ class Guard(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def check(self, event):
+    def check(self, scope, event):
         """
         Called by the transition, override for specific behaviour
 
         Args:
-            event: The event which fired the transition associated this guard.
+            scope (Scope): Activated state(s) scope variables.
+            event (Event): Transition event trigger.
 
         Note:
             Checking a guard should not have any side effects, therefore don't
@@ -62,3 +63,25 @@ class Guard(metaclass=abc.ABCMeta):
             Not implemented error for abstract class.
         """
         raise NotImplementedError
+
+
+class ElseGuard(Guard):
+    """
+    Simple 'else' guard condition which always returns True when checked.
+
+    Useful guard for outgoing transitions from Choice Pseudostates to ensure there is at least
+    one path that can be executed.
+    """
+
+    def check(self, scope, event):
+        """
+        Called by the transition.
+
+        Args:
+            scope (Scope): Activated state(s) scope variables.
+            event (Event): Transition event trigger.
+
+        Returns:
+            True.
+        """
+        return True

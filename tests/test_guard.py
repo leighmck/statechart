@@ -16,11 +16,12 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import pytest
+
 from statechart import Guard, KwEvent
 
 
 class GreaterThanZero(Guard):
-    def check(self, event):
+    def check(self, scope, event):
         if 'value' in event.kwargs and event.kwargs['value'] > 0:
             return True
         else:
@@ -37,4 +38,4 @@ class TestGuard:
                               (KwEvent(name='a', value=1), True)])
     def test_guard_check(self, event, expected):
         guard = GreaterThanZero()
-        assert guard.check(event) == expected
+        assert guard.check(scope=None, event=event) == expected

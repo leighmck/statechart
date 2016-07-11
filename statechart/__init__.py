@@ -17,9 +17,9 @@
 
 from statechart.action import Action  # NOQA
 from statechart.event import Event, KwEvent  # NOQA
-from statechart.guard import Guard  # NOQA
+from statechart.guard import ElseGuard, Guard  # NOQA
 from statechart.states import CompositeState, ConcurrentState, FinalState, State, Statechart  # NOQA
-from statechart.pseudostates import InitialState, ShallowHistoryState  # NOQA
+from statechart.pseudostates import ChoiceState, InitialState, ShallowHistoryState  # NOQA
 from statechart.transitions import InternalTransition, Transition  # NOQA
 
 __author__ = 'Leigh McKenzie'

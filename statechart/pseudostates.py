@@ -167,3 +167,66 @@ class ShallowHistoryState(PseudoState):
             self.dispatch(metadata=metadata, event=None)
 
         return True
+
+
+class ChoiceState(PseudoState):
+    def __init__(self, name, context):
+        """
+        The Choice pseudo-state is used to compose complex transitional path which,
+        which, when reached, result in the dynamic evaluation of the guards of the
+        triggers of its outgoing transitions.
+
+        It enables splitting of transitions into multiple outgoing paths.
+
+        Args:
+            name (str): An identifier for the model element.
+            context (Context): The parent context that contains this state.
+
+        Note:
+            It must have at least one incoming and one outgoing Transition.
+
+            If none of the guards evaluates to true, then the model is considered ill-formed.
+            To avoid this, it is recommended to define one outgoing transition with a
+            predefined "else" guard for every choice vertex.
+        """
+        PseudoState.__init__(self, name=name, context=context)
+        self._logger = logging.getLogger(__name__)
+
+    def activate(self, metadata, event):
+        """
+        Activate the state and dispatch transition to the default state of the
+        composite state.
+
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            event (Event): Event which led to the transition into this state.
+
+        Returns:
+            True if the state was activated.
+        """
+        self._logger.info('activate %s', self.name)
+
+        for transition in self._transitions:
+            executed = transition.execute(metadata=metadata, event=None)
+
+            if executed is True:
+                return True
+
+        raise RuntimeError('No choice made due to guard conditions, '
+                           'suggest to add transition with "Else" guard')
+
+    def add_transition(self, transition):
+        """Add a transition from this state.
+
+        Transitions are checked in the order they are defined.
+
+        Args:
+            transition (Transition): Transition to add.
+
+        Raises:
+            RuntimeError: If transition is invalid.
+        """
+        if transition is None:
+            raise RuntimeError('Cannot add null transition')
+
+        self._transitions.append(transition)

@@ -17,8 +17,8 @@
 
 import pytest
 
-from statechart import (CompositeState, Event, InitialState,
-                        ShallowHistoryState, State, Statechart, Transition)
+from statechart import (ChoiceState, CompositeState, ElseGuard, Event, Guard, InitialState,
+                        KwEvent, ShallowHistoryState, State, Statechart, Transition)
 
 
 class TestInitialState:
@@ -288,3 +288,42 @@ class TestShallowHistoryState:
 
         # Assert the history state has restored state C
         assert statechart.metadata.is_active(C)
+
+
+class TestChoiceState:
+    def test_create_choice_state(self):
+        startchart = Statechart(name='statechart')
+        composite_state = CompositeState(name='composite', context=startchart)
+        ShallowHistoryState(name='history', context=composite_state)
+
+    @pytest.mark.parametrize('choice, expected_state_name',
+                             [('a', 'a'),
+                              ('b', 'b')])
+    def test_choice_state_transitions(self, choice, expected_state_name):
+        class IsA(Guard):
+            def check(self, scope, event):
+                return scope.get('value') == 'a'
+
+        startchart = Statechart(name='statechart')
+        startchart.scope['value'] = choice
+        init = InitialState(name='init', context=startchart)
+
+        state_a = State(name='a', context=startchart)
+        state_b = State(name='b', context=startchart)
+
+        choice = ChoiceState(name='if a', context=startchart)
+
+        Transition(name='init', start=init, end=choice)
+
+        Transition(name='choice a', start=choice, end=state_a, event=None, guard=IsA())
+        Transition(name='choice b', start=choice, end=state_b, event=None, guard=ElseGuard())
+
+        startchart.start()
+
+        active_states = startchart.metadata.active_states
+        expected_state_activated = False
+        for state in active_states:
+            if state.name == expected_state_name:
+                expected_state_activated = True
+
+        assert expected_state_activated is True
