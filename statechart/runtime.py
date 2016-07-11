@@ -41,7 +41,7 @@ class Metadata:
     def __init__(self):
         self.active_states = {}
         self.event = None
-        self.history_states = {}
+        self._history_states = {}
         self.transition = None
         self._logger = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ class Metadata:
             The most recent state remembered by the specified history state.
         """
         self._logger.info('Get history state %s', history_state.name)
-        return self.history_states[history_state]
+        return self._history_states[history_state]
 
     def has_history_info(self, history_state):
         """
@@ -108,7 +108,7 @@ class Metadata:
         """
         status = False
 
-        if history_state in self.history_states:
+        if history_state in self._history_states:
             status = True
 
         self._logger.info('Has history info %s? %s', history_state.name, str(status))
@@ -136,7 +136,7 @@ class Metadata:
         """Resets the metadata object for reuse."""
         self._logger.info('Reset active states & history')
         self.active_states.clear()
-        self.history_states.clear()
+        self._history_states.clear()
 
     def store_history_info(self, history_state, actual_state):
         """"
@@ -150,7 +150,7 @@ class Metadata:
         """
         self._logger.info('Store history state %s for actual state %s',
                           history_state.name, actual_state.name)
-        self.history_states[history_state] = actual_state
+        self._history_states[history_state] = actual_state
 
 
 class Scope(ChainMap):

@@ -278,7 +278,7 @@ class ConcurrentState(Context):
     def __init__(self, name, context):
         Context.__init__(self, name, context)
         self._logger = logging.getLogger(__name__)
-        self.regions = []
+        self._regions = []
 
     def add_region(self, region):
         """
@@ -288,7 +288,7 @@ class ConcurrentState(Context):
             region (CompositeState): Region to add.
         """
         if isinstance(region, CompositeState):
-            self.regions.append(region)
+            self._regions.append(region)
         else:
             raise RuntimeError('A concurrent state can only add composite state regions')
 
@@ -310,7 +310,7 @@ class ConcurrentState(Context):
         if Context.activate(self, metadata, param):
             rdata = metadata.active_states[self]
 
-            for region in self.regions:
+            for region in self._regions:
                 if not (region in rdata.state_set):
                     # Check if region is activated implicitly via incoming
                     # transition.
@@ -334,7 +334,7 @@ class ConcurrentState(Context):
         """
         self._logger.info('deactivate %s', self.name)
 
-        for region in self.regions:
+        for region in self._regions:
             if metadata.is_active(region):
                 region.deactivate(metadata, param)
 
@@ -360,7 +360,7 @@ class ConcurrentState(Context):
         dispatched = False
 
         """ Check if any of the child regions can handle the event """
-        for region in self.regions:
+        for region in self._regions:
             if region.dispatch(metadata, event):
                 dispatched = True
 
