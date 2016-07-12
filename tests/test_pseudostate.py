@@ -18,7 +18,7 @@
 import pytest
 
 from statechart import (ChoiceState, CompositeState, ElseGuard, Event, Guard, InitialState,
-                        KwEvent, ShallowHistoryState, State, Statechart, Transition)
+                        ShallowHistoryState, State, Statechart, Transition)
 
 
 class TestInitialState:
@@ -33,8 +33,8 @@ class TestInitialState:
         Transition('default', start=initial_state, end=default_state)
         startchart.start()
 
-        initial_state.activate(metadata=startchart.metadata, event=None)
-        assert startchart.metadata.is_active(state=default_state)
+        initial_state.activate(metadata=startchart._metadata, event=None)
+        assert startchart.is_active('default')
 
 
 class TestShallowHistoryState:
@@ -106,17 +106,17 @@ class TestShallowHistoryState:
         statechart.dispatch(I)
 
         # Assert we have reached state B, history should restore this state
-        assert statechart.metadata.is_active(B)
+        assert statechart.is_active('B')
 
         statechart.dispatch(J)
 
         # Assert we have reached state C
-        assert statechart.metadata.is_active(C)
+        assert statechart.is_active('C')
 
         statechart.dispatch(K)
 
         # Assert the history state has restored state B
-        assert statechart.metadata.is_active(B)
+        assert statechart.is_active('B')
 
     def test_activate_shallow_history_given_deep_history_scenario(self):
         """
@@ -184,23 +184,23 @@ class TestShallowHistoryState:
         statechart.start()
         statechart.dispatch(I)
 
-        assert statechart.metadata.is_active(B)
+        assert statechart.is_active('B')
 
         statechart.dispatch(J)
 
         # Assert we have reached state C, history should restore C's parent
         # state csb
-        assert statechart.metadata.is_active(C)
+        assert statechart.is_active('C')
 
         statechart.dispatch(K)
 
         # Assert we have reached state D
-        assert statechart.metadata.is_active(D)
+        assert statechart.is_active('D')
 
         statechart.dispatch(L)
 
         # Assert the history state has restored state csb
-        assert statechart.metadata.is_active(csb)
+        assert statechart.is_active('csb')
 
     def test_activate_multiple_shallow_history_states(self):
         """
@@ -271,23 +271,23 @@ class TestShallowHistoryState:
         statechart.start()
         statechart.dispatch(I)
 
-        assert statechart.metadata.is_active(B)
+        assert statechart.is_active('B')
 
         statechart.dispatch(J)
 
         # Assert we have reached state C, csb's history state should restore
         # this state
-        assert statechart.metadata.is_active(C)
+        assert statechart.is_active('C')
 
         statechart.dispatch(K)
 
         # Assert we have reached state D
-        assert statechart.metadata.is_active(D)
+        assert statechart.is_active('D')
 
         statechart.dispatch(L)
 
         # Assert the history state has restored state C
-        assert statechart.metadata.is_active(C)
+        assert statechart.is_active('C')
 
 
 class TestChoiceState:
@@ -304,26 +304,20 @@ class TestChoiceState:
             def check(self, scope, event):
                 return scope.get('value') == 'a'
 
-        startchart = Statechart(name='statechart')
-        startchart.scope['value'] = choice
-        init = InitialState(name='init', context=startchart)
+        statechart = Statechart(name='statechart')
+        statechart.scope['value'] = choice
+        init = InitialState(name='init', context=statechart)
 
-        state_a = State(name='a', context=startchart)
-        state_b = State(name='b', context=startchart)
+        state_a = State(name='a', context=statechart)
+        state_b = State(name='b', context=statechart)
 
-        choice = ChoiceState(name='if a', context=startchart)
+        choice = ChoiceState(name='if a', context=statechart)
 
         Transition(name='init', start=init, end=choice)
 
         Transition(name='choice a', start=choice, end=state_a, event=None, guard=IsA())
         Transition(name='choice b', start=choice, end=state_b, event=None, guard=ElseGuard())
 
-        startchart.start()
+        statechart.start()
 
-        active_states = startchart.metadata.active_states
-        expected_state_activated = False
-        for state in active_states:
-            if state.name == expected_state_name:
-                expected_state_activated = True
-
-        assert expected_state_activated is True
+        assert statechart.is_active(expected_state_name)

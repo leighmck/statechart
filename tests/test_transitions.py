@@ -95,7 +95,7 @@ class TestInternalTransition:
                            action=internal_action)
         empty_statechart.start()
 
-        assert empty_statechart.metadata.is_active(default_state)
+        assert empty_statechart.is_active('next')
         assert default_state.entry_executed is True
         assert default_state.do_executed is True
         assert default_state.exit_executed is False

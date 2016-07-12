@@ -487,7 +487,7 @@ class Statechart(Context):
         self._running = False
         self._scope = Scope()
         self._event_queue = deque([])
-        self.metadata = Metadata()
+        self._metadata = Metadata()
 
     def start(self):
         """
@@ -503,9 +503,9 @@ class Statechart(Context):
         if self._running is True:
             raise RuntimeError('Cannot start Statechart once already running.')
         else:
-            self.metadata.reset()
-            self.metadata.activate(self)
-            self.metadata.activate(self.initial_state)
+            self._metadata.reset()
+            self._metadata.activate(self)
+            self._metadata.activate(self.initial_state)
             self.dispatch(None)
             self._running = True
 
@@ -516,7 +516,7 @@ class Statechart(Context):
         self._logger.info('stop %s', self.name)
 
         self._running = False
-        self.deactivate(self.metadata, event=None)
+        self.deactivate(self._metadata, event=None)
 
     def async_dispatch(self, event):
         """
@@ -541,8 +541,8 @@ class Statechart(Context):
             True if transition executed.
         """
         self._logger.info('dispatch event %s', event)
-        current_state = self.metadata.active_states[self].current_state
-        return current_state.dispatch(self.metadata, event)
+        current_state = self._metadata.active_states[self].current_state
+        return current_state.dispatch(self._metadata, event)
 
     def add_transition(self, transition):
         raise RuntimeError('Cannot add transition to a statechart')
@@ -559,3 +559,19 @@ class Statechart(Context):
                 event = self._event_queue.popleft()
                 self.dispatch(event)
                 yield from asyncio.sleep(0)
+
+    def is_active(self, state_name):
+        """
+        Check if the state name is active
+
+        Srgs:
+            state_name (str): State name to check.
+
+        Returns:
+            True if the state name is currently active.
+        """
+        for state in self._metadata.active_states:
+            if state.name == state_name:
+                return True
+
+        return False

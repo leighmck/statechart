@@ -95,7 +95,7 @@ class TestScope:
 
         statechart.start()
 
-        assert statechart.metadata.is_active(top_state.middle_state.bottom_a)
+        assert statechart.is_active('bottom_a')
         assert dict(top_state.scope) == {
             'top_int': 1,
             'top_str': 'top',
@@ -119,7 +119,7 @@ class TestScope:
         a_to_b = Event(name='AB')
         statechart.dispatch(event=a_to_b)
 
-        assert statechart.metadata.is_active(top_state.middle_state.bottom_b)
+        assert statechart.is_active('bottom_b')
 
         # Assert the top state's scope was mutated by the bottom_b entry action.
         assert top_state.scope == {

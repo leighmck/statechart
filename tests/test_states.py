@@ -98,9 +98,9 @@ class TestState:
         default_state = State(name='default', context=statechart)
         statechart.start()
 
-        default_state.activate(statechart.metadata, 0)
+        default_state.activate(statechart._metadata, 0)
 
-        assert statechart.metadata.is_active(default_state)
+        assert statechart.is_active('default')
 
     def test_deactivate(self):
         statechart = Statechart(name='statechart')
@@ -108,11 +108,11 @@ class TestState:
         default_state = State(name='default', context=statechart)
         statechart.start()
 
-        default_state.activate(statechart.metadata, 0)
-        assert statechart.metadata.is_active(default_state)
+        default_state.activate(statechart._metadata, 0)
+        assert statechart.is_active('default')
 
-        default_state.deactivate(statechart.metadata, 0)
-        assert not statechart.metadata.is_active(default_state)
+        default_state.deactivate(statechart._metadata, 0)
+        assert not statechart.is_active('default')
 
     def test_dispatch(self):
         statechart = Statechart(name='statechart')
@@ -123,9 +123,9 @@ class TestState:
         default_trigger = Event('default_trigger')
         Transition(name='default', start=initial_state, end=default_state, event=default_trigger)
 
-        assert initial_state.dispatch(metadata=statechart.metadata, event=default_trigger)
+        assert initial_state.dispatch(metadata=statechart._metadata, event=default_trigger)
 
-        assert statechart.metadata.is_active(default_state)
+        assert statechart.is_active('default')
 
 
 class TestFinalState:
@@ -135,13 +135,6 @@ class TestFinalState:
 
         with pytest.raises(RuntimeError):
             Transition(name='final', start=final_state, end=statechart)
-
-    def test_dispatch(self):
-        statechart = Statechart(name='statechart')
-        final_state = FinalState(name='final', context=statechart)
-        final_trigger = Event(name='final_trigger')
-        with pytest.raises(RuntimeError):
-            final_state.dispatch(metadata=statechart.metadata, event=final_trigger)
 
 
 # TODO(lam) Add test with final states - state shouldn't dispatch default
@@ -229,28 +222,28 @@ class TestConcurrentState:
 
         statechart.start()
 
-        assert statechart.metadata.is_active(keyboard)
-        assert statechart.metadata.is_active(caps_lock_off)
-        assert statechart.metadata.is_active(num_lock_off)
-        assert statechart.metadata.is_active(scroll_lock_off)
+        assert statechart.is_active('keyboard')
+        assert statechart.is_active('caps_lock_off')
+        assert statechart.is_active('num_lock_off')
+        assert statechart.is_active('scroll_lock_off')
 
         statechart.dispatch(event=caps_lock_pressed)
-        assert statechart.metadata.is_active(caps_lock_on)
+        assert statechart.is_active('caps_lock_on')
 
         statechart.dispatch(event=num_lock_pressed)
-        assert statechart.metadata.is_active(num_lock_on)
+        assert statechart.is_active('num_lock_on')
 
         statechart.dispatch(event=scroll_lock_pressed)
-        assert statechart.metadata.is_active(scroll_lock_on)
+        assert statechart.is_active('scroll_lock_on')
 
         statechart.dispatch(event=caps_lock_pressed)
-        assert statechart.metadata.is_active(caps_lock_off)
+        assert statechart.is_active('caps_lock_off')
 
         statechart.dispatch(event=num_lock_pressed)
-        assert statechart.metadata.is_active(num_lock_off)
+        assert statechart.is_active('num_lock_off')
 
         statechart.dispatch(event=scroll_lock_pressed)
-        assert statechart.metadata.is_active(scroll_lock_off)
+        assert statechart.is_active('scroll_lock_off')
 
 
 class TestCompositeState:
@@ -279,20 +272,20 @@ class TestCompositeState:
 
         statechart.start()
 
-        assert statechart.metadata.is_active(top_a)
-        assert statechart.metadata.is_active(top_a.state_a)
+        assert statechart.is_active('top a')
+        assert statechart.is_active('sub state a')
 
         statechart.dispatch(top_a.sub_a_to_b)
 
-        assert statechart.metadata.is_active(top_a)
-        assert statechart.metadata.is_active(top_a.state_b)
+        assert statechart.is_active('top a')
+        assert statechart.is_active('sub state b')
 
         statechart.dispatch(top_a_to_b)
 
-        assert statechart.metadata.is_active(top_b)
-        assert statechart.metadata.is_active(top_b.state_a)
+        assert statechart.is_active('top b')
+        assert statechart.is_active('sub state a')
 
         statechart.dispatch(top_a.sub_a_to_b)
 
-        assert statechart.metadata.is_active(top_b)
-        assert statechart.metadata.is_active(top_b.state_b)
+        assert statechart.is_active('top b')
+        assert statechart.is_active('sub state b')
