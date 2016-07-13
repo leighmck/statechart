@@ -136,6 +136,27 @@ class TestFinalState:
         with pytest.raises(RuntimeError):
             Transition(name='final', start=final_state, end=statechart)
 
+    def test_finished_composite_state(self):
+        statechart = Statechart(name='statechart')
+        statechart_init = InitialState(name='statechart init', context=statechart)
+
+        composite_state = CompositeState(name='composite', context=statechart)
+        comp_init = InitialState(name='init comp', context=composite_state)
+        a = State(name='a', context=composite_state)
+        comp_final = FinalState(name='final comp', context=composite_state)
+
+        Transition(name='statechart init', start=statechart_init, end=composite_state)
+        Transition(name='comp init', start=comp_init, end=a)
+        Transition(name='comp finished', start=a, end=comp_final, event=Event('e'))
+
+        b = State(name='b', context=statechart)
+        Transition(name='comp to b', start=composite_state, end=b)
+
+        statechart.start()
+        assert statechart.is_active('a')
+        statechart.dispatch(Event('e'))
+        assert statechart.is_active('b')
+
 
 # TODO(lam) Add test with final states - state shouldn't dispatch default
 # event until all regions have finished.
@@ -255,9 +276,9 @@ class TestCompositeState:
             self.state_a = State(name='sub state a', context=self)
             self.state_b = State(name='sub state b', context=self)
 
-            self.sub_a_to_b = Event('sub cd')
+            self.sub_a_to_b = Event('sub_ab')
             Transition(name='init', start=init, end=self.state_a)
-            Transition(name='sub_cd', start=self.state_a, end=self.state_b, event=self.sub_a_to_b)
+            Transition(name='sub_ab', start=self.state_a, end=self.state_b, event=self.sub_a_to_b)
 
     def test_submachines(self):
         statechart = Statechart(name='statechart')
@@ -266,9 +287,9 @@ class TestCompositeState:
         top_a = self.Submachine('top a', statechart)
         top_b = self.Submachine('top b', statechart)
 
-        top_a_to_b = Event('top_ab')
+        top_a_to_b = Event('top ab')
         Transition(name='init', start=init, end=top_a)
-        Transition(name='init', start=top_a, end=top_b, event=top_a_to_b)
+        Transition(name='top_a_to_b', start=top_a, end=top_b, event=top_a_to_b)
 
         statechart.start()
 

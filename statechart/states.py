@@ -252,6 +252,10 @@ class FinalState(State):
     Args:
         name (str): An identifier for the model element.
         context (Context): The parent context that contains this state.
+
+    Raises:
+        RuntimeError: If the model is ill-formed by attempting to add a transition directly from
+            the final state.
     """
 
     def __init__(self, name, context):
@@ -429,7 +433,9 @@ class CompositeState(Context):
 
         state_runtime_data = metadata.active_states[self]
 
-        if self.history:
+        # If the composite state contains a history pseudostate, preserve the current active child
+        # state in history, unless that state is a final state.
+        if self.history and not (isinstance(state_runtime_data.current_state, FinalState)):
             metadata.store_history_info(self.history, state_runtime_data.current_state)
 
         if metadata.is_active(state=state_runtime_data.current_state):
@@ -460,8 +466,17 @@ class CompositeState(Context):
             metadata.activate(self.initial_state)
             data.current_state.activate(metadata, event)
 
+        dispatched = False
+
         if data.current_state and data.current_state.dispatch(metadata, event):
-            return True
+            dispatched = True
+
+        # If the substate dispatched the event and reached a final state or if this state
+        # is no longer active, trigger a new dispatch for the end transition, otherwise return.
+        data = metadata.active_states[self]
+        if dispatched and not (
+                isinstance(data.current_state, FinalState) or not metadata.is_active(self)):
+            return dispatched
 
         # Since none of the child states can handle the event, let this state
         # try handling the event.
@@ -516,7 +531,7 @@ class Statechart(Context):
         self._logger.info('stop %s', self.name)
 
         self._running = False
-        self.deactivate(self.metadata, event=None)
+        self.deactivate(self._metadata, event=None)
         self._event_queue.clear()
 
     def async_dispatch(self, event):
