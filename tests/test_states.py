@@ -47,32 +47,6 @@ class TestStatechart:
     def test_create_statechart(self):
         Statechart(name='statechart')
 
-    def test_start(self):
-        statechart = Statechart(name='statechart')
-        initial_state = InitialState(name='initial', context=statechart)
-        statechart.start()
-        assert statechart.initial_state is initial_state
-
-    def test_dispatch(self):
-        statechart = Statechart(name='statechart')
-        initial_state = InitialState(name='initial', context=statechart)
-        default_state = StateSpy(name='default', context=statechart)
-        next_state = State(name='next', context=statechart)
-        test_event = Event(name='test_event')
-        Transition('default_transition', start=initial_state, end=default_state)
-        Transition(name='test_transition', start=default_state, end=next_state, event=test_event)
-        statechart.start()
-        assert statechart.dispatch(event=test_event)
-        assert default_state.dispatch_called
-        assert default_state.event == test_event
-
-    def test_add_transition(self):
-        statechart = Statechart(name='statechart')
-        initial_state = InitialState(name='initial', context=statechart)
-
-        with pytest.raises(RuntimeError):
-            Transition('initial_transition', start=statechart, end=initial_state)
-
 
 class TestState:
     def test_create_state(self):
@@ -91,41 +65,6 @@ class TestState:
         default_transition = Transition(name='default', start=initial_state, end=default_state)
 
         assert default_transition in initial_state._transitions
-
-    def test_activate(self):
-        statechart = Statechart(name='statechart')
-        InitialState(name='initial', context=statechart)
-        default_state = State(name='default', context=statechart)
-        statechart.start()
-
-        default_state.activate(statechart._metadata, 0)
-
-        assert statechart.is_active('default')
-
-    def test_deactivate(self):
-        statechart = Statechart(name='statechart')
-        InitialState(name='initial', context=statechart)
-        default_state = State(name='default', context=statechart)
-        statechart.start()
-
-        default_state.activate(statechart._metadata, 0)
-        assert statechart.is_active('default')
-
-        default_state.deactivate(statechart._metadata, 0)
-        assert not statechart.is_active('default')
-
-    def test_dispatch(self):
-        statechart = Statechart(name='statechart')
-        initial_state = InitialState(name='initial', context=statechart)
-        default_state = State(name='default', context=statechart)
-        statechart.start()
-
-        default_trigger = Event('default_trigger')
-        Transition(name='default', start=initial_state, end=default_state, event=default_trigger)
-
-        assert initial_state.dispatch(metadata=statechart._metadata, event=default_trigger)
-
-        assert statechart.is_active('default')
 
 
 class TestFinalState:

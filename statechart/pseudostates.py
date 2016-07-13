@@ -54,21 +54,6 @@ class PseudoState(State):
 
         return True
 
-    def dispatch(self, metadata, event):
-        """
-        Dispatch transition.
-
-        Args:
-            metadata (Metadata): Statechart metadata data.
-            event (Event): Transition event trigger.
-
-        Returns:
-            True if the transition was executed, False if transition was not
-            triggered for this event or if the guard condition failed.
-        """
-        self._logger.info('dispatch %s', self.name)
-        return State.dispatch(self, metadata=metadata, event=event)
-
 
 class InitialState(PseudoState):
     """
@@ -108,6 +93,47 @@ class InitialState(PseudoState):
         self.dispatch(metadata=metadata, event=None)
 
         return True
+
+    def dispatch(self, metadata, event):
+        """
+        Dispatch transition.
+
+        Args:
+            metadata (Metadata): Statechart metadata data.
+            event (Event): Transition event trigger.
+
+        Returns:
+            True if the transition was executed, False if transition was not
+            triggered for this event or if the guard condition failed.
+
+        Raises:
+            RuntimeError: If the state could not dispatch transiton
+        """
+        if super().dispatch(metadata=metadata, event=event):
+            return True
+        else:
+            raise RuntimeError('Initial state must be able to dispatch transition')
+
+    def add_transition(self, transition):
+        """Add a transition from this state.
+
+        An initial state must have a single transition. The transition must not need an
+        event trigger or have a guard condition.
+
+        Args:
+            transition (Transition): Transition to add, must be an external transition.
+
+        Raises:
+            RuntimeError: If transition is invalid, or if transition already exists.
+        """
+        if len(self._transitions) is not 0:
+            raise RuntimeError('There can only be a single transition from an initial state')
+        elif transition.event is not None:
+            raise RuntimeError('Transition from initial state must not require an event trigger')
+        elif transition.guard is not None:
+            raise RuntimeError('Transition from initial state cannot have a guard condition')
+        else:
+            super().add_transition(transition=transition)
 
 
 class ShallowHistoryState(PseudoState):

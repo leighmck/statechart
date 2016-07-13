@@ -27,7 +27,7 @@ class TestInitialState:
         InitialState(name='initial', context=startchart)
 
     def test_activate_initial_state(self):
-        startchart = Statechart(name='test')
+        startchart = Statechart(name='statechart')
         initial_state = InitialState(name='initial', context=startchart)
         default_state = State(name='default', context=startchart)
         Transition('default', start=initial_state, end=default_state)
@@ -35,6 +35,42 @@ class TestInitialState:
 
         initial_state.activate(metadata=startchart._metadata, event=None)
         assert startchart.is_active('default')
+
+    def test_missing_transition_from_initial_state(self):
+        startchart = Statechart(name='statechart')
+        initial_state = InitialState(name='initial', context=startchart)
+
+        with pytest.raises(RuntimeError):
+            startchart.start()
+
+    def test_multiple_transitions_from_initial_state(self):
+        startchart = Statechart(name='statechart')
+        initial_state = InitialState(name='initial', context=startchart)
+        default_state = State(name='default', context=startchart)
+
+        Transition('default_1', start=initial_state, end=default_state)
+        with pytest.raises(RuntimeError):
+            Transition('default_2', start=initial_state, end=default_state)
+
+    def test_transition_from_initial_state_with_event_trigger(self):
+        startchart = Statechart(name='statechart')
+        initial_state = InitialState(name='initial', context=startchart)
+        default_state = State(name='default', context=startchart)
+
+        with pytest.raises(RuntimeError):
+            Transition('default', start=initial_state, end=default_state, event=Event('event'))
+
+    def test_transition_from_initial_state_with_guard_condition(self):
+        class MyGuard(Guard):
+            def check(self, scope, event):
+                return False
+
+        startchart = Statechart(name='statechart')
+        initial_state = InitialState(name='initial', context=startchart)
+        default_state = State(name='default', context=startchart)
+
+        with pytest.raises(RuntimeError):
+            Transition('default', start=initial_state, end=default_state, event=None, guard=MyGuard())
 
 
 class TestShallowHistoryState:

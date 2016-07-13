@@ -16,11 +16,12 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import pytest
-from statechart import Action
 
+from statechart import Action
+from statechart.runtime import Scope
 
 class MyAction(Action):
-    def execute(self, event):
+    def execute(self, scope, event):
         pass
 
 
@@ -35,4 +36,4 @@ class TestAction:
             Action()
 
     def test_execute_action(self, my_action):
-        my_action.execute(event=None)
+        my_action.execute(scope=Scope(), event=None)
