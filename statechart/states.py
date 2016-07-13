@@ -516,7 +516,8 @@ class Statechart(Context):
         self._logger.info('stop %s', self.name)
 
         self._running = False
-        self.deactivate(self._metadata, event=None)
+        self.deactivate(self.metadata, event=None)
+        self._event_queue.clear()
 
     def async_dispatch(self, event):
         """
