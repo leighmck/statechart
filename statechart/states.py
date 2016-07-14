@@ -574,7 +574,7 @@ class Statechart(Context):
             if len(self._event_queue):
                 event = self._event_queue.popleft()
                 self.dispatch(event)
-                yield from asyncio.sleep(0)
+            yield from asyncio.sleep(0)
 
     def is_active(self, state_name):
         """
