@@ -25,7 +25,7 @@ class ActionSpy(Action):
     def __init__(self):
         self.executed = False
 
-    def execute(self, event):
+    def execute(self, scope, event):
         self.executed = True
 
 
@@ -75,7 +75,7 @@ class TestFinalState:
         with pytest.raises(RuntimeError):
             Transition(name='final', start=final_state, end=statechart)
 
-    def test_finished_composite_state(self):
+    def test_transition_from_finished_composite_state(self):
         statechart = Statechart(name='statechart')
         statechart_init = InitialState(name='statechart init', context=statechart)
 
@@ -96,6 +96,29 @@ class TestFinalState:
         statechart.dispatch(Event('e'))
         assert statechart.is_active('b')
 
+    def test_default_transition_from_finished_composite_state(self):
+        statechart = Statechart(name='statechart')
+        statechart_init = InitialState(name='statechart init', context=statechart)
+
+        composite_state = CompositeState(name='composite', context=statechart)
+        comp_init = InitialState(name='init comp', context=composite_state)
+        a = State(name='a', context=composite_state)
+        comp_final = FinalState(name='final comp', context=composite_state)
+
+        Transition(name='statechart init', start=statechart_init, end=composite_state)
+        Transition(name='comp init', start=comp_init, end=a)
+        Transition(name='comp finished', start=a, end=comp_final, event=Event('e'))
+
+        b = State(name='b', context=statechart)
+        c = State(name='c', context=statechart)
+
+        Transition(name='comp to c', start=composite_state, end=b, event=Event('f'))
+        Transition(name='comp to b', start=composite_state, end=b)
+
+        statechart.start()
+        assert statechart.is_active('a')
+        statechart.dispatch(Event('e'))
+        assert statechart.is_active('b')
 
 # TODO(lam) Add test with final states - state shouldn't dispatch default
 # event until all regions have finished.
