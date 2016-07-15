@@ -17,7 +17,7 @@
 
 from statechart.action import Action  # NOQA
 from statechart.event import Event, KwEvent  # NOQA
-from statechart.guard import ElseGuard, Guard  # NOQA
+from statechart.guard import EqualGuard, ElseGuard, Guard  # NOQA
 from statechart.states import CompositeState, ConcurrentState, FinalState, State, Statechart  # NOQA
 from statechart.pseudostates import ChoiceState, InitialState, ShallowHistoryState  # NOQA
 from statechart.transitions import InternalTransition, Transition  # NOQA

@@ -17,8 +17,7 @@
 
 import pytest
 
-from statechart import Guard, KwEvent
-from statechart.guard import EqualGuard
+from statechart import EqualGuard, Guard, KwEvent
 
 
 class GreaterThanZero(Guard):
