@@ -85,3 +85,30 @@ class ElseGuard(Guard):
             True.
         """
         return True
+
+
+class EqualGuard(Guard):
+    """
+    Check if the two inputs 'a' and 'b' are equal.
+
+    Args:
+        a: First input.
+        b: Second input.
+    """
+
+    def __init__(self, a, b):
+        self._a = a
+        self._b = b
+
+    def check(self, scope, event):
+        """
+        Called by the transition.
+
+        Args:
+            scope (Scope): Activated state(s) scope variables.
+            event (Event): Transition event trigger.
+
+        Returns:
+            The result of the equality check between 'a' and 'b'.
+        """
+        return self._a == self._b
