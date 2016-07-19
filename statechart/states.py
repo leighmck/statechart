@@ -481,6 +481,10 @@ class CompositeState(Context):
         # Since none of the child states can handle the event, let this state
         # try handling the event.
         for transition in self._transitions:
+            # If transition is local, deactivate current state if transition is allowed.
+            if transition.is_allowed(event):
+                data.current_state.deactivate(metadata=metadata, event=event)
+
             if transition.execute(metadata, event):
                 return True
 

@@ -16,6 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import logging
+
 from statechart import Statechart
 
 
@@ -59,6 +60,68 @@ class Transition:
         self._calculate_state_set(start, end)
 
         start.add_transition(self)
+
+    def execute(self, metadata, event):
+        """
+        Attempt to execute the transition.
+        Evaluate if the transition is allowed by checking the guard condition.
+        If the transition is allowed, deactivate source states, perform
+        transition action and activate all target states.
+
+        Args:
+            metadata (Metadata): The metadata data object.
+            event (Event): The event that fires the transition.
+
+        Returns:
+            True if the transition was executed.
+        """
+        self._logger.info('execute %s', self.name)
+
+        if not self.is_allowed(event=event):
+            return False
+
+        metadata.event = event
+        metadata.transition = self
+
+        for state in self.deactivate:
+            state.deactivate(metadata, event)
+
+        if self.action:
+            # TODO(lam): pass read-only scope, as it is accessed concurrently
+            self.action.execute(self.start.scope, event)
+
+        for state in self.activate:
+            # TODO(lam): pass read-only scope, as it is accessed concurrently
+            state.activate(metadata, event)
+
+        metadata.transition = None
+        metadata.event = None
+
+        return True
+
+    def is_allowed(self, event):
+        """"
+        Check if the transition is allowed.
+
+        Args:
+            event (Event): The event that fires the transition.
+
+        Returns:
+            True if the transition is allowed.
+        """
+        if self.event and event is None:
+            self._logger.info('default transition not activated')
+            return False
+
+        if self.event and self.event != event:
+            self._logger.info('transition not triggered by event %s', event)
+            return False
+
+        if self.guard and not self.guard.check(self.start.scope, event):
+            self._logger.info('transition blocked by guard condition %s', event)
+            return False
+
+        return True
 
     def _calculate_state_set(self, start, end):
         """
@@ -116,53 +179,6 @@ class Transition:
         while i < len(end_states):
             self.activate.append(end_states[i])
             i += 1
-
-    def execute(self, metadata, event):
-        """
-        Attempt to execute the transition.
-        Evaluate if the transition is allowed by checking the guard condition.
-        If the transition is allowed, deactivate source states, perform
-        transition action and activate all target states.
-
-        Args:
-            metadata (Metadata): The metadata data object.
-            event (Event): The event that fires the transition.
-
-        Returns:
-            True if the transition was executed.
-        """
-        self._logger.info('execute %s', self.name)
-
-        if self.event and event is None:
-            self._logger.info('default transition not activated')
-            return False
-
-        if self.event and self.event != event:
-            self._logger.info('transition not triggered by event %s', event)
-            return False
-
-        if self.guard and not self.guard.check(self.start.scope, event):
-            self._logger.info('transition blocked by guard condition %s', event)
-            return False
-
-        metadata.event = event
-        metadata.transition = self
-
-        for state in self.deactivate:
-            state.deactivate(metadata, event)
-
-        if self.action:
-            # TODO(lam): pass read-only scope, as it is accessed concurrently
-            self.action.execute(self.start.scope, event)
-
-        for state in self.activate:
-            # TODO(lam): pass read-only scope, as it is accessed concurrently
-            state.activate(metadata, event)
-
-        metadata.transition = None
-        metadata.event = None
-
-        return True
 
 
 class InternalTransition(Transition):

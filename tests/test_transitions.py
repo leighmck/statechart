@@ -16,7 +16,8 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import pytest
-from statechart import (Action, Event, State, InitialState, InternalTransition,
+
+from statechart import (Action, CompositeState, Event, State, InitialState, InternalTransition,
                         Statechart, Transition)
 
 
@@ -24,25 +25,8 @@ class ActionSpy(Action):
     def __init__(self):
         self.executed = False
 
-    def execute(self, event):
+    def execute(self, metadata, event):
         self.executed = True
-
-
-class StateSpy(State):
-    def __init__(self, name, context):
-        super().__init__(name=name, context=context)
-        self.entry_executed = False
-        self.do_executed = False
-        self.exit_executed = False
-
-    def entry(self, event):
-        self.entry_executed = True
-
-    def do(self, event):
-        self.do_executed = True
-
-    def exit(self, event):
-        self.exit_executed = True
 
 
 @pytest.fixture
@@ -52,6 +36,26 @@ def empty_statechart():
 
 
 class TestTransition:
+    class StateSpy(CompositeState):
+        def __init__(self, name, context):
+            super().__init__(name=name, context=context)
+
+            # Count state entries and exit
+            self.entries = 0
+            self.exits = 0
+
+            init = InitialState(name='init', context=self)
+            self.default = State(name='default', context=self)
+            self.local = State(name='local', context=self)
+
+            Transition(name='init', start=init, end=self.default)
+
+        def entry(self, event):
+            self.entries += 1
+
+        def exit(self, event):
+            self.exits += 1
+
     def test_create_transition(self, empty_statechart):
         initial_state = InitialState(name='initial', context=empty_statechart)
         next_state = State(name='next', context=empty_statechart)
@@ -79,11 +83,70 @@ class TestTransition:
         assert next_state in transition.deactivate
         assert next_state in transition.activate
 
+    def test_external_transition(self, empty_statechart):
+        init = InitialState(name='init', context=empty_statechart)
+        state_spy = self.StateSpy(name='spy', context=empty_statechart)
+
+        Transition(name='init', start=init, end=state_spy)
+        Transition(name='extern', start=state_spy, end=state_spy, event=Event('extern'))
+
+        empty_statechart.start()
+
+        assert empty_statechart.is_active('spy')
+        assert state_spy.entries is 1
+        assert state_spy.exits is 0
+
+        empty_statechart.dispatch(Event('extern'))
+
+        # After dispatching the external event from the state spy, the
+        # state should be deactivated and activated again.
+        assert empty_statechart.is_active('spy')
+        assert state_spy.entries is 2
+        assert state_spy.exits is 1
+
+    def test_local_transition(self, empty_statechart):
+        init = InitialState(name='init', context=empty_statechart)
+        state_spy = self.StateSpy(name='spy', context=empty_statechart)
+
+        Transition(name='init', start=init, end=state_spy)
+        Transition(name='local', start=state_spy, end=state_spy.local, event=Event('local'))
+
+        empty_statechart.start()
+
+        assert empty_statechart.is_active('spy')
+        assert empty_statechart.is_active('default')
+        assert state_spy.entries is 1
+        assert state_spy.exits is 0
+
+        empty_statechart.dispatch(Event('local'))
+
+        assert empty_statechart.is_active('spy')
+        assert not empty_statechart.is_active('default')
+        assert empty_statechart.is_active('local')
+        assert state_spy.entries is 1
+        assert state_spy.exits is 0
+
 
 class TestInternalTransition:
+    class StateSpy(State):
+        def __init__(self, name, context):
+            super().__init__(name=name, context=context)
+            self.entry_executed = False
+            self.do_executed = False
+            self.exit_executed = False
+
+        def entry(self, event):
+            self.entry_executed = True
+
+        def do(self, event):
+            self.do_executed = True
+
+        def exit(self, event):
+            self.exit_executed = True
+
     def test_execute(self, empty_statechart):
         initial_state = InitialState(name='initial', context=empty_statechart)
-        default_state = StateSpy(name='next', context=empty_statechart)
+        default_state = self.StateSpy(name='next', context=empty_statechart)
         Transition(name='name', start=initial_state, end=default_state)
 
         internal_event = Event(name='internal-event')
