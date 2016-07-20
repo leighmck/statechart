@@ -389,7 +389,7 @@ class ConcurrentState(Context):
         Returns:
             True if the concurrent state is finished.
         """
-        return all(region.is_finished() for region in self._regions)
+        return all(region.is_finished(metadata) for region in self._regions)
 
 
 class CompositeState(Context):
@@ -586,7 +586,7 @@ class Statechart(Context):
         """
         self._logger.info('dispatch event %s', event)
         current_state = self._metadata.active_states[self].current_state
-        return current_state.dispatch(self._metadata, event)
+        current_state.dispatch(self._metadata, event)
 
     def add_transition(self, transition):
         raise RuntimeError('Cannot add transition to a statechart')

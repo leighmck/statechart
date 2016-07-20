@@ -223,10 +223,10 @@ class InternalTransition(Transition):
         if self.event and event != self.event:
             return False
 
-        if self.guard and not self.guard.check(self.start.scope, event):
+        if self.guard and not self.guard.check(scope=self.start.scope, event=event):
             return False
 
         if self.action:
-            self.action.execute(event)
+            self.action.execute(scope=self.start.scope, event=event)
 
         return True
