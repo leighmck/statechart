@@ -20,6 +20,7 @@ import pytest
 from statechart import Action
 from statechart.runtime import Scope
 
+
 class MyAction(Action):
     def execute(self, scope, event):
         pass

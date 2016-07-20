@@ -379,6 +379,18 @@ class ConcurrentState(Context):
 
         return dispatched
 
+    def is_finished(self, metadata):
+        """"
+        Check if all regions within the concurrent state are finished.
+
+        Args:
+            metadata (Metadata): Statechart metadata data.
+
+        Returns:
+            True if the concurrent state is finished.
+        """
+        return all(region.is_finished() for region in self._regions)
+
 
 class CompositeState(Context):
     """
@@ -489,6 +501,18 @@ class CompositeState(Context):
                 return True
 
         return False
+
+    def is_finished(self, metadata):
+        """"
+        Check if the composite state has reached it's final state.
+
+        Args:
+            metadata (Metadata): Statechart metadata data.
+
+        Returns:
+            True if the composite state is finished.
+        """
+        return isinstance(metadata.active_states[self].current_state, FinalState)
 
 
 class Statechart(Context):

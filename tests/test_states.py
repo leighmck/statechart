@@ -112,13 +112,14 @@ class TestFinalState:
         b = State(name='b', context=statechart)
         c = State(name='c', context=statechart)
 
-        Transition(name='comp to c', start=composite_state, end=b, event=Event('f'))
+        Transition(name='comp to c', start=composite_state, end=c, event=Event('f'))
         Transition(name='comp to b', start=composite_state, end=b)
 
         statechart.start()
         assert statechart.is_active('a')
         statechart.dispatch(Event('e'))
         assert statechart.is_active('b')
+
 
 # TODO(lam) Add test with final states - state shouldn't dispatch default
 # event until all regions have finished.

@@ -38,7 +38,7 @@ class TestInitialState:
 
     def test_missing_transition_from_initial_state(self):
         startchart = Statechart(name='statechart')
-        initial_state = InitialState(name='initial', context=startchart)
+        InitialState(name='initial', context=startchart)
 
         with pytest.raises(RuntimeError):
             startchart.start()
@@ -70,7 +70,8 @@ class TestInitialState:
         default_state = State(name='default', context=startchart)
 
         with pytest.raises(RuntimeError):
-            Transition('default', start=initial_state, end=default_state, event=None, guard=MyGuard())
+            Transition('default', start=initial_state, end=default_state, event=None,
+                       guard=MyGuard())
 
 
 class TestShallowHistoryState:
