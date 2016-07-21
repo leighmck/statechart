@@ -15,9 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import asyncio
 import logging
-from collections import deque
 
 from statechart.runtime import Metadata, Scope
 
@@ -527,9 +525,7 @@ class Statechart(Context):
     def __init__(self, name):
         Context.__init__(self, name=name, context=None)
         self._logger = logging.getLogger(__name__)
-        self._running = False
         self._scope = Scope()
-        self._event_queue = deque([])
         self._metadata = Metadata()
 
     def start(self):
@@ -542,37 +538,17 @@ class Statechart(Context):
             RuntimeError if the statechart had already been started.
         """
         self._logger.info('start %s', self.name)
-
-        if self._running is True:
-            raise RuntimeError('Cannot start Statechart once already running.')
-        else:
-            self._metadata.reset()
-            self._metadata.activate(self)
-            self._metadata.activate(self.initial_state)
-            self.dispatch(None)
-            self._running = True
+        self._metadata.reset()
+        self._metadata.activate(self)
+        self._metadata.activate(self.initial_state)
+        self.dispatch(None)
 
     def stop(self):
         """
         Stops the statemachine by deactivating statechart and thus all it's child states.
         """
         self._logger.info('stop %s', self.name)
-
-        self._running = False
         self.deactivate(self._metadata, event=None)
-        self._event_queue.clear()
-
-    def async_dispatch(self, event):
-        """
-        Handle asyncio statechart event.
-
-        Adds event to queue for future processing.
-
-        Args:
-            event (Event): Transition event trigger.
-        """
-        self._logger.info('handle async event %s', event)
-        self._event_queue.append(event)
 
     def dispatch(self, event):
         """
@@ -590,19 +566,6 @@ class Statechart(Context):
 
     def add_transition(self, transition):
         raise RuntimeError('Cannot add transition to a statechart')
-
-    @asyncio.coroutine
-    def async_event_loop(self):
-        """
-        Run asyncio statechart event loop.
-
-        Dispatches events in queue in FIFO order.
-        """
-        while self._running is True:
-            if len(self._event_queue):
-                event = self._event_queue.popleft()
-                self.dispatch(event)
-            yield from asyncio.sleep(0)
 
     def is_active(self, state_name):
         """

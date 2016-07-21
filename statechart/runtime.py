@@ -41,8 +41,8 @@ class Metadata:
     def __init__(self):
         self.active_states = {}
         self.event = None
-        self._history_states = {}
         self.transition = None
+        self._history_states = {}
         self._logger = logging.getLogger(__name__)
 
     def activate(self, state):
