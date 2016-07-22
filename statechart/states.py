@@ -562,7 +562,7 @@ class Statechart(Context):
         """
         self._logger.info('dispatch event %s', event)
         current_state = self._metadata.active_states[self].current_state
-        current_state.dispatch(self._metadata, event)
+        return current_state.dispatch(self._metadata, event)
 
     def add_transition(self, transition):
         raise RuntimeError('Cannot add transition to a statechart')
