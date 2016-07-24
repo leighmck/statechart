@@ -42,8 +42,8 @@ class Event:
     """
 
     def __init__(self, name):
+        self._logger = logging.getLogger(self.__class__.__name__)
         self.name = name
-        self._logger = logging.getLogger(__name__)
 
     def __eq__(self, event):
         """
@@ -100,6 +100,5 @@ class KwEvent(Event):
     """
 
     def __init__(self, name, **kwargs):
-        Event.__init__(self, name=name)
+        super().__init__(name=name)
         self.kwargs = kwargs
-        self._logger = logging.getLogger(__name__)

@@ -25,9 +25,9 @@ class StateRuntimeData:
     """
 
     def __init__(self):
+        self._logger = logging.getLogger(self.__class__.__name__)
         self.current_state = None
         self.state_set = list()
-        self._logger = logging.getLogger(__name__)
 
 
 class Metadata:
@@ -39,11 +39,11 @@ class Metadata:
     """
 
     def __init__(self):
+        self._logger = logging.getLogger(self.__class__.__name__)
         self.active_states = {}
         self.event = None
         self.transition = None
         self._history_states = {}
-        self._logger = logging.getLogger(__name__)
 
     def activate(self, state):
         """
@@ -53,7 +53,6 @@ class Metadata:
         Args:
             state (State): State to activate.
         """
-        self._logger.info('Activate %s', state.name)
         if not (state in self.active_states):
             self.active_states[state] = StateRuntimeData()
 
@@ -74,8 +73,6 @@ class Metadata:
         Args:
             state (State): State to dactivate.
         """
-        self._logger.info('Deactivate %s', state.name)
-
         if state in self.active_states:
             data = self.active_states[state]
             data.current_state = None
@@ -93,7 +90,6 @@ class Metadata:
         Returns:
             The most recent state remembered by the specified history state.
         """
-        self._logger.info('Get history state %s', history_state.name)
         return self._history_states[history_state]
 
     def has_history_info(self, history_state):
@@ -111,7 +107,6 @@ class Metadata:
         if history_state in self._history_states:
             status = True
 
-        self._logger.info('Has history info %s? %s', history_state.name, str(status))
         return status
 
     def is_active(self, state):
@@ -129,12 +124,10 @@ class Metadata:
         if state in self.active_states:
             status = True
 
-        self._logger.info('Is %s active? %s', state.name, str(status))
         return status
 
     def reset(self):
         """Resets the metadata object for reuse."""
-        self._logger.info('Reset active states & history')
         self.active_states.clear()
         self._history_states.clear()
 
@@ -148,8 +141,6 @@ class Metadata:
             can be restored in order to recall the actual state to recall.
             actual_state: (State): State to recall.
         """
-        self._logger.info('Store history state %s for actual state %s',
-                          history_state.name, actual_state.name)
         self._history_states[history_state] = actual_state
 
 

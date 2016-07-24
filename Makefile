@@ -48,7 +48,7 @@ lint:
 	flake8 statechart tests
 
 test:
-	py.test
+	py.test --log-format="%(name)-16s %(levelname)-8s %(message)s"
 
 coverage:
 	coverage run --source statechart -m py.test

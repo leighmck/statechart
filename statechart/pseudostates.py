@@ -15,8 +15,6 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import logging
-
 from statechart import CompositeState, State, Statechart
 
 
@@ -32,8 +30,7 @@ class PseudoState(State):
     """
 
     def __init__(self, name, context):
-        State.__init__(self, name=name, context=context)
-        self._logger = logging.getLogger(__name__)
+        super().__init__(name=name, context=context)
 
     def activate(self, metadata, event):
         """
@@ -46,7 +43,6 @@ class PseudoState(State):
         Returns:
             True if the state was activated.
         """
-        self._logger.info('activate %s', self.name)
         metadata.activate(self)
 
         if self.entry:
@@ -66,8 +62,7 @@ class InitialState(PseudoState):
     """
 
     def __init__(self, name, context):
-        PseudoState.__init__(self, name=name, context=context)
-        self._logger = logging.getLogger(__name__)
+        super().__init__(name=name, context=context)
 
         if isinstance(self.context, CompositeState) or isinstance(self.context, Statechart):
             if self.context.initial_state:
@@ -89,7 +84,6 @@ class InitialState(PseudoState):
         Returns:
             True if the state was activated.
         """
-        self._logger.info('activate %s', self.name)
         self.dispatch(metadata=metadata, event=None)
 
         return True
@@ -107,7 +101,7 @@ class InitialState(PseudoState):
             triggered for this event or if the guard condition failed.
 
         Raises:
-            RuntimeError: If the state could not dispatch transiton
+            RuntimeError: If the state could not dispatch transition
         """
         if super().dispatch(metadata=metadata, event=event):
             return True
@@ -151,8 +145,7 @@ class ShallowHistoryState(PseudoState):
             name (str): An identifier for the model element.
             context (Context): The parent context that contains this state.
         """
-        PseudoState.__init__(self, name=name, context=context)
-        self._logger = logging.getLogger(__name__)
+        super().__init__(name=name, context=context)
 
         self.state = None
 
@@ -176,8 +169,6 @@ class ShallowHistoryState(PseudoState):
         Returns:
             True if the state was activated.
         """
-        self._logger.info('activate %s', self.name)
-
         if len(self._transitions) > 1:
             raise RuntimeError('History state cannot have more than 1 transition')
 
@@ -196,27 +187,24 @@ class ShallowHistoryState(PseudoState):
 
 
 class ChoiceState(PseudoState):
-    def __init__(self, name, context):
-        """
-        The Choice pseudo-state is used to compose complex transitional path which,
-        which, when reached, result in the dynamic evaluation of the guards of the
-        triggers of its outgoing transitions.
+    """
+    The Choice pseudo-state is used to compose complex transitional path which,
+    which, when reached, result in the dynamic evaluation of the guards of the
+    triggers of its outgoing transitions.
 
-        It enables splitting of transitions into multiple outgoing paths.
+    It enables splitting of transitions into multiple outgoing paths.
 
-        Args:
-            name (str): An identifier for the model element.
-            context (Context): The parent context that contains this state.
+    Args:
+        name (str): An identifier for the model element.
+        context (Context): The parent context that contains this state.
 
-        Note:
-            It must have at least one incoming and one outgoing Transition.
+    Note:
+        It must have at least one incoming and one outgoing Transition.
 
-            If none of the guards evaluates to true, then the model is considered ill-formed.
-            To avoid this, it is recommended to define one outgoing transition with a
-            predefined "else" guard for every choice vertex.
-        """
-        PseudoState.__init__(self, name=name, context=context)
-        self._logger = logging.getLogger(__name__)
+        If none of the guards evaluates to true, then the model is considered ill-formed.
+        To avoid this, it is recommended to define one outgoing transition with a
+        predefined "else" guard for every choice vertex.
+    """
 
     def activate(self, metadata, event):
         """
@@ -230,12 +218,8 @@ class ChoiceState(PseudoState):
         Returns:
             True if the state was activated.
         """
-        self._logger.info('activate %s', self.name)
-
         for transition in self._transitions:
-            executed = transition.execute(metadata=metadata, event=None)
-
-            if executed is True:
+            if transition.execute(metadata=metadata, event=None):
                 return True
 
         raise RuntimeError('No choice made due to guard conditions, '
