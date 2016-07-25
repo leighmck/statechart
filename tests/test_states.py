@@ -47,6 +47,105 @@ class TestStatechart:
     def test_create_statechart(self):
         Statechart(name='statechart')
 
+    def test_simple_statechart_finished(self):
+        statechart = Statechart(name='statechart')
+        init = InitialState(name='init', context=statechart)
+        default = State(name='default', context=statechart)
+        final = FinalState(name='final', context=statechart)
+
+        finish = Event('finish')
+
+        Transition(name='init', start=init, end=default)
+        Transition(name='finish', start=default, end=final, event=finish)
+        statechart.start()
+
+        assert statechart.is_active('default')
+        assert not statechart.is_finished()
+
+        statechart.dispatch(finish)
+
+        assert statechart.is_active('final')
+        assert statechart.is_finished()
+
+    def test_composite_statechart_finished(self):
+        statechart = Statechart(name='statechart')
+        init = InitialState(name='init', context=statechart)
+        final = FinalState(name='final', context=statechart)
+
+        composite = CompositeState(name='composite', context=statechart)
+        composite_init = InitialState(name='composite_init', context=composite)
+        composite_default = State(name='composite_default', context=composite)
+        composite_final = FinalState(name='composite_final', context=composite)
+
+        finish = Event('finish')
+
+        Transition(name='init', start=init, end=composite)
+        Transition(name='composite_init', start=composite_init, end=composite_default)
+        Transition(name='finish_composite', start=composite_default, end=composite_final, event=finish)
+        Transition(name='composite_finished', start=composite, end=final)
+
+        statechart.start()
+
+        assert statechart.is_active('composite')
+        assert statechart.is_active('composite_default')
+        assert not statechart.is_finished()
+
+        statechart.dispatch(finish)
+
+        assert statechart.is_active('final')
+        assert statechart.is_finished()
+
+    def test_compound_statechart_finished(self):
+        statechart = Statechart(name='statechart')
+        init = InitialState(name='init', context=statechart)
+        final = FinalState(name='final', context=statechart)
+
+        composite_1 = CompositeState(name='composite_1', context=statechart)
+        composite_1_init = InitialState(name='composite_1_init', context=composite_1)
+        composite_1_default = State(name='composite_1_default', context=composite_1)
+        composite_1_final = FinalState(name='composite_1_final', context=composite_1)
+
+        composite_2 = CompositeState(name='composite_2', context=statechart)
+        composite_2_init = InitialState(name='composite_2_init', context=composite_2)
+        composite_2_default = State(name='composite_2_default', context=composite_2)
+        composite_2_final = FinalState(name='composite_2_final', context=composite_2)
+
+        compound = ConcurrentState(name='compound', context=statechart)
+        compound.add_region(composite_1)
+        compound.add_region(composite_2)
+
+        finish_1 = Event('finish_1')
+        finish_2 = Event('finish_2')
+
+        Transition(name='init', start=init, end=compound)
+        Transition(name='composite_1_init', start=composite_1_init, end=composite_1_default)
+        Transition(name='composite_2_init', start=composite_2_init, end=composite_2_default)
+
+        Transition(name='finish_composite_1', start=composite_1_default, end=composite_1_final, event=finish_1)
+        Transition(name='finish_composite_2', start=composite_2_default, end=composite_2_final, event=finish_2)
+
+        Transition(name='compound_finished', start=compound, end=final, event=finish_1)
+
+        statechart.start()
+
+        assert statechart.is_active('compound')
+        assert statechart.is_active('composite_1_default')
+        assert statechart.is_active('composite_2_default')
+        assert not statechart.is_finished()
+
+        statechart.dispatch(finish_1)
+
+        assert statechart.is_active('compound')
+        assert statechart.is_active('composite_1_final')
+        assert statechart.is_active('composite_2_default')
+        assert not statechart.is_finished()
+
+        statechart.dispatch(finish_2)
+
+        assert not statechart.is_active('compound')
+        assert statechart.is_active('final')
+        assert statechart.is_finished()
+
 
 class TestState:
     def test_create_state(self):

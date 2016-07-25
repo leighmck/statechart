@@ -165,8 +165,6 @@ class State:
         """
         self._logger.info('Activate "%s"', self.name)
 
-        activated = False
-
         if not metadata.is_active(self):
             metadata.activate(self)
 
@@ -176,9 +174,9 @@ class State:
             if self.do:
                 self.do(event)
 
-            activated = True
+            return True
 
-        return activated
+        return False
 
     def deactivate(self, metadata, event):
         """
@@ -300,8 +298,6 @@ class ConcurrentState(Context):
         Returns:
             True if state activated, False if already active.
         """
-        status = False
-
         if super().activate(metadata, param):
             rdata = metadata.active_states[self]
 
@@ -311,9 +307,9 @@ class ConcurrentState(Context):
                     region.activate(metadata, param)
                     region.initial_state.activate(metadata, param)
 
-            status = True
+            return True
 
-        return status
+        return False
 
     def deactivate(self, metadata, param):
         """
@@ -551,7 +547,7 @@ class Statechart(Context):
         """
         Check if the state name is active
 
-        Srgs:
+        Args:
             state_name (str): State name to check.
 
         Returns:
@@ -562,3 +558,15 @@ class Statechart(Context):
                 return True
 
         return False
+
+    def is_finished(self):
+        """"
+        Check if the statechart has finished
+
+        Returns:
+            True if the statechart has finished.
+        """
+        if isinstance(self._metadata.active_states[self].current_state, FinalState):
+            return True
+        else:
+            return False
