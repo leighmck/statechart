@@ -126,6 +126,91 @@ class TestTransition:
         assert state_spy.entries is 1
         assert state_spy.exits is 0
 
+    def test_deep_local_transitions(self, empty_statechart):
+        sc = empty_statechart
+        init = InitialState(name='init', context=sc)
+
+        top = CompositeState(name='top', context=sc)
+        top_init = InitialState(name='top_init', context=top)
+        middle_a = CompositeState(name='middle_a', context=top)
+        middle_b = CompositeState(name='middle_b', context=top)
+
+        middle_a_init = InitialState(name='middle_a_init', context=middle_a)
+        bottom_a1 = State(name='bottom_a1', context=middle_a)
+        bottom_a2 = State(name='bottom_a2', context=middle_a)
+
+        middle_b_init = InitialState(name='middle_b_init', context=middle_b)
+        bottom_b1 = State(name='bottom_b1', context=middle_b)
+        bottom_b2 = State(name='bottom_b2', context=middle_b)
+
+        # Setup default transitions
+        Transition(name='sc_init', start=init, end=top)
+        Transition(name='top_init', start=top_init, end=middle_a)
+        Transition(name='middle_a_init', start=middle_a_init, end=bottom_a1)
+        Transition(name='middle_b_init', start=middle_b_init, end=bottom_b1)
+
+        # Setup events to trigger transitions
+        a_to_b = Event('a_to_b')
+        a1_to_a2 = Event('a1_to_a2')
+        b1_to_b2 = Event('b1_to_b2')
+        top_to_middle_a = Event('top_to_middle_a')
+        top_to_middle_b = Event('top_to_middle_b')
+        middle_a_to_a1 = Event('middle_a_to_a1')
+        middle_a_to_a2 = Event('middle_a_to_a2')
+        middle_b_to_b1 = Event('middle_b_to_b1')
+        middle_b_to_b2 = Event('middle_b_to_b2')
+
+        # Setup external transitions
+        Transition(name='middle_a_to_b', start=middle_a, end=middle_b, event=a_to_b)
+        Transition(name='bottom_a1_to_a2', start=bottom_a1, end=bottom_a2, event=a1_to_a2)
+        Transition(name='bottom_b1_to_b2', start=bottom_a1, end=bottom_a2, event=b1_to_b2)
+
+        # Setup local transitions
+        Transition(name='top_to_middle_a', start=top, end=middle_a, event=top_to_middle_a)
+        Transition(name='top_to_middle_b', start=top, end=middle_b, event=top_to_middle_b)
+
+        Transition(name='middle_a_to_a1', start=middle_a, end=bottom_a1, event=middle_a_to_a1)
+        Transition(name='middle_a_to_a2', start=middle_a, end=bottom_a2, event=middle_a_to_a2)
+
+        Transition(name='middle_b_to_b1', start=middle_b, end=bottom_b1, event=middle_b_to_b1)
+        Transition(name='middle_b_to_b2', start=middle_b, end=bottom_b2, event=middle_b_to_b2)
+
+        sc.start()
+
+        assert sc.is_active('top')
+        assert sc.is_active('middle_a')
+        assert sc.is_active('bottom_a1')
+
+        sc.dispatch(middle_a_to_a2)
+
+        assert sc.is_active('top')
+        assert sc.is_active('middle_a')
+        assert sc.is_active('bottom_a2')
+
+        sc.dispatch(top_to_middle_b)
+
+        assert sc.is_active('top')
+        assert sc.is_active('middle_b')
+        assert sc.is_active('bottom_b1')
+
+        sc.dispatch(top_to_middle_a)
+
+        assert sc.is_active('top')
+        assert sc.is_active('middle_a')
+        assert sc.is_active('bottom_a1')
+
+        sc.dispatch(a_to_b)
+
+        assert sc.is_active('top')
+        assert sc.is_active('middle_b')
+        assert sc.is_active('bottom_b1')
+
+        sc.dispatch(middle_b_to_b2)
+
+        assert sc.is_active('top')
+        assert sc.is_active('middle_b')
+        assert sc.is_active('bottom_b2')
+
 
 class TestInternalTransition:
     class StateSpy(State):
