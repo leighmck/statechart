@@ -211,6 +211,63 @@ class TestTransition:
         assert sc.is_active('middle_b')
         assert sc.is_active('bottom_b2')
 
+    def test_transition_hierarchy(self, empty_statechart):
+        sc = empty_statechart
+        init = InitialState(name='init', context=sc)
+
+        top = CompositeState(name='top', context=sc)
+        top_init = InitialState(name='top_init', context=top)
+        middle_a = CompositeState(name='middle_a', context=top)
+        middle_b = CompositeState(name='middle_b', context=top)
+
+        middle_a_init = InitialState(name='middle_a_init', context=middle_a)
+        bottom_a1 = State(name='bottom_a1', context=middle_a)
+        bottom_a2 = State(name='bottom_a2', context=middle_a)
+
+        middle_b_init = InitialState(name='middle_b_init', context=middle_b)
+        bottom_b1 = State(name='bottom_b1', context=middle_b)
+        bottom_b2 = State(name='bottom_b2', context=middle_b)
+
+        # Setup default transitions
+        Transition(name='sc_init', start=init, end=top)
+        Transition(name='top_init', start=top_init, end=middle_a)
+        Transition(name='middle_a_init', start=middle_a_init, end=bottom_a1)
+        Transition(name='middle_b_init', start=middle_b_init, end=bottom_b1)
+
+        # Setup event triggers
+        across = Event('across')
+        up = Event('up')
+
+        # Setup external transitions
+        Transition(name='bottom_a1_to_a2', start=bottom_a1, end=bottom_a2, event=across)
+        Transition(name='bottom_a2_to_middle_b', start=bottom_a2, end=middle_b, event=up)
+        Transition(name='middle_b_to_a', start=middle_b, end=middle_a, event=across)
+
+        sc.start()
+
+        assert sc.is_active('top')
+        assert sc.is_active('middle_a')
+        assert sc.is_active('bottom_a1')
+
+        sc.dispatch(across)
+
+        assert sc.is_active('top')
+        assert sc.is_active('middle_a')
+        assert sc.is_active('bottom_a2')
+
+
+        sc.dispatch(up)
+
+        assert sc.is_active('top')
+        assert sc.is_active('middle_b')
+        assert sc.is_active('bottom_b1')
+
+        sc.dispatch(across)
+
+        assert sc.is_active('top')
+        assert sc.is_active('middle_a')
+        assert sc.is_active('bottom_a1')
+
 
 class TestInternalTransition:
     class StateSpy(State):

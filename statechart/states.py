@@ -461,17 +461,16 @@ class CompositeState(Context):
 
         # If the substate dispatched the event and reached a final state or if this state
         # is no longer active, trigger a new dispatch for the end transition, otherwise return.
-        data = metadata.active_states[self]
-        if dispatched and not (
-                isinstance(data.current_state, FinalState) or not metadata.is_active(self)):
-            return dispatched
+        if dispatched and metadata.is_active(self) and not isinstance(metadata.active_states[self].current_state,
+                                                                      FinalState):
+            return True
 
         # Since none of the child states can handle the event, let this state
         # try handling the event.
         for transition in self._transitions:
             # If transition is local, deactivate current state if transition is allowed.
             if self not in transition.deactivate and transition.is_allowed(event):
-                transition.deactivate.insert(0, data.current_state)
+                transition.deactivate.insert(0, metadata.active_states[self].current_state)
 
             if transition.execute(metadata, event):
                 return True
