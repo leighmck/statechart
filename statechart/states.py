@@ -64,23 +64,6 @@ class State:
             raise RuntimeError('Context cannot be null')
 
         self.context = context
-        parent = context
-
-        """ Recursively move up to get the statechart object """
-        if parent is not None:
-            while 1:
-                if isinstance(parent, Statechart):
-                    break
-
-                if parent is None:
-                    break
-
-                parent = parent.context
-
-            if isinstance(parent, Statechart):
-                self.statechart = parent
-            else:
-                raise RuntimeError('Statechart not found - check hierarchy')
 
         self._transitions = []
 
