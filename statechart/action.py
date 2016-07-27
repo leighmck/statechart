@@ -20,12 +20,12 @@ import abc
 
 class Action(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def execute(self, scope, event):
+    def execute(self, metadata, event):
         """
         Called by the transition, override for specific behaviour.
 
         Args:
-            scope (Scope): Activated state(s) scope variables.
+            metadata (Metadata): Common statechart metadata.
             event (Event): The event which triggered this action.
 
         Raises:

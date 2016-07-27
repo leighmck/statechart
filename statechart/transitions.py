@@ -56,7 +56,7 @@ class Transition:
         """ Used to store the states that will get de-activated """
         self.deactivate = list()
 
-        self._calculate_state_set(start, end)
+        self._calculate_state_set(start=start, end=end)
 
         start.add_transition(self)
 
@@ -68,13 +68,13 @@ class Transition:
         transition action and activate all target states.
 
         Args:
-            metadata (Metadata): The metadata data object.
+            metadata (Metadata): Common statechart metadata.
             event (Event): The event that fires the transition.
 
         Returns:
             True if the transition was executed.
         """
-        if not self.is_allowed(event=event):
+        if not self.is_allowed(metadata=metadata, event=event):
             return False
 
         metadata.event = event
@@ -88,26 +88,25 @@ class Transition:
                               self.start.name, self.end.name)
 
         for state in self.deactivate:
-            state.deactivate(metadata, event)
+            state.deactivate(metadata=metadata, event=event)
 
         if self.action:
-            # TODO(lam): pass read-only scope, as it is accessed concurrently
-            self.action.execute(self.start.scope, event)
+            self.action.execute(metadata=metadata, event=event)
 
         for state in self.activate:
-            # TODO(lam): pass read-only scope, as it is accessed concurrently
-            state.activate(metadata, event)
+            state.activate(metadata=metadata, event=event)
 
         metadata.transition = None
         metadata.event = None
 
         return True
 
-    def is_allowed(self, event):
+    def is_allowed(self, metadata, event):
         """"
         Check if the transition is allowed.
 
         Args:
+            metadata (Metadata): Common statechart metadata.
             event (Event): The event that fires the transition.
 
         Returns:
@@ -119,7 +118,7 @@ class Transition:
         if self.event and self.event != event:
             return False
 
-        if self.guard and not self.guard.check(self.start.scope, event):
+        if self.guard and not self.guard.check(metadata=metadata, event=event):
             return False
 
         return True
@@ -130,10 +129,9 @@ class Transition:
         when triggering the transition.
 
         Args:
-            start (State): The originating state (or pseudostate) of the
-                transition.
-            end (State): The target state (or pseudostate) that is reached
-                when the transition is executed.
+            start (State): The originating state (or pseudostate) of the transition.
+            end (State): The target state (or pseudostate) that is reached when the transition is
+                executed.
         """
         start_states = list()
         end_states = list()
@@ -210,16 +208,16 @@ class InternalTransition(Transition):
         If the transition is allowed perform transition action.
 
         Args:
-            metadata (Metadata): The metadata data object.
+            metadata (Metadata): Common statechart metadata.
             event (Event): The event that fires the transition.
 
         Returns:
             True if the transition was executed.
         """
-        if not self.is_allowed(self.event):
+        if not self.is_allowed(metadata=metadata, event=event):
             return False
 
         if self.action:
-            self.action.execute(scope=self.start.scope, event=event)
+            self.action.execute(metadata=metadata, event=event)
 
         return True

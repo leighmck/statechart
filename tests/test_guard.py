@@ -21,7 +21,7 @@ from statechart import EqualGuard, Guard, KwEvent
 
 
 class GreaterThanZero(Guard):
-    def check(self, scope, event):
+    def check(self, metadata, event):
         if 'value' in event.kwargs and event.kwargs['value'] > 0:
             return True
         else:
@@ -38,7 +38,7 @@ class TestGuard:
                               (KwEvent(name='a', value=1), True)])
     def test_guard_check(self, event, expected):
         guard = GreaterThanZero()
-        assert guard.check(scope=None, event=event) == expected
+        assert guard.check(metadata=None, event=event) == expected
 
     @pytest.mark.parametrize('a, b, expected',
                              [(1, 1, True),
@@ -47,4 +47,4 @@ class TestGuard:
                               ('1', '2', False)])
     def test_equal_guard(self, a, b, expected):
         guard = EqualGuard(a=a, b=b)
-        assert guard.check(scope=None, event=None) == expected
+        assert guard.check(metadata=None, event=None) == expected

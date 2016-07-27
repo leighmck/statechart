@@ -39,16 +39,16 @@ class Guard(metaclass=abc.ABCMeta):
         Transition(name='e', start=a, end=b, event=my_event, guard=GreaterThanZero())
 
         Fire the event. If the state has a transition that :
-        statechart.dispatch(event=Event(name='my event', value=10)
+        statechart.dispatch(Event(name='my event', value=10))
     """
 
     @abc.abstractmethod
-    def check(self, scope, event):
+    def check(self, metadata, event):
         """
         Called by the transition, override for specific behaviour
 
         Args:
-            scope (Scope): Activated state(s) scope variables.
+            metadata (Metadata): Common statechart metadata.
             event (Event): Transition event trigger.
 
         Note:
@@ -73,12 +73,12 @@ class ElseGuard(Guard):
     one path that can be executed.
     """
 
-    def check(self, scope, event):
+    def check(self, metadata, event):
         """
         Called by the transition.
 
         Args:
-            scope (Scope): Activated state(s) scope variables.
+            metadata (Metadata): Common statechart metadata.
             event (Event): Transition event trigger.
 
         Returns:
@@ -100,12 +100,12 @@ class EqualGuard(Guard):
         self._a = a
         self._b = b
 
-    def check(self, scope, event):
+    def check(self, metadata, event):
         """
         Called by the transition.
 
         Args:
-            scope (Scope): Activated state(s) scope variables.
+            metadata (Metadata): Common statechart metadata.
             event (Event): Transition event trigger.
 
         Returns:

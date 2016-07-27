@@ -37,7 +37,7 @@ class PseudoState(State):
         Activate the state.
 
         Args:
-            metadata (Metadata): Statechart metadata data.
+            metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
 
         Returns:
@@ -46,7 +46,7 @@ class PseudoState(State):
         metadata.activate(self)
 
         if self.entry:
-            self.entry(event=event)
+            self.entry(metadata=metadata, event=event)
 
         return True
 
@@ -78,7 +78,7 @@ class InitialState(PseudoState):
         composite state.
 
         Args:
-            metadata (Metadata): Statechart metadata data.
+            metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
 
         Returns:
@@ -93,7 +93,7 @@ class InitialState(PseudoState):
         Dispatch transition.
 
         Args:
-            metadata (Metadata): Statechart metadata data.
+            metadata (Metadata): Common statechart metadata.
             event (Event): Transition event trigger.
 
         Returns:
@@ -127,7 +127,7 @@ class InitialState(PseudoState):
         elif transition.guard is not None:
             raise RuntimeError('Transition from initial state cannot have a guard condition')
         else:
-            super().add_transition(transition=transition)
+            super().add_transition(transition)
 
 
 class ShallowHistoryState(PseudoState):
@@ -163,7 +163,7 @@ class ShallowHistoryState(PseudoState):
         composite state.
 
         Args:
-            metadata (Metadata): Statechart metadata data.
+            metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
 
         Returns:
@@ -212,7 +212,7 @@ class ChoiceState(PseudoState):
         composite state.
 
         Args:
-            metadata (Metadata): Statechart metadata data.
+            metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
 
         Returns:

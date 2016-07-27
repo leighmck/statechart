@@ -16,8 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import pytest
-from statechart import InitialState, State, Statechart, Transition
-from statechart.runtime import Metadata
+from statechart import InitialState, Metadata, State, Statechart, Transition
 
 
 @pytest.fixture

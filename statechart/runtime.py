@@ -16,7 +16,6 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import logging
-from collections import ChainMap
 
 
 class StateRuntimeData:
@@ -136,20 +135,9 @@ class Metadata:
         Store history for history state when leaving context.
 
         Args:
-            history_state (HistoryState): History state to store.
-            When this state's context is reactivated, the history state
-            can be restored in order to recall the actual state to recall.
+            history_state (HistoryState): History state to store. When this state's context is
+                reactivated, the history state can be restored in order to recall the actual
+                state to recall.
             actual_state: (State): State to recall.
         """
         self._history_states[history_state] = actual_state
-
-
-class Scope(ChainMap):
-    """Variant of ChainMap that allows direct updates to inner scopes"""
-
-    def __setitem__(self, key, value):
-        for mapping in self.maps:
-            if key in mapping:
-                mapping[key] = value
-                return
-        self.maps[0][key] = value

@@ -18,11 +18,10 @@
 import pytest
 
 from statechart import Action
-from statechart.runtime import Scope
 
 
 class MyAction(Action):
-    def execute(self, scope, event):
+    def execute(self, metadata, event):
         pass
 
 
@@ -37,4 +36,4 @@ class TestAction:
             Action()
 
     def test_execute_action(self, my_action):
-        my_action.execute(scope=Scope(), event=None)
+        my_action.execute(metadata=None, event=None)

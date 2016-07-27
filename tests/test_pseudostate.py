@@ -18,7 +18,7 @@
 import pytest
 
 from statechart import (ChoiceState, CompositeState, ElseGuard, Event, Guard, InitialState,
-                        ShallowHistoryState, State, Statechart, Transition)
+                        Metadata, ShallowHistoryState, State, Statechart, Transition)
 
 
 class TestInitialState:
@@ -62,7 +62,7 @@ class TestInitialState:
 
     def test_transition_from_initial_state_with_guard_condition(self):
         class MyGuard(Guard):
-            def check(self, scope, event):
+            def check(self, metadata, event):
                 return False
 
         startchart = Statechart(name='statechart')
@@ -337,12 +337,18 @@ class TestChoiceState:
                              [('a', 'a'),
                               ('b', 'b')])
     def test_choice_state_transitions(self, choice, expected_state_name):
-        class IsA(Guard):
-            def check(self, scope, event):
-                return scope.get('value') == 'a'
+        class MyMetadata(Metadata):
+            def __init__(self):
+                super().__init__()
+                self.value = None
 
-        statechart = Statechart(name='statechart')
-        statechart.scope['value'] = choice
+        class IsA(Guard):
+            def check(self, metadata, event):
+                return metadata.value == 'a'
+
+        myMetadata = MyMetadata()
+        myMetadata.value = choice
+        statechart = Statechart(name='statechart', metadata=myMetadata)
         init = InitialState(name='init', context=statechart)
 
         state_a = State(name='a', context=statechart)
