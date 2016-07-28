@@ -450,8 +450,7 @@ class CompositeState(Context):
             # If transition is local, deactivate current state if transition is allowed.
             if self not in transition.deactivate and transition.is_allowed(metadata=metadata,
                                                                            event=event):
-                if metadata.active_states[self].current_state not in transition.deactivate:
-                    transition.deactivate.insert(0, metadata.active_states[self].current_state)
+                data.current_state.deactivate(metadata=metadata, event=event)
 
             if transition.execute(metadata=metadata, event=event):
                 return True
