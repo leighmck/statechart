@@ -15,9 +15,11 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+
 import pytest
 
-from statechart import Action
+from statechart import Action, Metadata
+from statechart.action import CallAction
 
 
 class MyAction(Action):
@@ -25,9 +27,20 @@ class MyAction(Action):
         pass
 
 
+class MyMetadata(Metadata):
+    def __init__(self):
+        super().__init__()
+        self.value = 0
+
+
 @pytest.fixture
 def my_action():
     return MyAction()
+
+
+@pytest.fixture
+def my_metadata():
+    return MyMetadata()
 
 
 class TestAction:
@@ -37,3 +50,14 @@ class TestAction:
 
     def test_execute_action(self, my_action):
         my_action.execute(metadata=None, event=None)
+
+
+def my_callback(metadata, event):
+    metadata.value = 1
+
+
+class TestCallAction:
+    def test_execute_callback_action(self, my_metadata):
+        call_action = CallAction(my_callback)
+        call_action.execute(metadata=my_metadata, event=None)
+        assert my_metadata.value is 1
