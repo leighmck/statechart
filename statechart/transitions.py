@@ -195,7 +195,7 @@ class InternalTransition(Transition):
         action (Action): An optional procedure to be performed when the transition fires.
     """
 
-    def __init__(self, name, state, event, guard, action):
+    def __init__(self, name, state, event=None, guard=None, action=None):
         super().__init__(name=name, start=state, end=state, event=event, guard=guard,
                          action=action)
         self.deactivate.clear()

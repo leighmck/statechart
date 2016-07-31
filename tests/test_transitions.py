@@ -294,7 +294,6 @@ class TestInternalTransition:
         InternalTransition(name='internal',
                            state=default_state,
                            event=internal_event,
-                           guard=None,
                            action=internal_action)
         empty_statechart.start()
 
