@@ -28,7 +28,6 @@ class Transition:
     response of the state machine to a particular event instance.
 
     Args:
-        name (start): An identifier for the Transition.
         start (State): The originating state (or pseudostate) of the
             transition.
         end (State): The target state (or pseudostate) that is reached when the
@@ -41,9 +40,8 @@ class Transition:
             transition fires.
     """
 
-    def __init__(self, name, start, end, event=None, guard=None, action=None):
+    def __init__(self, start, end, event=None, guard=None, action=None):
         self._logger = logging.getLogger(self.__class__.__name__)
-        self.name = name
         self.start = start
         self.end = end
         self.event = event
@@ -186,7 +184,6 @@ class InternalTransition(Transition):
     This is true even if the state machine is in a nested state within this state.
 
     Args:
-        name (str): An identifier for the Transition.
         state (State): The state which owns this transition. The transition executes without
             exiting or re-entering this state.
         event (Event): The event that fires the transition.
@@ -195,9 +192,8 @@ class InternalTransition(Transition):
         action (Action): An optional procedure to be performed when the transition fires.
     """
 
-    def __init__(self, name, state, event=None, guard=None, action=None):
-        super().__init__(name=name, start=state, end=state, event=event, guard=guard,
-                         action=action)
+    def __init__(self, state, event=None, guard=None, action=None):
+        super().__init__(start=state, end=state, event=event, guard=guard, action=action)
         self.deactivate.clear()
         self.activate.clear()
 

@@ -36,7 +36,7 @@ class Guard(metaclass=abc.ABCMeta):
 
         Add guard to transition:
 
-        Transition(name='e', start=a, end=b, event=my_event, guard=GreaterThanZero())
+        Transition(start=a, end=b, event=my_event, guard=GreaterThanZero())
 
         Fire the event. If the state has a transition that :
         statechart.dispatch(Event(name='my event', value=10))

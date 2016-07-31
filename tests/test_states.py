@@ -55,8 +55,8 @@ class TestStatechart:
 
         finish = Event('finish')
 
-        Transition(name='init', start=init, end=default)
-        Transition(name='finish', start=default, end=final, event=finish)
+        Transition(start=init, end=default)
+        Transition(start=default, end=final, event=finish)
         statechart.start()
 
         assert statechart.is_active('default')
@@ -79,11 +79,10 @@ class TestStatechart:
 
         finish = Event('finish')
 
-        Transition(name='init', start=init, end=composite)
-        Transition(name='composite_init', start=composite_init, end=composite_default)
-        Transition(name='finish_composite', start=composite_default, end=composite_final,
-                   event=finish)
-        Transition(name='composite_finished', start=composite, end=final)
+        Transition(start=init, end=composite)
+        Transition(start=composite_init, end=composite_default)
+        Transition(start=composite_default, end=composite_final, event=finish)
+        Transition(start=composite, end=final)
 
         statechart.start()
 
@@ -111,7 +110,7 @@ class TestState:
         initial_state = InitialState(name='initial', context=statechart)
         default_state = State(name='default', context=statechart)
 
-        default_transition = Transition(name='default', start=initial_state, end=default_state)
+        default_transition = Transition(start=initial_state, end=default_state)
 
         assert default_transition in initial_state._transitions
 
@@ -122,7 +121,7 @@ class TestFinalState:
         final_state = FinalState(name='final', context=statechart)
 
         with pytest.raises(RuntimeError):
-            Transition(name='final', start=final_state, end=statechart)
+            Transition(start=final_state, end=statechart)
 
     def test_transition_from_finished_composite_state(self):
         statechart = Statechart(name='statechart')
@@ -133,12 +132,12 @@ class TestFinalState:
         a = State(name='a', context=composite_state)
         comp_final = FinalState(name='final comp', context=composite_state)
 
-        Transition(name='statechart init', start=statechart_init, end=composite_state)
-        Transition(name='comp init', start=comp_init, end=a)
-        Transition(name='comp finished', start=a, end=comp_final, event=Event('e'))
+        Transition(start=statechart_init, end=composite_state)
+        Transition(start=comp_init, end=a)
+        Transition(start=a, end=comp_final, event=Event('e'))
 
         b = State(name='b', context=statechart)
-        Transition(name='comp to b', start=composite_state, end=b)
+        Transition(start=composite_state, end=b)
 
         statechart.start()
         assert statechart.is_active('a')
@@ -154,15 +153,15 @@ class TestFinalState:
         a = State(name='a', context=composite_state)
         comp_final = FinalState(name='final comp', context=composite_state)
 
-        Transition(name='statechart init', start=statechart_init, end=composite_state)
-        Transition(name='comp init', start=comp_init, end=a)
-        Transition(name='comp finished', start=a, end=comp_final, event=Event('e'))
+        Transition(start=statechart_init, end=composite_state)
+        Transition(start=comp_init, end=a)
+        Transition(start=a, end=comp_final, event=Event('e'))
 
         b = State(name='b', context=statechart)
         c = State(name='c', context=statechart)
 
-        Transition(name='comp to c', start=composite_state, end=c, event=Event('f'))
-        Transition(name='comp to b', start=composite_state, end=b)
+        Transition(start=composite_state, end=c, event=Event('f'))
+        Transition(start=composite_state, end=b)
 
         statechart.start()
 
@@ -222,40 +221,34 @@ class TestConcurrentState:
 
         start_state = InitialState(name='start_state', context=statechart)
         keyboard = ConcurrentState(name='keyboard', context=statechart)
-        Transition(name='start', start=start_state, end=keyboard)
+        Transition(start=start_state, end=keyboard)
 
         caps_lock = CompositeState(name='caps_lock', context=keyboard)
         caps_lock_initial = InitialState(name='caps_lock_initial', context=caps_lock)
         caps_lock_on = State(name='caps_lock_on', context=caps_lock)
         caps_lock_off = State(name='caps_lock_off', context=caps_lock)
         caps_lock_pressed = Event(name='caps_lock_pressed')
-        Transition(name='caps_lock_default_off', start=caps_lock_initial, end=caps_lock_off)
-        Transition(name='caps_lock_on', start=caps_lock_on, end=caps_lock_off,
-                   event=caps_lock_pressed)
-        Transition(name='caps_lock_off', start=caps_lock_off, end=caps_lock_on,
-                   event=caps_lock_pressed)
+        Transition(start=caps_lock_initial, end=caps_lock_off)
+        Transition(start=caps_lock_on, end=caps_lock_off, event=caps_lock_pressed)
+        Transition(start=caps_lock_off, end=caps_lock_on, event=caps_lock_pressed)
 
         num_lock = CompositeState(name='num_lock', context=keyboard)
         num_lock_initial = InitialState(name='num_lock_initial', context=num_lock)
         num_lock_on = State(name='num_lock_on', context=num_lock)
         num_lock_off = State(name='num_lock_off', context=num_lock)
         num_lock_pressed = Event(name='num_lock_pressed')
-        Transition(name='num_lock_default_off', start=num_lock_initial, end=num_lock_off)
-        Transition(name='num_lock_on', start=num_lock_on, end=num_lock_off,
-                   event=num_lock_pressed)
-        Transition(name='num_lock_off', start=num_lock_off, end=num_lock_on,
-                   event=num_lock_pressed)
+        Transition(start=num_lock_initial, end=num_lock_off)
+        Transition(start=num_lock_on, end=num_lock_off, event=num_lock_pressed)
+        Transition(start=num_lock_off, end=num_lock_on, event=num_lock_pressed)
 
         scroll_lock = CompositeState(name='scroll_lock', context=keyboard)
         scroll_lock_initial = InitialState(name='scroll_lock_initial', context=scroll_lock)
         scroll_lock_on = State(name='scroll_lock_on', context=scroll_lock)
         scroll_lock_off = State(name='scroll_lock_off', context=scroll_lock)
         scroll_lock_pressed = Event(name='scroll_lock_pressed')
-        Transition(name='scroll_lock_default_off', start=scroll_lock_initial, end=scroll_lock_off)
-        Transition(name='scroll_lock_on', start=scroll_lock_on, end=scroll_lock_off,
-                   event=scroll_lock_pressed)
-        Transition(name='scroll_lock_off', start=scroll_lock_off, end=scroll_lock_on,
-                   event=scroll_lock_pressed)
+        Transition(start=scroll_lock_initial, end=scroll_lock_off)
+        Transition(start=scroll_lock_on, end=scroll_lock_off, event=scroll_lock_pressed)
+        Transition(start=scroll_lock_off, end=scroll_lock_on, event=scroll_lock_pressed)
 
         statechart.start()
 
@@ -293,8 +286,8 @@ class TestCompositeState:
             self.state_b = State(name='sub state b', context=self)
 
             self.sub_a_to_b = Event('sub_ab')
-            Transition(name='init', start=init, end=self.state_a)
-            Transition(name='sub_ab', start=self.state_a, end=self.state_b, event=self.sub_a_to_b)
+            Transition(start=init, end=self.state_a)
+            Transition(start=self.state_a, end=self.state_b, event=self.sub_a_to_b)
 
     def test_submachines(self):
         statechart = Statechart(name='statechart')
@@ -304,8 +297,8 @@ class TestCompositeState:
         top_b = self.Submachine('top b', statechart)
 
         top_a_to_b = Event('top ab')
-        Transition(name='init', start=init, end=top_a)
-        Transition(name='top_a_to_b', start=top_a, end=top_b, event=top_a_to_b)
+        Transition(start=init, end=top_a)
+        Transition(start=top_a, end=top_b, event=top_a_to_b)
 
         statechart.start()
 

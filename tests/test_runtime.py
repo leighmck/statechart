@@ -24,7 +24,7 @@ def state():
     statechart = Statechart(name='statechart')
     initial_state = InitialState(name='initial', context=statechart)
     next_state = State(name='next', context=statechart)
-    Transition('default', initial_state, next_state)
+    Transition(initial_state, next_state)
     statechart.start()
     return next_state
 

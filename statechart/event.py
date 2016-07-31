@@ -29,7 +29,7 @@ class Event:
         my_event = Event(name='my event')
 
         Add the event trigger to a transition:
-        Transition(name='e', start=a, end=b, event=my_event)
+        Transition(start=a, end=b, event=my_event)
 
         Fire the event:
         statechart.dispatch(event=my_event)
@@ -89,7 +89,7 @@ class KwEvent(Event):
         my_event = Event(name='my event', a=1, b='2', c=[])
 
         Add the event trigger to a transition:
-        Transition(name='e', start=a, end=b, event=my_event)
+        Transition(start=a, end=b, event=my_event)
 
         Fire the event:
         statechart.dispatch(event=my_event)

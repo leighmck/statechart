@@ -48,7 +48,7 @@ class TestTransition:
             self.default = State(name='default', context=self)
             self.local = State(name='local', context=self)
 
-            Transition(name='init', start=init, end=self.default)
+            Transition(start=init, end=self.default)
 
         def entry(self, metadata, event):
             self.entries += 1
@@ -59,7 +59,7 @@ class TestTransition:
     def test_create_transition(self, empty_statechart):
         initial_state = InitialState(name='initial', context=empty_statechart)
         next_state = State(name='next', context=empty_statechart)
-        transition = Transition(name='name', start=initial_state, end=next_state)
+        transition = Transition(start=initial_state, end=next_state)
 
         # The transition should be added to the initial state's list of
         # outgoing transitions
@@ -72,7 +72,7 @@ class TestTransition:
 
     def test_create_cyclic_transition(self, empty_statechart):
         next_state = State(name='next', context=empty_statechart)
-        transition = Transition(name='name', start=next_state, end=next_state)
+        transition = Transition(start=next_state, end=next_state)
 
         # The transition should be added to the initial state's list of
         # outgoing transitions.
@@ -87,8 +87,8 @@ class TestTransition:
         init = InitialState(name='init', context=empty_statechart)
         state_spy = self.StateSpy(name='spy', context=empty_statechart)
 
-        Transition(name='init', start=init, end=state_spy)
-        Transition(name='extern', start=state_spy, end=state_spy, event=Event('extern'))
+        Transition(start=init, end=state_spy)
+        Transition(start=state_spy, end=state_spy, event=Event('extern'))
 
         empty_statechart.start()
 
@@ -108,8 +108,8 @@ class TestTransition:
         init = InitialState(name='init', context=empty_statechart)
         state_spy = self.StateSpy(name='spy', context=empty_statechart)
 
-        Transition(name='init', start=init, end=state_spy)
-        Transition(name='local', start=state_spy, end=state_spy.local, event=Event('local'))
+        Transition(start=init, end=state_spy)
+        Transition(start=state_spy, end=state_spy.local, event=Event('local'))
 
         empty_statechart.start()
 
@@ -144,10 +144,10 @@ class TestTransition:
         bottom_b2 = State(name='bottom_b2', context=middle_b)
 
         # Setup default transitions
-        Transition(name='sc_init', start=init, end=top)
-        Transition(name='top_init', start=top_init, end=middle_a)
-        Transition(name='middle_a_init', start=middle_a_init, end=bottom_a1)
-        Transition(name='middle_b_init', start=middle_b_init, end=bottom_b1)
+        Transition(start=init, end=top)
+        Transition(start=top_init, end=middle_a)
+        Transition(start=middle_a_init, end=bottom_a1)
+        Transition(start=middle_b_init, end=bottom_b1)
 
         # Setup events to trigger transitions
         a_to_b = Event('a_to_b')
@@ -161,19 +161,19 @@ class TestTransition:
         middle_b_to_b2 = Event('middle_b_to_b2')
 
         # Setup external transitions
-        Transition(name='middle_a_to_b', start=middle_a, end=middle_b, event=a_to_b)
-        Transition(name='bottom_a1_to_a2', start=bottom_a1, end=bottom_a2, event=a1_to_a2)
-        Transition(name='bottom_b1_to_b2', start=bottom_a1, end=bottom_a2, event=b1_to_b2)
+        Transition(start=middle_a, end=middle_b, event=a_to_b)
+        Transition(start=bottom_a1, end=bottom_a2, event=a1_to_a2)
+        Transition(start=bottom_a1, end=bottom_a2, event=b1_to_b2)
 
         # Setup local transitions
-        Transition(name='top_to_middle_a', start=top, end=middle_a, event=top_to_middle_a)
-        Transition(name='top_to_middle_b', start=top, end=middle_b, event=top_to_middle_b)
+        Transition(start=top, end=middle_a, event=top_to_middle_a)
+        Transition(start=top, end=middle_b, event=top_to_middle_b)
 
-        Transition(name='middle_a_to_a1', start=middle_a, end=bottom_a1, event=middle_a_to_a1)
-        Transition(name='middle_a_to_a2', start=middle_a, end=bottom_a2, event=middle_a_to_a2)
+        Transition(start=middle_a, end=bottom_a1, event=middle_a_to_a1)
+        Transition(start=middle_a, end=bottom_a2, event=middle_a_to_a2)
 
-        Transition(name='middle_b_to_b1', start=middle_b, end=bottom_b1, event=middle_b_to_b1)
-        Transition(name='middle_b_to_b2', start=middle_b, end=bottom_b2, event=middle_b_to_b2)
+        Transition(start=middle_b, end=bottom_b1, event=middle_b_to_b1)
+        Transition(start=middle_b, end=bottom_b2, event=middle_b_to_b2)
 
         sc.start()
 
@@ -228,19 +228,19 @@ class TestTransition:
         bottom_b1 = State(name='bottom_b1', context=middle_b)
 
         # Setup default transitions
-        Transition(name='sc_init', start=init, end=top)
-        Transition(name='top_init', start=top_init, end=middle_a)
-        Transition(name='middle_a_init', start=middle_a_init, end=bottom_a1)
-        Transition(name='middle_b_init', start=middle_b_init, end=bottom_b1)
+        Transition(start=init, end=top)
+        Transition(start=top_init, end=middle_a)
+        Transition(start=middle_a_init, end=bottom_a1)
+        Transition(start=middle_b_init, end=bottom_b1)
 
         # Setup event triggers
         across = Event('across')
         up = Event('up')
 
         # Setup external transitions
-        Transition(name='bottom_a1_to_a2', start=bottom_a1, end=bottom_a2, event=across)
-        Transition(name='bottom_a2_to_middle_b', start=bottom_a2, end=middle_b, event=up)
-        Transition(name='middle_b_to_a', start=middle_b, end=middle_a, event=across)
+        Transition(start=bottom_a1, end=bottom_a2, event=across)
+        Transition(start=bottom_a2, end=middle_b, event=up)
+        Transition(start=middle_b, end=middle_a, event=across)
 
         sc.start()
 
@@ -287,14 +287,11 @@ class TestInternalTransition:
     def test_execute(self, empty_statechart):
         initial_state = InitialState(name='initial', context=empty_statechart)
         default_state = self.StateSpy(name='next', context=empty_statechart)
-        Transition(name='name', start=initial_state, end=default_state)
+        Transition(start=initial_state, end=default_state)
 
         internal_event = Event(name='internal-event')
         internal_action = ActionSpy()
-        InternalTransition(name='internal',
-                           state=default_state,
-                           event=internal_event,
-                           action=internal_action)
+        InternalTransition(state=default_state, event=internal_event, action=internal_action)
         empty_statechart.start()
 
         assert empty_statechart.is_active('next')

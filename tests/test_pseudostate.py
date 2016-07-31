@@ -30,7 +30,7 @@ class TestInitialState:
         startchart = Statechart(name='statechart')
         initial_state = InitialState(name='initial', context=startchart)
         default_state = State(name='default', context=startchart)
-        Transition('default', start=initial_state, end=default_state)
+        Transition(start=initial_state, end=default_state)
         startchart.start()
 
         initial_state.activate(metadata=startchart._metadata, event=None)
@@ -48,9 +48,9 @@ class TestInitialState:
         initial_state = InitialState(name='initial', context=startchart)
         default_state = State(name='default', context=startchart)
 
-        Transition('default_1', start=initial_state, end=default_state)
+        Transition(start=initial_state, end=default_state)
         with pytest.raises(RuntimeError):
-            Transition('default_2', start=initial_state, end=default_state)
+            Transition(start=initial_state, end=default_state)
 
     def test_transition_from_initial_state_with_event_trigger(self):
         startchart = Statechart(name='statechart')
@@ -58,7 +58,7 @@ class TestInitialState:
         default_state = State(name='default', context=startchart)
 
         with pytest.raises(RuntimeError):
-            Transition('default', start=initial_state, end=default_state, event=Event('event'))
+            Transition(start=initial_state, end=default_state, event=Event('event'))
 
     def test_transition_from_initial_state_with_guard_condition(self):
         class MyGuard(Guard):
@@ -70,8 +70,7 @@ class TestInitialState:
         default_state = State(name='default', context=startchart)
 
         with pytest.raises(RuntimeError):
-            Transition('default', start=initial_state, end=default_state, event=None,
-                       guard=MyGuard())
+            Transition(start=initial_state, end=default_state, event=None, guard=MyGuard())
 
 
 class TestShallowHistoryState:
@@ -129,14 +128,14 @@ class TestShallowHistoryState:
         L = Event(name='L')
 
         # Transitions between states & event triggers
-        Transition(name='statechart_init_default', start=statechart_init, end=csa)
-        Transition(name='csa_init_default', start=csa_init, end=csa_hist)
-        Transition(name='csa_hist_default', start=csa_hist, end=A)
-        Transition(name='AtoB', start=A, end=B, event=I)
-        Transition(name='CsaToCsb', start=csa, end=csb, event=J)
-        Transition(name='CsbToCsa', start=csb, end=csa, event=K)
-        Transition(name='csb_init_default', start=csb_init, end=C)
-        Transition(name='CtoD', start=C, end=D, event=L)
+        Transition(start=statechart_init, end=csa)
+        Transition(start=csa_init, end=csa_hist)
+        Transition(start=csa_hist, end=A)
+        Transition(start=A, end=B, event=I)
+        Transition(start=csa, end=csb, event=J)
+        Transition(start=csb, end=csa, event=K)
+        Transition(start=csb_init, end=C)
+        Transition(start=C, end=D, event=L)
 
         # Execute statechart
         statechart.start()
@@ -206,16 +205,16 @@ class TestShallowHistoryState:
         M = Event(name='M')
 
         # Transitions between states & event triggers
-        Transition(name='statechart_init_default', start=statechart_init, end=csa)
-        Transition(name='csa_init_default', start=csa_init, end=csa_hist)
-        Transition(name='csa_hist_default', start=csa_hist, end=A)
-        Transition(name='AtoCsb', start=A, end=csb, event=I)
-        Transition(name='csb_init_default', start=csb_init, end=B)
-        Transition(name='BtoC', start=B, end=C, event=J)
-        Transition(name='CsaToCsc', start=csa, end=csc, event=K)
-        Transition(name='CscToCsa', start=csc, end=csa, event=L)
-        Transition(name='csc_init_default', start=csc_init, end=D)
-        Transition(name='DtoE', start=D, end=E, event=M)
+        Transition(start=statechart_init, end=csa)
+        Transition(start=csa_init, end=csa_hist)
+        Transition(start=csa_hist, end=A)
+        Transition(start=A, end=csb, event=I)
+        Transition(start=csb_init, end=B)
+        Transition(start=B, end=C, event=J)
+        Transition(start=csa, end=csc, event=K)
+        Transition(start=csc, end=csa, event=L)
+        Transition(start=csc_init, end=D)
+        Transition(start=D, end=E, event=M)
 
         # Execute statechart
         statechart.start()
@@ -291,18 +290,17 @@ class TestShallowHistoryState:
         M = Event(name='M')
 
         # Transitions between states & event triggers
-        Transition(name='statechart_init_default', start=statechart_init,
-                   end=csa)
-        Transition(name='csa_init_default', start=csa_init, end=csa_hist)
-        Transition(name='csa_hist_default', start=csa_hist, end=A)
-        Transition(name='AtoCsb', start=A, end=csb, event=I)
-        Transition(name='csb_init_default', start=csb_init, end=csb_hist)
-        Transition(name='csb_hist_default', start=csb_hist, end=B)
-        Transition(name='BtoC', start=B, end=C, event=J)
-        Transition(name='CsaToCsc', start=csa, end=csc, event=K)
-        Transition(name='CscToCsa', start=csc, end=csa, event=L)
-        Transition(name='csc_init_default', start=csc_init, end=D)
-        Transition(name='DtoE', start=D, end=E, event=M)
+        Transition(start=statechart_init, end=csa)
+        Transition(start=csa_init, end=csa_hist)
+        Transition(start=csa_hist, end=A)
+        Transition(start=A, end=csb, event=I)
+        Transition(start=csb_init, end=csb_hist)
+        Transition(start=csb_hist, end=B)
+        Transition(start=B, end=C, event=J)
+        Transition(start=csa, end=csc, event=K)
+        Transition(start=csc, end=csa, event=L)
+        Transition(start=csc_init, end=D)
+        Transition(start=D, end=E, event=M)
 
         # Execute statechart
         statechart.start()
@@ -356,10 +354,10 @@ class TestChoiceState:
 
         choice = ChoiceState(name='if a', context=statechart)
 
-        Transition(name='init', start=init, end=choice)
+        Transition(start=init, end=choice)
 
-        Transition(name='choice a', start=choice, end=state_a, event=None, guard=IsA())
-        Transition(name='choice b', start=choice, end=state_b, event=None, guard=ElseGuard())
+        Transition(start=choice, end=state_a, event=None, guard=IsA())
+        Transition(start=choice, end=state_b, event=None, guard=ElseGuard())
 
         statechart.start()
 

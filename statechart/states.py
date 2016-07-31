@@ -42,7 +42,7 @@ class State:
 
         * Finally create the transitions between states with any associated
         event triggers, actions or guard conditions.
-        Transition(name='a to b', start=a, end=b)
+        Transition(start=a, end=b)
 
     Note:
         Do not dispatch a synchronous event within the action (enter, do or
