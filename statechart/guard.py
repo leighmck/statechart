@@ -65,6 +65,34 @@ class Guard(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
+class CallGuard(Guard):
+    """
+    Generic guard configured with a callback function, checked when the Transition is fired.
+
+    Note:
+        The callback function must be exception safe and support args for the statechart metadata
+        and transition event trigger.
+
+        e.g. def callback(self, metadata, event):
+    """
+
+    def __init__(self, callback):
+        self._callback = callback
+
+    def check(self, metadata, event):
+        """
+        Called by the transition.
+
+        Args:
+            metadata (Metadata): Common statechart metadata.
+            event (Event): Transition event trigger.
+
+        Returns:
+            The result returned by the callback function.
+        """
+        return bool(self._callback(metadata=metadata, event=event))
+
+
 class ElseGuard(Guard):
     """
     Simple 'else' guard condition which always returns True when checked.

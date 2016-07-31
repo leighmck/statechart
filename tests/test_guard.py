@@ -18,6 +18,7 @@
 import pytest
 
 from statechart import EqualGuard, Guard, KwEvent
+from statechart.guard import CallGuard
 
 
 class GreaterThanZero(Guard):
@@ -48,3 +49,22 @@ class TestGuard:
     def test_equal_guard(self, a, b, expected):
         guard = EqualGuard(a=a, b=b)
         assert guard.check(metadata=None, event=None) == expected
+
+
+def true_cb(metadata, event):
+    return True
+
+
+def false_cb(metadata, event):
+    return False
+
+
+class TestCallGuard:
+    def my_invalid_callback(self):
+        pass
+
+    @pytest.mark.parametrize('guard_cb, expected', [(true_cb, True), (false_cb, False)])
+    def test_check_callback_guard(self, guard_cb, expected):
+        callback_guard = CallGuard(guard_cb)
+        value = callback_guard.check(metadata=None, event=None)
+        assert value is expected
