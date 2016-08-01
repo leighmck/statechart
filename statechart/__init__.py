@@ -15,9 +15,9 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from statechart.action import Action  # NOQA
+from statechart.action import Action, CallAction  # NOQA
 from statechart.event import Event, KwEvent  # NOQA
-from statechart.guard import EqualGuard, ElseGuard, Guard  # NOQA
+from statechart.guard import CallGuard, EqualGuard, ElseGuard, Guard  # NOQA
 from statechart.states import CompositeState, ConcurrentState, FinalState, State, Statechart  # NOQA
 from statechart.pseudostates import ChoiceState, InitialState, ShallowHistoryState  # NOQA
 from statechart.runtime import Metadata  # NOQA

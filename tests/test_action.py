@@ -18,8 +18,7 @@
 
 import pytest
 
-from statechart import Action, Metadata
-from statechart.action import CallAction
+from statechart import Action, CallAction, Metadata
 
 
 class MyAction(Action):
