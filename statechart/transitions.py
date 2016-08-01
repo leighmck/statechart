@@ -17,6 +17,7 @@
 
 import logging
 
+from statechart import Event
 from statechart import Statechart
 
 
@@ -32,7 +33,7 @@ class Transition:
             transition.
         end (State): The target state (or pseudostate) that is reached when the
         transition is executed.
-        event (Event): The event that fires the transition.
+        event (Event|str): The event or event name that fires the transition.
         guard (Guard): A boolean predicate that  must be true for the
             transition to be fired. It is evaluated at the time the event is
             dispatched.
@@ -47,6 +48,9 @@ class Transition:
         self.event = event
         self.guard = guard
         self.action = action
+
+        if isinstance(event, str):
+            self.event = Event(event)
 
         """ Used to store the states that will get activated """
         self.activate = list()
