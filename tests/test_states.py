@@ -49,9 +49,9 @@ class TestStatechart:
 
     def test_simple_statechart_finished(self):
         statechart = Statechart(name='statechart')
-        init = InitialState(name='init', context=statechart)
+        init = InitialState(statechart)
         default = State(name='default', context=statechart)
-        final = FinalState(name='final', context=statechart)
+        final = FinalState(statechart)
 
         finish = Event('finish')
 
@@ -64,18 +64,17 @@ class TestStatechart:
 
         statechart.dispatch(finish)
 
-        assert statechart.is_active('final')
         assert statechart.is_finished()
 
     def test_composite_statechart_finished(self):
         statechart = Statechart(name='statechart')
-        init = InitialState(name='init', context=statechart)
-        final = FinalState(name='final', context=statechart)
+        init = InitialState(statechart)
+        final = FinalState(statechart)
 
         composite = CompositeState(name='composite', context=statechart)
-        composite_init = InitialState(name='composite_init', context=composite)
+        composite_init = InitialState(composite)
         composite_default = State(name='composite_default', context=composite)
-        composite_final = FinalState(name='composite_final', context=composite)
+        composite_final = FinalState(composite)
 
         finish = Event('finish')
 
@@ -92,7 +91,6 @@ class TestStatechart:
 
         statechart.dispatch(finish)
 
-        assert statechart.is_active('final')
         assert statechart.is_finished()
 
 
@@ -107,7 +105,7 @@ class TestState:
 
     def test_add_transition(self):
         statechart = Statechart(name='statechart')
-        initial_state = InitialState(name='initial', context=statechart)
+        initial_state = InitialState(statechart)
         default_state = State(name='default', context=statechart)
 
         default_transition = Transition(start=initial_state, end=default_state)
@@ -118,19 +116,19 @@ class TestState:
 class TestFinalState:
     def test_add_transition(self):
         statechart = Statechart(name='statechart')
-        final_state = FinalState(name='final', context=statechart)
+        final_state = FinalState(statechart)
 
         with pytest.raises(RuntimeError):
             Transition(start=final_state, end=statechart)
 
     def test_transition_from_finished_composite_state(self):
         statechart = Statechart(name='statechart')
-        statechart_init = InitialState(name='statechart init', context=statechart)
+        statechart_init = InitialState(statechart)
 
         composite_state = CompositeState(name='composite', context=statechart)
-        comp_init = InitialState(name='init comp', context=composite_state)
+        comp_init = InitialState(composite_state)
         a = State(name='a', context=composite_state)
-        comp_final = FinalState(name='final comp', context=composite_state)
+        comp_final = FinalState(composite_state)
 
         Transition(start=statechart_init, end=composite_state)
         Transition(start=comp_init, end=a)
@@ -146,12 +144,12 @@ class TestFinalState:
 
     def test_default_transition_from_finished_composite_state(self):
         statechart = Statechart(name='statechart')
-        statechart_init = InitialState(name='statechart init', context=statechart)
+        statechart_init = InitialState(statechart)
 
         composite_state = CompositeState(name='composite', context=statechart)
-        comp_init = InitialState(name='init comp', context=composite_state)
+        comp_init = InitialState(composite_state)
         a = State(name='a', context=composite_state)
-        comp_final = FinalState(name='final comp', context=composite_state)
+        comp_final = FinalState(composite_state)
 
         Transition(start=statechart_init, end=composite_state)
         Transition(start=comp_init, end=a)
@@ -219,12 +217,12 @@ class TestConcurrentState:
         """
         statechart = Statechart(name='statechart')
 
-        start_state = InitialState(name='start_state', context=statechart)
+        start_state = InitialState(statechart)
         keyboard = ConcurrentState(name='keyboard', context=statechart)
         Transition(start=start_state, end=keyboard)
 
         caps_lock = CompositeState(name='caps_lock', context=keyboard)
-        caps_lock_initial = InitialState(name='caps_lock_initial', context=caps_lock)
+        caps_lock_initial = InitialState(caps_lock)
         caps_lock_on = State(name='caps_lock_on', context=caps_lock)
         caps_lock_off = State(name='caps_lock_off', context=caps_lock)
         caps_lock_pressed = Event(name='caps_lock_pressed')
@@ -233,7 +231,7 @@ class TestConcurrentState:
         Transition(start=caps_lock_off, end=caps_lock_on, event=caps_lock_pressed)
 
         num_lock = CompositeState(name='num_lock', context=keyboard)
-        num_lock_initial = InitialState(name='num_lock_initial', context=num_lock)
+        num_lock_initial = InitialState(num_lock)
         num_lock_on = State(name='num_lock_on', context=num_lock)
         num_lock_off = State(name='num_lock_off', context=num_lock)
         num_lock_pressed = Event(name='num_lock_pressed')
@@ -242,7 +240,7 @@ class TestConcurrentState:
         Transition(start=num_lock_off, end=num_lock_on, event=num_lock_pressed)
 
         scroll_lock = CompositeState(name='scroll_lock', context=keyboard)
-        scroll_lock_initial = InitialState(name='scroll_lock_initial', context=scroll_lock)
+        scroll_lock_initial = InitialState(scroll_lock)
         scroll_lock_on = State(name='scroll_lock_on', context=scroll_lock)
         scroll_lock_off = State(name='scroll_lock_off', context=scroll_lock)
         scroll_lock_pressed = Event(name='scroll_lock_pressed')
@@ -281,7 +279,7 @@ class TestCompositeState:
         def __init__(self, name, context):
             CompositeState.__init__(self, name=name, context=context)
 
-            init = InitialState(name='init submachine', context=self)
+            init = InitialState(self)
             self.state_a = State(name='sub state a', context=self)
             self.state_b = State(name='sub state b', context=self)
 
@@ -292,7 +290,7 @@ class TestCompositeState:
     def test_submachines(self):
         statechart = Statechart(name='statechart')
 
-        init = InitialState(name='init a', context=statechart)
+        init = InitialState(statechart)
         top_a = self.Submachine('top a', statechart)
         top_b = self.Submachine('top b', statechart)
 

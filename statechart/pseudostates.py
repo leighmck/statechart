@@ -57,12 +57,11 @@ class InitialState(PseudoState):
     the default state of the composite state.
 
     Args:
-        name (str): An identifier for the model element.
         context (Context): The parent context that contains this state.
     """
 
-    def __init__(self, name, context):
-        super().__init__(name=name, context=context)
+    def __init__(self, context):
+        super().__init__(name='Initial', context=context)
 
         if isinstance(self.context, CompositeState) or isinstance(self.context, Statechart):
             if self.context.initial_state:
@@ -131,7 +130,7 @@ class InitialState(PseudoState):
 
 
 class ShallowHistoryState(PseudoState):
-    def __init__(self, name, context):
+    def __init__(self, context):
         """
         Shallow history is a pseudo state representing the most recent
         substate of a submachine.
@@ -142,10 +141,9 @@ class ShallowHistoryState(PseudoState):
         one transition may originate from the history.
 
         Args:
-            name (str): An identifier for the model element.
             context (Context): The parent context that contains this state.
         """
-        super().__init__(name=name, context=context)
+        super().__init__(name='Shallow history', context=context)
 
         self.state = None
 
@@ -195,7 +193,6 @@ class ChoiceState(PseudoState):
     It enables splitting of transitions into multiple outgoing paths.
 
     Args:
-        name (str): An identifier for the model element.
         context (Context): The parent context that contains this state.
 
     Note:
@@ -205,6 +202,9 @@ class ChoiceState(PseudoState):
         To avoid this, it is recommended to define one outgoing transition with a
         predefined "else" guard for every choice vertex.
     """
+
+    def __init__(self, context):
+        super().__init__(name='Choice', context=context)
 
     def activate(self, metadata, event):
         """

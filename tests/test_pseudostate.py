@@ -24,11 +24,11 @@ from statechart import (ChoiceState, CompositeState, ElseGuard, Event, Guard, In
 class TestInitialState:
     def test_create_initial_state(self):
         startchart = Statechart(name='statechart')
-        InitialState(name='initial', context=startchart)
+        InitialState(startchart)
 
     def test_activate_initial_state(self):
         startchart = Statechart(name='statechart')
-        initial_state = InitialState(name='initial', context=startchart)
+        initial_state = InitialState(startchart)
         default_state = State(name='default', context=startchart)
         Transition(start=initial_state, end=default_state)
         startchart.start()
@@ -38,14 +38,14 @@ class TestInitialState:
 
     def test_missing_transition_from_initial_state(self):
         startchart = Statechart(name='statechart')
-        InitialState(name='initial', context=startchart)
+        InitialState(startchart)
 
         with pytest.raises(RuntimeError):
             startchart.start()
 
     def test_multiple_transitions_from_initial_state(self):
         startchart = Statechart(name='statechart')
-        initial_state = InitialState(name='initial', context=startchart)
+        initial_state = InitialState(startchart)
         default_state = State(name='default', context=startchart)
 
         Transition(start=initial_state, end=default_state)
@@ -54,7 +54,7 @@ class TestInitialState:
 
     def test_transition_from_initial_state_with_event_trigger(self):
         startchart = Statechart(name='statechart')
-        initial_state = InitialState(name='initial', context=startchart)
+        initial_state = InitialState(startchart)
         default_state = State(name='default', context=startchart)
 
         with pytest.raises(RuntimeError):
@@ -66,7 +66,7 @@ class TestInitialState:
                 return False
 
         startchart = Statechart(name='statechart')
-        initial_state = InitialState(name='initial', context=startchart)
+        initial_state = InitialState(startchart)
         default_state = State(name='default', context=startchart)
 
         with pytest.raises(RuntimeError):
@@ -77,16 +77,16 @@ class TestShallowHistoryState:
     def test_create_shallow_history_state(self):
         startchart = Statechart(name='statechart')
         composite_state = CompositeState(name='composite', context=startchart)
-        ShallowHistoryState(name='history', context=composite_state)
+        ShallowHistoryState(composite_state)
 
     def test_cannot_create_multiple_shallow_history_states(self):
         startchart = Statechart(name='statechart')
         composite_state = CompositeState(name='composite', context=startchart)
 
-        ShallowHistoryState(name='history', context=composite_state)
+        ShallowHistoryState(composite_state)
 
         with pytest.raises(RuntimeError):
-            ShallowHistoryState(name='history', context=composite_state)
+            ShallowHistoryState(composite_state)
 
     def test_activate_shallow_history_state(self):
         """
@@ -110,14 +110,14 @@ class TestShallowHistoryState:
 
         # Child states
         # statechart
-        statechart_init = InitialState(name='statechart_init', context=statechart)
+        statechart_init = InitialState(statechart)
         # csa
-        csa_init = InitialState(name='csa_init', context=csa)
-        csa_hist = ShallowHistoryState(name='csa_hist', context=csa)
+        csa_init = InitialState(csa)
+        csa_hist = ShallowHistoryState(context=csa)
         A = State(name='A', context=csa)
         B = State(name='B', context=csa)
         # csb
-        csb_init = InitialState(name='csb_init', context=csb)
+        csb_init = InitialState(csb)
         C = State(name='C', context=csb)
         D = State(name='D', context=csb)
 
@@ -182,18 +182,18 @@ class TestShallowHistoryState:
 
         # Child states
         # statechart
-        statechart_init = InitialState(name='statechart_init', context=statechart)
+        statechart_init = InitialState(statechart)
 
         # csa
-        csa_init = InitialState(name='csa_init', context=csa)
-        csa_hist = ShallowHistoryState(name='csa_hist', context=csa)
+        csa_init = InitialState(csa)
+        csa_hist = ShallowHistoryState(context=csa)
         A = State(name='A', context=csa)
         # csb
-        csb_init = InitialState(name='csb_init', context=csb)
+        csb_init = InitialState(csb)
         B = State(name='B', context=csb)
         C = State(name='C', context=csb)
         # csc
-        csc_init = InitialState(name='csc_init', context=csc)
+        csc_init = InitialState(csc)
         D = State(name='D', context=csc)
         E = State(name='E', context=csc)
 
@@ -266,19 +266,19 @@ class TestShallowHistoryState:
 
         # Child states
         # statechart
-        statechart_init = InitialState(name='statechart_init', context=statechart)
+        statechart_init = InitialState(statechart)
 
         # csa
-        csa_init = InitialState(name='csa_init', context=csa)
-        csa_hist = ShallowHistoryState(name='csa_hist', context=csa)
+        csa_init = InitialState(csa)
+        csa_hist = ShallowHistoryState(context=csa)
         A = State(name='A', context=csa)
         # csb
-        csb_init = InitialState(name='csb_init', context=csb)
-        csb_hist = ShallowHistoryState(name='csb_hist', context=csb)
+        csb_init = InitialState(csb)
+        csb_hist = ShallowHistoryState(context=csb)
         B = State(name='B', context=csb)
         C = State(name='C', context=csb)
         # csc
-        csc_init = InitialState(name='csc_init', context=csc)
+        csc_init = InitialState(csc)
         D = State(name='D', context=csc)
         E = State(name='E', context=csc)
 
@@ -329,7 +329,7 @@ class TestChoiceState:
     def test_create_choice_state(self):
         startchart = Statechart(name='statechart')
         composite_state = CompositeState(name='composite', context=startchart)
-        ShallowHistoryState(name='history', context=composite_state)
+        ShallowHistoryState(composite_state)
 
     @pytest.mark.parametrize('choice, expected_state_name',
                              [('a', 'a'),
@@ -347,12 +347,12 @@ class TestChoiceState:
         myMetadata = MyMetadata()
         myMetadata.value = choice
         statechart = Statechart(name='statechart', metadata=myMetadata)
-        init = InitialState(name='init', context=statechart)
+        init = InitialState(statechart)
 
         state_a = State(name='a', context=statechart)
         state_b = State(name='b', context=statechart)
 
-        choice = ChoiceState(name='if a', context=statechart)
+        choice = ChoiceState(context=statechart)
 
         Transition(start=init, end=choice)
 

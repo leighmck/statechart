@@ -22,7 +22,7 @@ from statechart import InitialState, Metadata, State, Statechart, Transition
 @pytest.fixture
 def state():
     statechart = Statechart(name='statechart')
-    initial_state = InitialState(name='initial', context=statechart)
+    initial_state = InitialState(statechart)
     next_state = State(name='next', context=statechart)
     Transition(initial_state, next_state)
     statechart.start()

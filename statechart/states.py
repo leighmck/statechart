@@ -221,7 +221,6 @@ class FinalState(State):
     A final state cannot have transitions or dispatch other transitions.
 
     Args:
-        name (str): An identifier for the model element.
         context (Context): The parent context that contains this state.
 
     Raises:
@@ -229,8 +228,8 @@ class FinalState(State):
             the final state.
     """
 
-    def __init__(self, name, context):
-        super().__init__(name=name, context=context)
+    def __init__(self, context):
+        super().__init__(name='Final', context=context)
 
     def add_transition(self, transition):
         raise RuntimeError('Cannot add a transition from the final state')

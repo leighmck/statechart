@@ -44,7 +44,7 @@ class TestTransition:
             self.entries = 0
             self.exits = 0
 
-            init = InitialState(name='init', context=self)
+            init = InitialState(self)
             self.default = State(name='default', context=self)
             self.local = State(name='local', context=self)
 
@@ -57,7 +57,7 @@ class TestTransition:
             self.exits += 1
 
     def test_create_transition(self, empty_statechart):
-        initial_state = InitialState(name='initial', context=empty_statechart)
+        initial_state = InitialState(empty_statechart)
         next_state = State(name='next', context=empty_statechart)
         transition = Transition(start=initial_state, end=next_state)
 
@@ -84,7 +84,7 @@ class TestTransition:
         assert next_state in transition.activate
 
     def test_external_transition(self, empty_statechart):
-        init = InitialState(name='init', context=empty_statechart)
+        init = InitialState(empty_statechart)
         state_spy = self.StateSpy(name='spy', context=empty_statechart)
 
         Transition(start=init, end=state_spy)
@@ -105,7 +105,7 @@ class TestTransition:
         assert state_spy.exits is 1
 
     def test_local_transition(self, empty_statechart):
-        init = InitialState(name='init', context=empty_statechart)
+        init = InitialState(empty_statechart)
         state_spy = self.StateSpy(name='spy', context=empty_statechart)
 
         Transition(start=init, end=state_spy)
@@ -128,18 +128,18 @@ class TestTransition:
 
     def test_deep_local_transitions(self, empty_statechart):
         sc = empty_statechart
-        init = InitialState(name='init', context=sc)
+        init = InitialState(sc)
 
         top = CompositeState(name='top', context=sc)
-        top_init = InitialState(name='top_init', context=top)
+        top_init = InitialState(top)
         middle_a = CompositeState(name='middle_a', context=top)
         middle_b = CompositeState(name='middle_b', context=top)
 
-        middle_a_init = InitialState(name='middle_a_init', context=middle_a)
+        middle_a_init = InitialState(middle_a)
         bottom_a1 = State(name='bottom_a1', context=middle_a)
         bottom_a2 = State(name='bottom_a2', context=middle_a)
 
-        middle_b_init = InitialState(name='middle_b_init', context=middle_b)
+        middle_b_init = InitialState(middle_b)
         bottom_b1 = State(name='bottom_b1', context=middle_b)
         bottom_b2 = State(name='bottom_b2', context=middle_b)
 
@@ -213,18 +213,18 @@ class TestTransition:
 
     def test_transition_hierarchy(self, empty_statechart):
         sc = empty_statechart
-        init = InitialState(name='init', context=sc)
+        init = InitialState(sc)
 
         top = CompositeState(name='top', context=sc)
-        top_init = InitialState(name='top_init', context=top)
+        top_init = InitialState(top)
         middle_a = CompositeState(name='middle_a', context=top)
         middle_b = CompositeState(name='middle_b', context=top)
 
-        middle_a_init = InitialState(name='middle_a_init', context=middle_a)
+        middle_a_init = InitialState(middle_a)
         bottom_a1 = State(name='bottom_a1', context=middle_a)
         bottom_a2 = State(name='bottom_a2', context=middle_a)
 
-        middle_b_init = InitialState(name='middle_b_init', context=middle_b)
+        middle_b_init = InitialState(middle_b)
         bottom_b1 = State(name='bottom_b1', context=middle_b)
 
         # Setup default transitions
@@ -285,7 +285,7 @@ class TestInternalTransition:
             self.exit_executed = True
 
     def test_execute(self, empty_statechart):
-        initial_state = InitialState(name='initial', context=empty_statechart)
+        initial_state = InitialState(empty_statechart)
         default_state = self.StateSpy(name='next', context=empty_statechart)
         Transition(start=initial_state, end=default_state)
 
