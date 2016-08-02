@@ -88,7 +88,7 @@ class TestTransition:
         state_spy = self.StateSpy(name='spy', context=empty_statechart)
 
         Transition(start=init, end=state_spy)
-        Transition(start=state_spy, end=state_spy, event=Event('extern'))
+        Transition(start=state_spy, end=state_spy, event='extern')
 
         empty_statechart.start()
 

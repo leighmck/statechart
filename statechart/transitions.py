@@ -190,7 +190,7 @@ class InternalTransition(Transition):
     Args:
         state (State): The state which owns this transition. The transition executes without
             exiting or re-entering this state.
-        event (Event): The event that fires the transition.
+        event (Event|str): The event or event name that fires the transition.
         guard (Guard): A boolean predicate that  must be true for the transition to be fired.
             It is evaluated at the time the event is dispatched.
         action (Action): An optional procedure to be performed when the transition fires.
