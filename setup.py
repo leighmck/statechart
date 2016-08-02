@@ -7,19 +7,21 @@ try:
 except ImportError:
     from distutils.core import setup
 
-
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [
-    # TODO: put package requirements here
+requirements = []
+
+setup_requirements = [
+    'pytest-runner'
 ]
 
 test_requirements = [
-    'pytest'
+    'pytest',
+    'pytest-catchlog'
 ]
 
 setup(
@@ -34,7 +36,7 @@ setup(
         'statechart',
     ],
     package_dir={'statechart':
-                 'statechart'},
+                     'statechart'},
     include_package_data=True,
     install_requires=requirements,
     license="ISCL",
@@ -49,5 +51,6 @@ setup(
         'Programming Language :: Python :: 3.4',
     ],
     test_suite='tests',
+    setup_requires=setup_requirements,
     tests_require=test_requirements
 )
