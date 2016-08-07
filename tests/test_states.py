@@ -157,9 +157,11 @@ class TestFinalState:
 
         b = State(name='b', context=statechart)
         c = State(name='c', context=statechart)
+        d = State(name='d', context=statechart)
 
         Transition(start=composite_state, end=c, event=Event('f'))
-        Transition(start=composite_state, end=b)
+        Transition(start=composite_state, end=b, event=Event('e'))
+        Transition(start=composite_state, end=d)
 
         statechart.start()
 
@@ -167,7 +169,7 @@ class TestFinalState:
 
         statechart.dispatch(Event('e'))
 
-        assert statechart.is_active('b')
+        assert statechart.is_active('d')
 
 
 # TODO(lam) Add test with final states - state shouldn't dispatch default

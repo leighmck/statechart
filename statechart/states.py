@@ -234,9 +234,6 @@ class FinalState(State):
     def add_transition(self, transition):
         raise RuntimeError('Cannot add a transition from the final state')
 
-    def dispatch(self, metadata, event):
-        raise RuntimeError('Cannot dispatch an event to the final state')
-
 
 class ConcurrentState(Context):
     """
@@ -437,11 +434,14 @@ class CompositeState(Context):
         if data.current_state and data.current_state.dispatch(metadata=metadata, event=event):
             dispatched = True
 
-        # If the substate dispatched the event and reached a final state or if this state
-        # is no longer active, trigger a new dispatch for the end transition, otherwise return.
-        if dispatched and metadata.is_active(self) and not isinstance(
-                metadata.active_states[self].current_state, FinalState):
+        # If the substate dispatched the event and this state is no longer active, return..
+        if dispatched and not metadata.is_active(self):
             return True
+
+        # If the substate dispatched the event and reached a final state, continue to dispatch any
+        # default transitions from this state.
+        if dispatched and isinstance(metadata.active_states[self].current_state, FinalState):
+            event = None
 
         # Since none of the child states can handle the event, let this state
         # try handling the event.
