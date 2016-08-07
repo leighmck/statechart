@@ -61,7 +61,7 @@ coverage:
 	$(BROWSER) htmlcov/index.html
 
 docs:
-	rm -f docs/statechart.rst
+	rm -f docs/pystatechart.rst
 	rm -f docs/modules.rst
 	sphinx-apidoc -o docs/ statechart
 	$(MAKE) -C docs clean
