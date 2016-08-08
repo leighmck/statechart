@@ -171,6 +171,29 @@ class TestFinalState:
 
         assert statechart.is_active('d')
 
+    def test_default_transition_isnt_executed_from_unfinished_composite_state(self):
+        statechart = Statechart(name='statechart')
+        statechart_init = InitialState(statechart)
+
+        composite_state = CompositeState(name='composite', context=statechart)
+        comp_init = InitialState(composite_state)
+        a = State(name='a', context=composite_state)
+
+        Transition(start=statechart_init, end=composite_state)
+        Transition(start=comp_init, end=a)
+
+        b = State(name='b', context=statechart)
+
+        Transition(start=composite_state, end=b)
+
+        statechart.start()
+
+        assert statechart.is_active('a')
+
+        statechart.dispatch(Event('e'))
+
+        assert statechart.is_active('a')
+
 
 # TODO(lam) Add test with final states - state shouldn't dispatch default
 # event until all regions have finished.

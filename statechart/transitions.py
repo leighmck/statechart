@@ -114,10 +114,7 @@ class Transition:
         Returns:
             True if the transition is allowed.
         """
-        if self.event and event is None:
-            return False
-
-        if self.event and self.event != event:
+        if self.event != event:
             return False
 
         if self.guard and not self.guard.check(metadata=metadata, event=event):
