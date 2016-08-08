@@ -11,3 +11,8 @@ History
 ------------------
 
 * Final state bug fixes.
+
+0.2.2 (2016-08-08)
+------------------
+
+* Default transition bug fix.
