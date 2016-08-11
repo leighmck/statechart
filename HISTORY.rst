@@ -16,3 +16,8 @@ History
 ------------------
 
 * Default transition bug fix.
+
+0.2.3 (2016-08-10)
+------------------
+
+* Consume event dispatched by child state unless a final state activated.
