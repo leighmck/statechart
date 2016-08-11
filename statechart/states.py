@@ -434,14 +434,17 @@ class CompositeState(Context):
         if data.current_state and data.current_state.dispatch(metadata=metadata, event=event):
             dispatched = True
 
-        # If the substate dispatched the event and this state is no longer active, return..
-        if dispatched and not metadata.is_active(self):
-            return True
+        if dispatched:
+            # If the substate dispatched the event and this state is no longer active, return.
+            if not metadata.is_active(self):
+                return True
 
-        # If the substate dispatched the event and reached a final state, continue to dispatch any
-        # default transitions from this state.
-        if dispatched and isinstance(metadata.active_states[self].current_state, FinalState):
-            event = None
+            # If the substate dispatched the event and reached a final state, continue to dispatch
+            # any default transitions from this state.
+            if isinstance(metadata.active_states[self].current_state, FinalState):
+                event = None
+            else:
+                return True
 
         # Since none of the child states can handle the event, let this state
         # try handling the event.

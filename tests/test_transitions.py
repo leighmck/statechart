@@ -266,6 +266,33 @@ class TestTransition:
         assert sc.is_active('middle_a')
         assert sc.is_active('bottom_a1')
 
+    def test_transition_event_consumed(self, empty_statechart):
+        sc = empty_statechart
+        init = InitialState(sc)
+
+        # a = State(name='a', context=sc)
+        b = State(name='b', context=sc)
+
+        cs = CompositeState(name='cs', context=sc)
+        cs_init = InitialState(cs)
+        cs_a = State(name='cs a', context=cs)
+        cs_b = State(name='cs b', context=cs)
+
+        Transition(start=init, end=cs)
+        Transition(start=cs, end=cs_init)
+
+        Transition(start=cs_init, end=cs_a)
+        Transition(start=cs_a, end=cs_b, event='home')
+        Transition(start=cs, end=b, event='home')
+
+        sc.start()
+
+        assert sc.is_active('cs a')
+
+        sc.dispatch(Event('home'))
+
+        assert sc.is_active('cs b')
+
 
 class TestInternalTransition:
     class StateSpy(State):
