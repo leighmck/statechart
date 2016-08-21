@@ -21,3 +21,8 @@ History
 ------------------
 
 * Consume event dispatched by child state unless a final state activated.
+
+0.2.4 (2016-08-21)
+------------------
+
+* Fix internal transition acting like local transition.
