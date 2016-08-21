@@ -338,3 +338,25 @@ class TestInternalTransition:
         assert default_state.exit_executed is False
 
         assert internal_action.executed is True
+
+    def test_top_level_internal_transition(self, empty_statechart):
+        sc = empty_statechart
+        sc_init = InitialState(sc)
+
+        cs = CompositeState(name='cs', context=sc)
+        cs_init = InitialState(cs)
+        cs_default = State(name='cs_default', context=cs)
+
+        Transition(start=sc_init, end=cs)
+        Transition(start=cs_init, end=cs_default)
+
+        test_event = Event('internal-event-trigger')
+        InternalTransition(state=cs, event=test_event)
+
+        sc.start()
+
+        assert sc.is_active('cs_default')
+
+        sc.dispatch(test_event)
+
+        assert sc.is_active('cs_default')

@@ -450,8 +450,8 @@ class CompositeState(Context):
         # try handling the event.
         for transition in self._transitions:
             # If transition is local, deactivate current state if transition is allowed.
-            if self not in transition.deactivate and transition.is_allowed(metadata=metadata,
-                                                                           event=event):
+            if self._is_local_transition(transition) and transition.is_allowed(metadata=metadata,
+                                                                               event=event):
                 data.current_state.deactivate(metadata=metadata, event=event)
 
             if transition.execute(metadata=metadata, event=event):
@@ -470,6 +470,22 @@ class CompositeState(Context):
             True if the composite state is finished.
         """
         return isinstance(metadata.active_states[self].current_state, FinalState)
+
+    def _is_local_transition(self, transition):
+        """
+        Check if a transition is local.
+
+        The transition must meet the following conditions:
+         - Not an internal transition.
+         - Transition originates from this state, but doesn't leave/deactivate it.
+
+        Returns:
+            True if the transition is a local transition, otherwise false.
+        """
+        if transition.start is transition.end or self in transition.deactivate:
+            return False
+        else:
+            return True
 
 
 class Statechart(Context):
