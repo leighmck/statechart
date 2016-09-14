@@ -540,6 +540,15 @@ class Statechart(Context):
     def add_transition(self, transition):
         raise RuntimeError('Cannot add transition to a statechart')
 
+    def entry(self, metadata, event):
+        raise RuntimeError('Cannot define an entry action for a statechart')
+
+    def do(self, metadata, event):
+        raise RuntimeError('Cannot define an do action for a statechart')
+
+    def exit(self, metadata, event):
+        raise RuntimeError('Cannot define an exit action for a statechart')
+
     def is_active(self, state_name):
         """
         Check if the state name is active
