@@ -32,3 +32,8 @@ History
 
 * Implement display module to generate Plant UML code of a statechart.
 * Raise runtime exception if an action is defined on top level statechart.
+
+0.3.1 (2016-10-16)
+------------------
+
+* Implement specific statechart deactivate function.
