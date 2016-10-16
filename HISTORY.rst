@@ -26,3 +26,9 @@ History
 ------------------
 
 * Fix internal transition acting like local transition.
+
+0.3.0 (2016-10-16)
+------------------
+
+* Implement display module to generate Plant UML code of a statechart.
+* Raise runtime exception if an action is defined on top level statechart.
