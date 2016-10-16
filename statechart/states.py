@@ -524,6 +524,22 @@ class Statechart(Context):
         self._logger.info('Stop "%s"', self.name)
         self.deactivate(metadata=self._metadata, event=None)
 
+    def deactivate(self, metadata, event):
+        """
+        Deactivate the statechart.
+
+        Args:
+            metadata (Metadata): Common statechart metadata.
+            event (Event): Event which led to the transition out of this state.
+
+        Returns:
+            True if statechart deactivated, False if already inactive.
+        """
+        self._logger.info('Deactivate "%s"', self.name)
+
+        if metadata.is_active(self):
+            metadata.deactivate(self)
+
     def dispatch(self, event):
         """
         Calls the dispatch method on the current state.
