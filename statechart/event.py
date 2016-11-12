@@ -41,36 +41,21 @@ class Event:
         name (str): An identifier for the event.
     """
 
-    def __init__(self, name):
+    def __init__(self, name, data=None):
         self._logger = logging.getLogger(self.__class__.__name__)
         self.name = name
+        self.data = data or {}
 
     def __eq__(self, event):
-        """
-        Determine if an event is equal to this event by comparing names.
-
-        Args:
-            event (Event): Event to compare.
-
-        Returns:
-            True if events are equal.
-        """
         if event is None:
             return False
-
         return self.name == event.name
 
     def __ne__(self, event):
-        """
-        Determine if an event is not equal to this event by comparing names.
-
-        Args:
-            event (Event): Event to compare.
-
-        Returns:
-            True if events are not equal.
-        """
         return not self.__eq__(event)
+
+    def __repr__(self):
+        return 'Event(name=%s, data=%r)' % (self.name, self.data)
 
 
 class KwEvent(Event):

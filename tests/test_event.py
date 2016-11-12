@@ -38,3 +38,11 @@ class TestEvent:
     def test_events_not_equal(self, event):
         diff_event = Event(name='diff_event')
         assert diff_event is not event
+
+    def test_event_data(self):
+        name = 'ev'
+        data = {'a': 1}
+        ev = Event(name, data)
+
+        assert ev.name == name
+        assert ev.data == data
