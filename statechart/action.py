@@ -46,7 +46,7 @@ class CallAction(Action):
     """
 
     def __init__(self, callback):
-        self._callback = callback
+        self.callback = callback
 
     def execute(self, metadata, event):
         """
@@ -57,4 +57,4 @@ class CallAction(Action):
             metadata (Metadata): Common statechart metadata.
             event (Event): The event which triggered this action.
         """
-        self._callback(metadata=metadata, event=event)
+        self.callback(metadata=metadata, event=event)
