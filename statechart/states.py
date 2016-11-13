@@ -65,7 +65,7 @@ class State:
 
         self.context = context
 
-        self._transitions = []
+        self.transitions = []
 
     def entry(self, metadata, event):
         """
@@ -126,9 +126,9 @@ class State:
             raise RuntimeError('Cannot add null transition')
 
         if transition.guard:
-            self._transitions.insert(0, transition)
+            self.transitions.insert(0, transition)
         else:
-            self._transitions.append(transition)
+            self.transitions.append(transition)
 
     def activate(self, metadata, event):
         """
@@ -190,7 +190,7 @@ class State:
         """
         status = False
 
-        for transition in self._transitions:
+        for transition in self.transitions:
             if transition.execute(metadata=metadata, event=event):
                 status = True
                 break
@@ -247,17 +247,17 @@ class ConcurrentState(Context):
 
     def __init__(self, name, context):
         super().__init__(name, context)
-        self._regions = []
+        self.regions = []
 
     def add_region(self, region):
         """
         Add a new region to the concurrent state.
 
-        Arsg:
+        Args:
             region (CompositeState): Region to add.
         """
         if isinstance(region, CompositeState):
-            self._regions.append(region)
+            self.regions.append(region)
         else:
             raise RuntimeError('A concurrent state can only add composite state regions')
 
@@ -275,7 +275,7 @@ class ConcurrentState(Context):
         if super().activate(metadata, event):
             rdata = metadata.active_states[self]
 
-            for region in self._regions:
+            for region in self.regions:
                 if not (region in rdata.state_set):
                     # Check if region is activated implicitly via incoming transition.
                     region.activate(metadata=metadata, event=event)
@@ -298,7 +298,7 @@ class ConcurrentState(Context):
         """
         self._logger.info('Deactivate "%s"', self.name)
 
-        for region in self._regions:
+        for region in self.regions:
             if metadata.is_active(region):
                 region.deactivate(metadata=metadata, event=event)
 
@@ -322,7 +322,7 @@ class ConcurrentState(Context):
         dispatched = False
 
         """ Check if any of the child regions can handle the event """
-        for region in self._regions:
+        for region in self.regions:
             if region.dispatch(metadata=metadata, event=event):
                 dispatched = True
 
@@ -330,7 +330,7 @@ class ConcurrentState(Context):
             return True
 
         """ Check if this state can handle the event by itself """
-        for transition in self._transitions:
+        for transition in self.transitions:
             if transition.execute(metadata=metadata, event=event):
                 dispatched = True
                 break
@@ -347,7 +347,7 @@ class ConcurrentState(Context):
         Returns:
             True if the concurrent state is finished.
         """
-        return all(region.is_finished(metadata) for region in self._regions)
+        return all(region.is_finished(metadata) for region in self.regions)
 
 
 class CompositeState(Context):
@@ -448,7 +448,7 @@ class CompositeState(Context):
 
         # Since none of the child states can handle the event, let this state
         # try handling the event.
-        for transition in self._transitions:
+        for transition in self.transitions:
             # If transition is local, deactivate current state if transition is allowed.
             if self._is_local_transition(transition) and transition.is_allowed(metadata=metadata,
                                                                                event=event):
@@ -500,7 +500,7 @@ class Statechart(Context):
 
     def __init__(self, name, metadata=None):
         super().__init__(name=name, context=None)
-        self._metadata = metadata or Metadata()
+        self.metadata = metadata or Metadata()
 
     def start(self):
         """
@@ -512,9 +512,9 @@ class Statechart(Context):
             RuntimeError if the statechart had already been started.
         """
         self._logger.info('Start "%s"', self.name)
-        self._metadata.reset()
-        self._metadata.activate(self)
-        self._metadata.activate(self.initial_state)
+        self.metadata.reset()
+        self.metadata.activate(self)
+        self.metadata.activate(self.initial_state)
         self.dispatch(None)
 
     def stop(self):
@@ -522,7 +522,7 @@ class Statechart(Context):
         Stops the statemachine by deactivating statechart and thus all it's child states.
         """
         self._logger.info('Stop "%s"', self.name)
-        self.deactivate(metadata=self._metadata, event=None)
+        self.deactivate(metadata=self.metadata, event=None)
 
     def deactivate(self, metadata, event):
         """
@@ -550,8 +550,8 @@ class Statechart(Context):
         Returns:
             True if transition executed.
         """
-        current_state = self._metadata.active_states[self].current_state
-        return current_state.dispatch(metadata=self._metadata, event=event)
+        current_state = self.metadata.active_states[self].current_state
+        return current_state.dispatch(metadata=self.metadata, event=event)
 
     def add_transition(self, transition):
         raise RuntimeError('Cannot add transition to a statechart')
@@ -575,7 +575,7 @@ class Statechart(Context):
         Returns:
             True if the state name is currently active.
         """
-        for state in self._metadata.active_states:
+        for state in self.metadata.active_states:
             if state.name == state_name:
                 return True
 
@@ -588,7 +588,7 @@ class Statechart(Context):
         Returns:
             True if the statechart has finished.
         """
-        if isinstance(self._metadata.active_states[self].current_state, FinalState):
+        if isinstance(self.metadata.active_states[self].current_state, FinalState):
             return True
         else:
             return False

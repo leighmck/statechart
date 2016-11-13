@@ -110,7 +110,7 @@ class TestState:
 
         default_transition = Transition(start=initial_state, end=default_state)
 
-        assert default_transition in initial_state._transitions
+        assert default_transition in initial_state.transitions
 
 
 class TestFinalState:

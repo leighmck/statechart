@@ -63,7 +63,7 @@ class TestTransition:
 
         # The transition should be added to the initial state's list of
         # outgoing transitions
-        assert transition in initial_state._transitions
+        assert transition in initial_state.transitions
 
         # When executed, the transition should be setup to deactivate the
         # initial state and to activate the next state
@@ -76,7 +76,7 @@ class TestTransition:
 
         # The transition should be added to the initial state's list of
         # outgoing transitions.
-        assert transition in next_state._transitions
+        assert transition in next_state.transitions
 
         # When executed, the transition should be setup to deactivate the
         # next state and to re-activate it.

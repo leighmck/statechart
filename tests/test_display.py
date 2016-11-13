@@ -95,7 +95,7 @@ class TestDescribe:
         (states, transitions) = display.describe(sc.initial_state, states=[], transitions=[])
 
         assert set(states) == {sc.init, sc.state, sc.final}
-        assert set(transitions) == set(sc.init._transitions + sc.state._transitions)
+        assert set(transitions) == set(sc.init.transitions + sc.state.transitions)
 
     def test_describe_composite_statechart(self, composite_statechart):
         sc = composite_statechart
@@ -113,10 +113,10 @@ class TestDescribe:
         }
 
         assert set(transitions) == set(
-            sc.init._transitions +
-            sc.composite._transitions +
-            sc.composite.init._transitions +
-            sc.composite.state._transitions
+            sc.init.transitions +
+            sc.composite.transitions +
+            sc.composite.init.transitions +
+            sc.composite.state.transitions
         )
 
     def test_describe_concurrent_statechart(self, concurrent_statechart):
@@ -144,17 +144,17 @@ class TestDescribe:
         }
 
         assert set(transitions) == set(
-            sc.init._transitions +
-            sc.concurrent._transitions +
-            sc.concurrent.composite_a._transitions +
-            sc.concurrent.composite_a.init._transitions +
-            sc.concurrent.composite_a.state._transitions +
-            sc.concurrent.composite_b._transitions +
-            sc.concurrent.composite_b.init._transitions +
-            sc.concurrent.composite_b.state._transitions +
-            sc.concurrent.composite_c._transitions +
-            sc.concurrent.composite_c.init._transitions +
-            sc.concurrent.composite_c.state._transitions
+            sc.init.transitions +
+            sc.concurrent.transitions +
+            sc.concurrent.composite_a.transitions +
+            sc.concurrent.composite_a.init.transitions +
+            sc.concurrent.composite_a.state.transitions +
+            sc.concurrent.composite_b.transitions +
+            sc.concurrent.composite_b.init.transitions +
+            sc.concurrent.composite_b.state.transitions +
+            sc.concurrent.composite_c.transitions +
+            sc.concurrent.composite_c.init.transitions +
+            sc.concurrent.composite_c.state.transitions
         )
 
     def test_plantuml_simple_statechart(self, simple_statechart):

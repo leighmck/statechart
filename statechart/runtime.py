@@ -42,7 +42,7 @@ class Metadata:
         self.active_states = {}
         self.event = None
         self.transition = None
-        self._history_states = {}
+        self.history_states = {}
 
     def activate(self, state):
         """
@@ -89,7 +89,7 @@ class Metadata:
         Returns:
             The most recent state remembered by the specified history state.
         """
-        return self._history_states[history_state]
+        return self.history_states[history_state]
 
     def has_history_info(self, history_state):
         """
@@ -103,7 +103,7 @@ class Metadata:
         """
         status = False
 
-        if history_state in self._history_states:
+        if history_state in self.history_states:
             status = True
 
         return status
@@ -128,7 +128,7 @@ class Metadata:
     def reset(self):
         """Resets the metadata object for reuse."""
         self.active_states.clear()
-        self._history_states.clear()
+        self.history_states.clear()
 
     def store_history_info(self, history_state, actual_state):
         """"
@@ -140,4 +140,4 @@ class Metadata:
                 state to recall.
             actual_state: (State): State to recall.
         """
-        self._history_states[history_state] = actual_state
+        self.history_states[history_state] = actual_state

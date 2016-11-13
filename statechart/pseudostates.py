@@ -119,7 +119,7 @@ class InitialState(PseudoState):
         Raises:
             RuntimeError: If transition is invalid, or if transition already exists.
         """
-        if len(self._transitions) is not 0:
+        if len(self.transitions) is not 0:
             raise RuntimeError('There can only be a single transition from an initial state')
         elif transition.event is not None:
             raise RuntimeError('Transition from initial state must not require an event trigger')
@@ -167,7 +167,7 @@ class ShallowHistoryState(PseudoState):
         Returns:
             True if the state was activated.
         """
-        if len(self._transitions) > 1:
+        if len(self.transitions) > 1:
             raise RuntimeError('History state cannot have more than 1 transition')
 
         if metadata.has_history_info(self):
@@ -218,7 +218,7 @@ class ChoiceState(PseudoState):
         Returns:
             True if the state was activated.
         """
-        for transition in self._transitions:
+        for transition in self.transitions:
             if transition.execute(metadata=metadata, event=None):
                 return True
 
@@ -239,4 +239,4 @@ class ChoiceState(PseudoState):
         if transition is None:
             raise RuntimeError('Cannot add null transition')
 
-        self._transitions.append(transition)
+        self.transitions.append(transition)

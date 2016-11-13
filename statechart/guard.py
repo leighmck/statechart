@@ -77,7 +77,7 @@ class CallGuard(Guard):
     """
 
     def __init__(self, callback):
-        self._callback = callback
+        self.callback = callback
 
     def check(self, metadata, event):
         """
@@ -90,7 +90,7 @@ class CallGuard(Guard):
         Returns:
             The result returned by the callback function.
         """
-        return bool(self._callback(metadata=metadata, event=event))
+        return bool(self.callback(metadata=metadata, event=event))
 
 
 class ElseGuard(Guard):
@@ -125,8 +125,8 @@ class EqualGuard(Guard):
     """
 
     def __init__(self, a, b):
-        self._a = a
-        self._b = b
+        self.a = a
+        self.b = b
 
     def check(self, metadata, event):
         """
@@ -139,4 +139,4 @@ class EqualGuard(Guard):
         Returns:
             The result of the equality check between 'a' and 'b'.
         """
-        return self._a == self._b
+        return self.a == self.b

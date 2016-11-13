@@ -33,7 +33,7 @@ class TestInitialState:
         Transition(start=initial_state, end=default_state)
         startchart.start()
 
-        initial_state.activate(metadata=startchart._metadata, event=None)
+        initial_state.activate(metadata=startchart.metadata, event=None)
         assert startchart.is_active('default')
 
     def test_missing_transition_from_initial_state(self):

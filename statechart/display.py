@@ -75,7 +75,7 @@ class Display:
         state.uuid = ''.join(('node_', str(uuid.uuid4()))).replace('-', '_')
         states.append(state)
 
-        for transition in state._transitions:
+        for transition in state.transitions:
             transitions.append(transition)
 
             node = transition.end
@@ -89,7 +89,7 @@ class Display:
                                                       states=states,
                                                       transitions=transitions)
             elif isinstance(node, ConcurrentState):
-                for region in node._regions:
+                for region in node.regions:
                     (states, transitions) = self.describe(state=region,
                                                           states=states,
                                                           transitions=transitions)
@@ -139,12 +139,12 @@ class Display:
         name = ''
 
         if isinstance(guard, CallGuard):
-            name = guard._callback.__name__
+            name = guard.callback.__name__
         elif isinstance(guard, ElseGuard):
             name = 'else'
         elif isinstance(guard, EqualGuard):
-            a = guard._a
-            b = guard._b
+            a = guard.a
+            b = guard.b
             name = '{a}=={b}'.format(a=a, b=b)
         else:
             name = 'guard'
@@ -187,10 +187,10 @@ class Display:
             'state {uuid} as "{name}" {{'.format(uuid=concurrent.uuid, name=concurrent.name),
         ]
 
-        for region in concurrent._regions:
+        for region in concurrent.regions:
             result += self._puml_context(region, states)
 
-            if not region == concurrent._regions[-1]:
+            if not region == concurrent.regions[-1]:
                 result += [
                     '--'
                 ]
@@ -244,12 +244,12 @@ class Display:
                 else:
                     result += self._puml_state(state)
 
-                for transition in state._transitions:
+                for transition in state.transitions:
                     if isinstance(transition.end, FinalState):
                         result += self._puml_transition(transition)
 
         result += [
-            '[*] --> {uuid}'.format(uuid=context.initial_state._transitions[0].end.uuid),
+            '[*] --> {uuid}'.format(uuid=context.initial_state.transitions[0].end.uuid),
         ]
 
         return result
