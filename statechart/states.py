@@ -59,7 +59,7 @@ class State:
 
         self.name = name
 
-        """ Context can be null only for the statechart """
+        """Context can be null only for the statechart"""
         if context is None and (not isinstance(self, Statechart)):
             raise RuntimeError('Context cannot be null')
 
@@ -212,6 +212,7 @@ class Context(State):
         super().__init__(name=name, context=context)
         self.initial_state = None
         self.current_state = None
+        self.finished = False
 
 
 class FinalState(State):
@@ -235,8 +236,12 @@ class FinalState(State):
     def add_transition(self, transition):
         raise RuntimeError('Cannot add a transition from the final state')
 
+    def activate(self, metadata, event):
+        super().activate(metadata=metadata, event=event)
+        self.context.finished = True
 
-class ConcurrentState(Context):
+
+class ConcurrentState(State):
     """
     A concurrent state is a state that contains composite state regions,
     activated concurrently.
@@ -336,17 +341,15 @@ class ConcurrentState(Context):
 
         return dispatched
 
-    def is_finished(self, metadata):
-        """"
+    @property
+    def finished(self):
+        """
         Check if all regions within the concurrent state are finished.
 
-        Args:
-            metadata (Metadata): Common statechart metadata.
-
         Returns:
-            True if the concurrent state is finished.
+            True if all regions are finished.
         """
-        return all(region.is_finished(metadata) for region in self.regions)
+        return all(region.finished for region in self.regions)
 
 
 class CompositeState(Context):
@@ -453,18 +456,6 @@ class CompositeState(Context):
                 return True
 
         return False
-
-    def is_finished(self, metadata):
-        """"
-        Check if the composite state has reached it's final state.
-
-        Args:
-            metadata (Metadata): Common statechart metadata.
-
-        Returns:
-            True if the composite state is finished.
-        """
-        return isinstance(self.current_state, FinalState)
 
     def _is_local_transition(self, transition):
         """
@@ -575,15 +566,3 @@ class Statechart(Context):
                 return True
 
         return False
-
-    def is_finished(self):
-        """"
-        Check if the statechart has finished
-
-        Returns:
-            True if the statechart has finished.
-        """
-        if isinstance(self.current_state, FinalState):
-            return True
-        else:
-            return False

@@ -60,11 +60,11 @@ class TestStatechart:
         statechart.start()
 
         assert statechart.is_active('default')
-        assert not statechart.is_finished()
+        assert not statechart.finished
 
         statechart.dispatch(finish)
 
-        assert statechart.is_finished()
+        assert statechart.finished
 
     def test_composite_statechart_finished(self):
         statechart = Statechart(name='statechart')
@@ -87,11 +87,11 @@ class TestStatechart:
 
         assert statechart.is_active('composite')
         assert statechart.is_active('composite_default')
-        assert not statechart.is_finished()
+        assert not statechart.finished
 
         statechart.dispatch(finish)
 
-        assert statechart.is_finished()
+        assert statechart.finished
 
 
 class TestState:
