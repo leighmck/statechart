@@ -148,10 +148,10 @@ class ShallowHistoryState(PseudoState):
         self.state = None
 
         if isinstance(self.context, CompositeState):
-            if self.context.history:
+            if self.context.history_state:
                 raise RuntimeError('"History state already present')
             else:
-                self.context.history = self
+                self.context.history_state = self
         else:
             raise RuntimeError('Parent not a composite state')
 
@@ -170,14 +170,12 @@ class ShallowHistoryState(PseudoState):
         if len(self.transitions) > 1:
             raise RuntimeError('History state cannot have more than 1 transition')
 
-        if metadata.has_history_info(self):
-            state = metadata.get_history_state(self)
-
+        if self.state:
             # Setup transition to the history's target state
             metadata.transition.start = self
-            metadata.transition.end = state
+            metadata.transition.end = self.state
 
-            state.activate(metadata=metadata, event=event)
+            self.state.activate(metadata=metadata, event=event)
         else:
             self.dispatch(metadata=metadata, event=None)
 

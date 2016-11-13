@@ -116,7 +116,7 @@ class Display:
         name = ''
 
         if isinstance(action, CallAction):
-            name = action._callback.__name__
+            name = action.callback.__name__
         else:
             name = 'action'
 
