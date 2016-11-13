@@ -140,3 +140,28 @@ class EqualGuard(Guard):
             The result of the equality check between 'a' and 'b'.
         """
         return self.a == self.b
+
+
+class NotGuard(Guard):
+    """
+    Invert the result of another guard.
+
+    Args:
+        guard (Guard): Guard check to invert.
+    """
+
+    def __init__(self, guard):
+        self.guard = guard
+
+    def check(self, metadata, event):
+        """
+        Called by the transition.
+
+        Args:
+            metadata (Metadata): Common statechart metadata.
+            event (Event): Transition event trigger.
+
+        Returns:
+            The inverse of the guard check.
+        """
+        return not self.guard.check(metadata=metadata, event=event)

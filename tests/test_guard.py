@@ -17,7 +17,7 @@
 
 import pytest
 
-from statechart import CallGuard, EqualGuard, Guard, KwEvent
+from statechart import CallGuard, ElseGuard, EqualGuard, Guard, KwEvent, NotGuard
 
 
 class GreaterThanZero(Guard):
@@ -67,3 +67,12 @@ class TestCallGuard:
         callback_guard = CallGuard(guard_cb)
         value = callback_guard.check(metadata=None, event=None)
         assert value is expected
+
+
+class TestNotGuard:
+    def test_not_guard(self):
+        else_guard = ElseGuard()
+        not_guard = NotGuard(else_guard)
+
+        assert else_guard.check(metadata=None, event=None) is True
+        assert not_guard.check(metadata=None, event=None) is False
