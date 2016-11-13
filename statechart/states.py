@@ -276,7 +276,7 @@ class ConcurrentState(Context):
             rdata = metadata.active_states[self]
 
             for region in self.regions:
-                if not (region in rdata.state_set):
+                if not metadata.is_active(region):
                     # Check if region is activated implicitly via incoming transition.
                     region.activate(metadata=metadata, event=event)
                     region.initial_state.activate(metadata=metadata, event=event)

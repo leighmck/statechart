@@ -26,7 +26,6 @@ class StateRuntimeData:
     def __init__(self):
         self._logger = logging.getLogger(self.__class__.__name__)
         self.current_state = None
-        self.state_set = list()
 
 
 class Metadata:
