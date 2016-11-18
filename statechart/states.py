@@ -64,8 +64,8 @@ class State:
             raise RuntimeError('Context cannot be null')
 
         self.context = context
-
         self.transitions = []
+        self.active = False
 
     def entry(self, metadata, event):
         """
@@ -137,24 +137,18 @@ class State:
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
-
-        Returns:
-            True if the state was activated.
         """
         self._logger.info('Activate "%s"', self.name)
 
-        if not metadata.is_active(self):
-            metadata.activate(self)
+        metadata.activate(self)
 
-            if self.entry:
-                self.entry(metadata=metadata, event=event)
+        if self.entry:
+            self.entry(metadata=metadata, event=event)
 
-            if self.do:
-                self.do(metadata=metadata, event=event)
+        if self.do:
+            self.do(metadata=metadata, event=event)
 
-            return True
-
-        return False
+        self.active = True
 
     def deactivate(self, metadata, event):
         """
@@ -163,18 +157,13 @@ class State:
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition out of this state.
-
-        Returns:
-            True if state deactivated, False if already inactive.
         """
         self._logger.info('Deactivate "%s"', self.name)
 
-        if metadata.is_active(self):
+        self.exit(metadata=metadata, event=event)
 
-            if self.exit:
-                self.exit(metadata=metadata, event=event)
-
-            metadata.deactivate(self)
+        metadata.deactivate(self)
+        self.active = False
 
     def dispatch(self, metadata, event):
         """
@@ -240,6 +229,10 @@ class FinalState(State):
         super().activate(metadata=metadata, event=event)
         self.context.finished = True
 
+    def deactivate(self, metadata, event):
+        super().deactivate(metadata=metadata, event=event)
+        self.context.finished = False
+
 
 class ConcurrentState(State):
     """
@@ -274,20 +267,12 @@ class ConcurrentState(State):
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
-
-        Returns:
-            True if state activated, False if already active.
         """
-        if super().activate(metadata, event):
-            for region in self.regions:
-                if not metadata.is_active(region):
-                    # Check if region is activated implicitly via incoming transition.
-                    region.activate(metadata=metadata, event=event)
-                    region.initial_state.activate(metadata=metadata, event=event)
-
-            return True
-
-        return False
+        super().activate(metadata, event)
+        for inactive in [region for region in self.regions if not region.active]:
+            # Check if region is activated implicitly via incoming transition.
+            inactive.activate(metadata=metadata, event=event)
+            inactive.initial_state.activate(metadata=metadata, event=event)
 
     def deactivate(self, metadata, event):
         """
@@ -296,9 +281,6 @@ class ConcurrentState(State):
         Args:
             metadata (Metadata): Common statechart metadata.
             event: Event which led to the transition out of this state.
-
-        Returns:
-            True if state deactivated, False if already inactive.
         """
         self._logger.info('Deactivate "%s"', self.name)
 
@@ -517,14 +499,9 @@ class Statechart(Context):
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition out of this state.
-
-        Returns:
-            True if statechart deactivated, False if already inactive.
         """
         self._logger.info('Deactivate "%s"', self.name)
-
-        if metadata.is_active(self):
-            metadata.deactivate(self)
+        metadata.deactivate(self)
 
     def dispatch(self, event):
         """
@@ -536,8 +513,7 @@ class Statechart(Context):
         Returns:
             True if transition executed.
         """
-        current_state = self.current_state
-        return current_state.dispatch(metadata=self.metadata, event=event)
+        return self.current_state.dispatch(metadata=self.metadata, event=event)
 
     def add_transition(self, transition):
         raise RuntimeError('Cannot add transition to a statechart')
@@ -561,8 +537,4 @@ class Statechart(Context):
         Returns:
             True if the state name is currently active.
         """
-        for state in self.metadata.active_states:
-            if state.name == state_name:
-                return True
-
-        return False
+        return state_name in [state.name for state in self.metadata.active_states]

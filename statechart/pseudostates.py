@@ -29,9 +29,6 @@ class PseudoState(State):
         context (Context): The parent context that contains this state.
     """
 
-    def __init__(self, name, context):
-        super().__init__(name=name, context=context)
-
     def activate(self, metadata, event):
         """
         Activate the state.
@@ -39,16 +36,9 @@ class PseudoState(State):
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
-
-        Returns:
-            True if the state was activated.
         """
+        self.active = True
         metadata.activate(self)
-
-        if self.entry:
-            self.entry(metadata=metadata, event=event)
-
-        return True
 
 
 class InitialState(PseudoState):
@@ -79,13 +69,9 @@ class InitialState(PseudoState):
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
-
-        Returns:
-            True if the state was activated.
         """
+        super().activate(metadata=metadata, event=event)
         self.dispatch(metadata=metadata, event=None)
-
-        return True
 
     def dispatch(self, metadata, event):
         """
@@ -163,10 +149,9 @@ class ShallowHistoryState(PseudoState):
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
-
-        Returns:
-            True if the state was activated.
         """
+        super().activate(metadata=metadata, event=event)
+
         if len(self.transitions) > 1:
             raise RuntimeError('History state cannot have more than 1 transition')
 
@@ -178,8 +163,6 @@ class ShallowHistoryState(PseudoState):
             self.state.activate(metadata=metadata, event=event)
         else:
             self.dispatch(metadata=metadata, event=None)
-
-        return True
 
 
 class ChoiceState(PseudoState):
@@ -212,10 +195,9 @@ class ChoiceState(PseudoState):
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
-
-        Returns:
-            True if the state was activated.
         """
+        super().activate(metadata=metadata, event=event)
+
         for transition in self.transitions:
             if transition.execute(metadata=metadata, event=None):
                 return True
