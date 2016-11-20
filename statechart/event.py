@@ -46,16 +46,21 @@ class Event:
         self.name = name
         self.data = data or {}
 
-    def __eq__(self, event):
-        if event is None:
-            return False
-        return self.name == event.name
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        return NotImplemented
 
-    def __ne__(self, event):
-        return not self.__eq__(event)
+    def __ne__(self, other):
+        if isinstance(other, self.__class__):
+            return not self.__eq__(other)
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(tuple(sorted(self.__dict__.items())))
 
     def __repr__(self):
-        return 'Event(name=%s, data=%r)' % (self.name, self.data)
+        return 'Event(name="%s", data=%r)' % (self.name, self.data)
 
 
 class KwEvent(Event):

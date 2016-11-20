@@ -200,10 +200,10 @@ class ChoiceState(PseudoState):
 
         for transition in self.transitions:
             if transition.execute(metadata=metadata, event=None):
-                return True
-
-        raise RuntimeError('No choice made due to guard conditions, '
-                           'suggest to add transition with "Else" guard')
+                break
+        else:
+            raise RuntimeError('No choice made due to guard conditions, '
+                               'add a transition with an "Else" guard')
 
     def add_transition(self, transition):
         """Add a transition from this state.
