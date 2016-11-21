@@ -186,6 +186,9 @@ class State:
 
         return status
 
+    def __repr__(self):
+        return '%s(name="%s", active="%r")' % (self.__class__.__name__, self.name, self.active)
+
 
 class Context(State):
     """
@@ -202,6 +205,10 @@ class Context(State):
         self.initial_state = None
         self.current_state = None
         self.finished = False
+
+    def __repr__(self):
+        return '%s(name="%s", active="%s", current state=%r, finished="%s")' % (
+            self.__class__.__name__, self.name, self.active, self.current_state, self.finished)
 
 
 class FinalState(State):
@@ -332,6 +339,10 @@ class ConcurrentState(State):
             True if all regions are finished.
         """
         return all(region.finished for region in self.regions)
+
+    def __repr__(self):
+        return '%s(name="%s", active="%s", regions=%r, finished="%s")' % (
+            self.__class__.__name__, self.name, self.active, self.regions, self.finished)
 
 
 class CompositeState(Context):
@@ -484,6 +495,7 @@ class Statechart(Context):
         self.metadata.activate(self)
         self.metadata.activate(self.initial_state)
         self.dispatch(None)
+        self.active = True
 
     def stop(self):
         """
@@ -502,6 +514,7 @@ class Statechart(Context):
         """
         self._logger.info('Deactivate "%s"', self.name)
         metadata.deactivate(self)
+        self.active = False
 
     def dispatch(self, event):
         """
