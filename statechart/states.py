@@ -186,6 +186,9 @@ class State:
 
         return status
 
+    def is_active(self, state_name):
+        return self.active and self.name == state_name
+
     def __repr__(self):
         return '%s(name="%s", active="%r")' % (self.__class__.__name__, self.name, self.active)
 
@@ -205,6 +208,14 @@ class Context(State):
         self.initial_state = None
         self.current_state = None
         self.finished = False
+
+    def is_active(self, state_name):
+        if not self.active:
+            return False
+        elif self.name == state_name:
+            return True
+        else:
+            return self.current_state.is_active(state_name)
 
     def __repr__(self):
         return '%s(name="%s", active="%s", current state=%r, finished="%s")' % (
@@ -292,7 +303,7 @@ class ConcurrentState(State):
         self._logger.info('Deactivate "%s"', self.name)
 
         for region in self.regions:
-            if metadata.is_active(region):
+            if region.active:
                 region.deactivate(metadata=metadata, event=event)
 
         super().deactivate(metadata=metadata, event=event)
@@ -309,7 +320,7 @@ class ConcurrentState(State):
             True if transition executed, False if transition not allowed,
             due to mismatched event trigger or failed guard condition.
         """
-        if self not in metadata.active_states:
+        if not self.active:
             raise RuntimeError('Inactive composite state attempting to dispatch transition')
 
         dispatched = False
@@ -339,6 +350,14 @@ class ConcurrentState(State):
             True if all regions are finished.
         """
         return all(region.finished for region in self.regions)
+
+    def is_active(self, state_name):
+        if not self.active:
+            return False
+        elif self.name == state_name:
+            return True
+        else:
+            return any(region.is_active(state_name) for region in self.regions)
 
     def __repr__(self):
         return '%s(name="%s", active="%s", regions=%r, finished="%s")' % (
@@ -395,7 +414,7 @@ class CompositeState(Context):
         if self.history_state and not (isinstance(self.current_state, FinalState)):
             self.history_state.state = self.current_state
 
-        if metadata.is_active(self.current_state):
+        if self.current_state.active:
             self.current_state.deactivate(metadata=metadata, event=event)
 
         super().deactivate(metadata=metadata, event=event)
@@ -427,7 +446,7 @@ class CompositeState(Context):
 
         if dispatched:
             # If the substate dispatched the event and this state is no longer active, return.
-            if not metadata.is_active(self):
+            if not self.active:
                 return True
 
             # If the substate dispatched the event and reached a final state, continue to dispatch
@@ -538,15 +557,3 @@ class Statechart(Context):
 
     def exit(self, metadata, event):
         raise RuntimeError('Cannot define an exit action for a statechart')
-
-    def is_active(self, state_name):
-        """
-        Check if the state name is active
-
-        Args:
-            state_name (str): State name to check.
-
-        Returns:
-            True if the state name is currently active.
-        """
-        return state_name in [state.name for state in self.metadata.active_states]

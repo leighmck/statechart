@@ -60,14 +60,3 @@ class TestMetadata:
         metadata.activate(state.context)
         metadata.deactivate(state)
         assert state not in metadata.active_states
-
-    def test_is_active_active_state(self, state):
-        metadata = Metadata()
-        metadata.activate(state.context)
-        metadata.activate(state)
-        assert metadata.is_active(state) is True
-
-    def test_is_active_inactive_state(self, state):
-        metadata = Metadata()
-        metadata.activate(state.context)
-        assert metadata.is_active(state) is False

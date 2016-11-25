@@ -61,20 +61,3 @@ class Metadata:
         if state in self.active_states:
             state.current_state = None
             self.active_states.remove(state)
-
-    def is_active(self, state):
-        """
-        Checks whether the given state is active or not.
-
-        Args:
-            state (State): State to check.
-
-        Returns:
-            True if the state is active.
-        """
-        status = False
-
-        if state in self.active_states:
-            status = True
-
-        return status
