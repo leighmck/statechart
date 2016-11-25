@@ -78,7 +78,3 @@ class Metadata:
             status = True
 
         return status
-
-    def reset(self):
-        """Resets the metadata object for reuse."""
-        self.active_states.clear()

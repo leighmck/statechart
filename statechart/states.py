@@ -491,7 +491,6 @@ class Statechart(Context):
             RuntimeError if the statechart had already been started.
         """
         self._logger.info('Start "%s"', self.name)
-        self.metadata.reset()
         self.metadata.activate(self)
         self.metadata.activate(self.initial_state)
         self.dispatch(None)
