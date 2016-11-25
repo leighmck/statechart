@@ -33,6 +33,9 @@ class Action(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
+    def __call__(self, *args, **kwargs):
+        return self.execute(*args, **kwargs)
+
 
 class CallAction(Action):
     """

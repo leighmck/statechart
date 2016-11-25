@@ -15,6 +15,8 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+from functools import partial
+
 import pytest
 
 from statechart import (Action, CompositeState, Event, State, InitialState, InternalTransition,
@@ -292,6 +294,67 @@ class TestTransition:
         sc.dispatch(Event('home'))
 
         assert sc.is_active('cs b')
+
+    def test_transition_action_function(self, empty_statechart):
+        self.state = False
+
+        def set_state(state):
+            self.state = bool(state)
+
+        set_true = partial(set_state, True)
+
+        sc = empty_statechart
+        initial = InitialState(sc)
+        default = State(name='default', context=sc)
+        next = State(name='next', context=sc)
+
+        Transition(start=initial, end=default)
+        Transition(start=default, end=next, event='next', action=set_true)
+
+        sc.start()
+        sc.dispatch(Event('next'))
+
+        assert self.state
+
+    def test_transition_action_function_with_event(self, empty_statechart):
+        self.state = False
+
+        def set_state(event):
+            self.state = event.data['state']
+
+        sc = empty_statechart
+        initial = InitialState(sc)
+        default = State(name='default', context=sc)
+        next = State(name='next', context=sc)
+
+        Transition(start=initial, end=default)
+        Transition(start=default, end=next, event='next', action=set_state)
+
+        sc.start()
+        sc.dispatch(Event(name='next', data={'state': True}))
+
+        assert self.state
+
+    def test_transition_action_function_with_metadata(self, empty_statechart):
+        sc = empty_statechart
+        sc.metadata.state = True
+
+        self.state = False
+
+        def set_state(metadata, event):
+            self.state = sc.metadata.state
+
+        initial = InitialState(sc)
+        default = State(name='default', context=sc)
+        next = State(name='next', context=sc)
+
+        Transition(start=initial, end=default)
+        Transition(start=default, end=next, event='next', action=set_state)
+
+        sc.start()
+        sc.dispatch(Event('next'))
+
+        assert self.state
 
 
 class TestInternalTransition:

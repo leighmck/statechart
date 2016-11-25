@@ -15,10 +15,11 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import logging
 
-from statechart import Event
-from statechart import Statechart
+import logging
+from functools import partial
+
+from statechart import Event, Statechart
 
 
 class Transition:
@@ -51,6 +52,12 @@ class Transition:
 
         if isinstance(event, str):
             self.event = Event(event)
+
+        if guard is not None and not callable(guard):
+            raise ValueError('Guard must be callable')
+
+        if action is not None and not callable(action):
+            raise ValueError('Action must be callable')
 
         """ Used to store the states that will get activated """
         self.activate = list()
@@ -93,7 +100,16 @@ class Transition:
             state.deactivate(metadata=metadata, event=event)
 
         if self.action:
-            self.action.execute(metadata=metadata, event=event)
+            for func in [partial(self.action, metadata=metadata, event=event),
+                         partial(self.action, metadata=metadata),
+                         partial(self.action, event=event),
+                         self.action]:
+                try:
+                    return func()
+                except TypeError:
+                    pass
+            else:
+                raise RuntimeError('Unable to call action function')
 
         for state in self.activate:
             state.activate(metadata=metadata, event=event)
@@ -104,7 +120,7 @@ class Transition:
         return True
 
     def is_allowed(self, metadata, event):
-        """"
+        """
         Check if the transition is allowed.
 
         Args:
@@ -122,9 +138,17 @@ class Transition:
         except AttributeError:
             return False
 
-        if self.guard and not self.guard.check(metadata=metadata, event=event):
-            return False
-
+        if self.guard:
+            for func in [partial(self.guard, metadata=metadata, event=event),
+                         partial(self.guard, metadata=metadata),
+                         partial(self.guard, event=event),
+                         self.guard]:
+                try:
+                    return func()
+                except TypeError:
+                    pass
+            else:
+                raise RuntimeError('Unable to call guard function')
         return True
 
     def _calculate_state_set(self, start, end):

@@ -64,6 +64,9 @@ class Guard(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
+    def __call__(self, *args, **kwargs):
+        return self.check(*args, **kwargs)
+
 
 class CallGuard(Guard):
     """
