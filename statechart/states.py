@@ -212,6 +212,18 @@ class Context(State):
         self.current_state = None
         self.finished = False
 
+    def deactivate(self, metadata, event):
+        """
+        Deactivate the state.
+
+        Args:
+            metadata (Metadata): Common statechart metadata.
+            event (Event): Event which led to the transition out of this state.
+        """
+        super().deactivate(metadata=metadata, event=event)
+        self.current_state = None
+        self.finished = False
+
     def is_active(self, state_name):
         if not self.active:
             return False
@@ -533,6 +545,7 @@ class Statechart(Context):
         """
         self._logger.info('Deactivate "%s"', self.name)
         self.active = False
+        self.current_state = None
 
     def dispatch(self, event):
         """
