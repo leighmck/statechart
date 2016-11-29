@@ -32,31 +32,3 @@ def state():
 class TestMetadata:
     def test_create_metadata(self):
         Metadata()
-
-    def test_activate_inactive_state(self, state):
-        metadata = Metadata()
-        metadata.activate(state.context)
-        metadata.activate(state)
-        assert state in metadata.active_states
-
-    def test_reactivate_active_state(self, state):
-        metadata = Metadata()
-        metadata.activate(state.context)
-        metadata.activate(state)
-        assert state in metadata.active_states
-        metadata.activate(state)
-        assert state in metadata.active_states
-
-    def test_deactivate_active_state(self, state):
-        metadata = Metadata()
-        metadata.activate(state.context)
-        metadata.activate(state)
-        assert state in metadata.active_states
-        metadata.deactivate(state)
-        assert state not in metadata.active_states
-
-    def test_deactivate_inactive_state(self, state):
-        metadata = Metadata()
-        metadata.activate(state.context)
-        metadata.deactivate(state)
-        assert state not in metadata.active_states

@@ -38,7 +38,12 @@ class PseudoState(State):
             event (Event): Event which led to the transition into this state.
         """
         self.active = True
-        metadata.activate(self)
+
+        if self.context:
+            if not self.context.active:
+                raise RuntimeError('Parent state not activated')
+
+            self.context.current_state = self
 
 
 class InitialState(PseudoState):

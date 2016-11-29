@@ -28,36 +28,5 @@ class Metadata:
 
     def __init__(self):
         self._logger = logging.getLogger(self.__class__.__name__)
-        self.active_states = []
         self.event = None
         self.transition = None
-
-    def activate(self, state):
-        """
-        Activates a state for this Metadata. If the state is not already
-        active, it will be added and a new StateRuntimeData created.
-
-        Args:
-            state (State): State to activate.
-        """
-        if state not in self.active_states:
-            self.active_states.append(state)
-
-        state.current_state = None
-
-        if state.context:
-            if state.context not in self.active_states:
-                raise RuntimeError('Parent state not activated')
-
-            state.context.current_state = state
-
-    def deactivate(self, state):
-        """
-        Deactivates the state and frees the allocated resources.
-
-        Args:
-            state (State): State to dactivate.
-        """
-        if state in self.active_states:
-            state.current_state = None
-            self.active_states.remove(state)

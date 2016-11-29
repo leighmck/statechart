@@ -140,15 +140,19 @@ class State:
         """
         self._logger.info('Activate "%s"', self.name)
 
-        metadata.activate(self)
+        self.active = True
+
+        if self.context:
+            if not self.context.active:
+                raise RuntimeError('Parent state not activated')
+
+            self.context.current_state = self
 
         if self.entry:
             self.entry(metadata=metadata, event=event)
 
         if self.do:
             self.do(metadata=metadata, event=event)
-
-        self.active = True
 
     def deactivate(self, metadata, event):
         """
@@ -162,7 +166,6 @@ class State:
 
         self.exit(metadata=metadata, event=event)
 
-        metadata.deactivate(self)
         self.active = False
 
     def dispatch(self, metadata, event):
@@ -431,12 +434,12 @@ class CompositeState(Context):
             True if transition executed, False if transition not allowed,
             due to mismatched event trigger or failed guard condition.
         """
-        if self not in metadata.active_states:
+        if not self.active:
             raise RuntimeError('Inactive composite state attempting to dispatch transition')
 
         # See if the current child state can handle the event
         if self.current_state is None and self.initial_state:
-            metadata.activate(self.initial_state)
+            self.initial_state.activate(metadata=metadata, event=None)
             self.current_state.activate(metadata=metadata, event=event)
 
         dispatched = False
@@ -510,10 +513,8 @@ class Statechart(Context):
             RuntimeError if the statechart had already been started.
         """
         self._logger.info('Start "%s"', self.name)
-        self.metadata.activate(self)
-        self.metadata.activate(self.initial_state)
-        self.dispatch(None)
         self.active = True
+        self.initial_state.activate(metadata=self.metadata, event=None)
 
     def stop(self):
         """
@@ -531,7 +532,6 @@ class Statechart(Context):
             event (Event): Event which led to the transition out of this state.
         """
         self._logger.info('Deactivate "%s"', self.name)
-        metadata.deactivate(self)
         self.active = False
 
     def dispatch(self, event):
