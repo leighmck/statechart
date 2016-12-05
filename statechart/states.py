@@ -559,6 +559,9 @@ class Statechart(Context):
         """
         return self.current_state.dispatch(metadata=self.metadata, event=event)
 
+    def is_finished(self):
+        return self.finished
+
     def add_transition(self, transition):
         raise RuntimeError('Cannot add transition to a statechart')
 
