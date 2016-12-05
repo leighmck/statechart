@@ -105,7 +105,8 @@ class Transition:
                          partial(self.action, event=event),
                          self.action]:
                 try:
-                    return func()
+                    func()
+                    break
                 except TypeError:
                     pass
             else:
