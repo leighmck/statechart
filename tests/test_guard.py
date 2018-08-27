@@ -21,7 +21,7 @@ from statechart import CallGuard, ElseGuard, EqualGuard, Guard, KwEvent, NotGuar
 
 
 class GreaterThanZero(Guard):
-    def check(self, metadata, event):
+    def check(self, event):
         if 'value' in event.kwargs and event.kwargs['value'] > 0:
             return True
         else:
@@ -38,7 +38,7 @@ class TestGuard:
                               (KwEvent(name='a', value=1), True)])
     def test_guard_check(self, event, expected):
         guard = GreaterThanZero()
-        assert guard.check(metadata=None, event=event) == expected
+        assert guard.check(event=event) == expected
 
     @pytest.mark.parametrize('a, b, expected',
                              [(1, 1, True),
@@ -47,14 +47,14 @@ class TestGuard:
                               ('1', '2', False)])
     def test_equal_guard(self, a, b, expected):
         guard = EqualGuard(a=a, b=b)
-        assert guard.check(metadata=None, event=None) == expected
+        assert guard.check(event=None) == expected
 
 
-def true_cb(metadata, event):
+def true_cb(event):
     return True
 
 
-def false_cb(metadata, event):
+def false_cb(event):
     return False
 
 
@@ -65,7 +65,7 @@ class TestCallGuard:
     @pytest.mark.parametrize('guard_cb, expected', [(true_cb, True), (false_cb, False)])
     def test_check_callback_guard(self, guard_cb, expected):
         callback_guard = CallGuard(guard_cb)
-        value = callback_guard.check(metadata=None, event=None)
+        value = callback_guard.check(event=None)
         assert value is expected
 
 
@@ -74,5 +74,5 @@ class TestNotGuard:
         else_guard = ElseGuard()
         not_guard = NotGuard(else_guard)
 
-        assert else_guard.check(metadata=None, event=None) is True
-        assert not_guard.check(metadata=None, event=None) is False
+        assert else_guard.check(event=None) is True
+        assert not_guard.check(event=None) is False

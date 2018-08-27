@@ -43,12 +43,11 @@ class Guard(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def check(self, metadata, event):
+    def check(self, event):
         """
         Called by the transition, override for specific behaviour
 
         Args:
-            metadata (Metadata): Common statechart metadata.
             event (Event): Transition event trigger.
 
         Note:
@@ -73,27 +72,26 @@ class CallGuard(Guard):
     Generic guard configured with a callback function, checked when the Transition is fired.
 
     Note:
-        The callback function must be exception safe and support args for the statechart metadata
-        and transition event trigger.
+        The callback function must be exception safe and support args for the statechart
+        transition event trigger.
 
-        e.g. def callback(self, metadata, event):
+        e.g. def callback(self, event):
     """
 
     def __init__(self, callback):
         self.callback = callback
 
-    def check(self, metadata, event):
+    def check(self, event):
         """
         Called by the transition.
 
         Args:
-            metadata (Metadata): Common statechart metadata.
             event (Event): Transition event trigger.
 
         Returns:
             The result returned by the callback function.
         """
-        return bool(self.callback(metadata=metadata, event=event))
+        return bool(self.callback(event=event))
 
 
 class ElseGuard(Guard):
@@ -104,12 +102,11 @@ class ElseGuard(Guard):
     one path that can be executed.
     """
 
-    def check(self, metadata, event):
+    def check(self, event):
         """
         Called by the transition.
 
         Args:
-            metadata (Metadata): Common statechart metadata.
             event (Event): Transition event trigger.
 
         Returns:
@@ -131,12 +128,11 @@ class EqualGuard(Guard):
         self.a = a
         self.b = b
 
-    def check(self, metadata, event):
+    def check(self, event):
         """
         Called by the transition.
 
         Args:
-            metadata (Metadata): Common statechart metadata.
             event (Event): Transition event trigger.
 
         Returns:
@@ -156,15 +152,14 @@ class NotGuard(Guard):
     def __init__(self, guard):
         self.guard = guard
 
-    def check(self, metadata, event):
+    def check(self, event):
         """
         Called by the transition.
 
         Args:
-            metadata (Metadata): Common statechart metadata.
             event (Event): Transition event trigger.
 
         Returns:
             The inverse of the guard check.
         """
-        return not self.guard.check(metadata=metadata, event=event)
+        return not self.guard.check(event=event)

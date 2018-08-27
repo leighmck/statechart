@@ -18,45 +18,18 @@
 
 import pytest
 
-from statechart import Action, CallAction, Metadata
+from statechart import Action, CallAction
+
+my_result = 0
 
 
-class MyAction(Action):
-    def execute(self, metadata, event):
-        pass
-
-
-class MyMetadata(Metadata):
-    def __init__(self):
-        super().__init__()
-        self.value = 0
-
-
-@pytest.fixture
-def my_action():
-    return MyAction()
-
-
-@pytest.fixture
-def my_metadata():
-    return MyMetadata()
-
-
-class TestAction:
-    def test_abstract_instantiation_throws(self):
-        with pytest.raises(TypeError):
-            Action()
-
-    def test_execute_action(self, my_action):
-        my_action.execute(metadata=None, event=None)
-
-
-def my_callback(metadata, event):
-    metadata.value = 1
+def my_action(event):
+    global my_result
+    my_result = 1
 
 
 class TestCallAction:
-    def test_execute_callback_action(self, my_metadata):
-        call_action = CallAction(my_callback)
-        call_action.execute(metadata=my_metadata, event=None)
-        assert my_metadata.value is 1
+    def test_execute_callback_action(self):
+        call_action = CallAction(my_action)
+        call_action.execute(event=None)
+        assert my_result is 1

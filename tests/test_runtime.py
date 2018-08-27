@@ -16,7 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import pytest
-from statechart import InitialState, Metadata, State, Statechart, Transition
+from statechart import InitialState, State, Statechart, Transition
 
 
 @pytest.fixture
@@ -27,8 +27,3 @@ def state():
     Transition(initial_state, next_state)
     statechart.start()
     return next_state
-
-
-class TestMetadata:
-    def test_create_metadata(self):
-        Metadata()

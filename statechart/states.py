@@ -67,7 +67,7 @@ class State:
         self.transitions = []
         self.active = False
 
-    def entry(self, metadata, event):
+    def entry(self, event):
         """
         An optional action that is executed whenever this state is
         entered, regardless of the transition taken to reach the state. If
@@ -75,12 +75,11 @@ class State:
         internal activity or transitions performed within the state.
 
         Args:
-            metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
         """
         pass
 
-    def do(self, metadata, event):
+    def do(self, event):
         """
         An optional action that is executed whilst this state is active.
         The execution starts after this state is entered, and stops either by
@@ -91,12 +90,11 @@ class State:
         this state is deactivated it will be cancelled.
 
         Args:
-            metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
         """
         pass
 
-    def exit(self, metadata, event):
+    def exit(self, event):
         """
         An optional action that is executed upon deactivation of this state
         regardless of which transition was taken out of the state. If defined,
@@ -105,7 +103,6 @@ class State:
         Initiates cancellation of the state do action if it is still running.
 
         Args:
-            metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
         """
         pass
@@ -149,10 +146,10 @@ class State:
             self.context.current_state = self
 
         if self.entry:
-            self.entry(metadata=metadata, event=event)
+            self.entry(event=event)
 
         if self.do:
-            self.do(metadata=metadata, event=event)
+            self.do(event=event)
 
     def deactivate(self, metadata, event):
         """
@@ -164,7 +161,7 @@ class State:
         """
         self._logger.info('Deactivate "%s"', self.name)
 
-        self.exit(metadata=metadata, event=event)
+        self.exit(event=event)
 
         self.active = False
 
@@ -475,8 +472,7 @@ class CompositeState(Context):
         # try handling the event.
         for transition in self.transitions:
             # If transition is local, deactivate current state if transition is allowed.
-            if self._is_local_transition(transition) and transition.is_allowed(metadata=metadata,
-                                                                               event=event):
+            if self._is_local_transition(transition) and transition.is_allowed(event=event):
                 self.current_state.deactivate(metadata=metadata, event=event)
 
             if transition.execute(metadata=metadata, event=event):
@@ -508,12 +504,11 @@ class Statechart(Context):
 
     Args:
         name (str): An identifier for the model element.
-        metadata (Metadata): Common statechart metadata.
     """
 
-    def __init__(self, name, metadata=None):
+    def __init__(self, name):
         super().__init__(name=name, context=None)
-        self.metadata = metadata or Metadata()
+        self.metadata = Metadata()
 
     def start(self):
         """
@@ -565,11 +560,11 @@ class Statechart(Context):
     def add_transition(self, transition):
         raise RuntimeError('Cannot add transition to a statechart')
 
-    def entry(self, metadata, event):
+    def entry(self, event):
         raise RuntimeError('Cannot define an entry action for a statechart')
 
-    def do(self, metadata, event):
+    def do(self, event):
         raise RuntimeError('Cannot define an do action for a statechart')
 
-    def exit(self, metadata, event):
+    def exit(self, event):
         raise RuntimeError('Cannot define an exit action for a statechart')

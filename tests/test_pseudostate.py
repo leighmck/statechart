@@ -18,7 +18,7 @@
 import pytest
 
 from statechart import (ChoiceState, CompositeState, ElseGuard, Event, Guard, InitialState,
-                        Metadata, ShallowHistoryState, State, Statechart, Transition)
+                        ShallowHistoryState, State, Statechart, Transition)
 
 
 class TestInitialState:
@@ -331,22 +331,15 @@ class TestChoiceState:
         composite_state = CompositeState(name='composite', context=startchart)
         ShallowHistoryState(composite_state)
 
-    @pytest.mark.parametrize('choice, expected_state_name',
+    @pytest.mark.parametrize('state_name, expected_state_name',
                              [('a', 'a'),
                               ('b', 'b')])
-    def test_choice_state_transitions(self, choice, expected_state_name):
-        class MyMetadata(Metadata):
-            def __init__(self):
-                super().__init__()
-                self.value = None
-
+    def test_choice_state_transitions(self, state_name, expected_state_name):
         class IsA(Guard):
-            def check(self, metadata, event):
-                return metadata.value == 'a'
+            def check(self, event):
+                return state_name == 'a'
 
-        myMetadata = MyMetadata()
-        myMetadata.value = choice
-        statechart = Statechart(name='statechart', metadata=myMetadata)
+        statechart = Statechart(name='statechart')
         init = InitialState(statechart)
 
         state_a = State(name='a', context=statechart)

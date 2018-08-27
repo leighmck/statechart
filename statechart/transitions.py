@@ -83,10 +83,9 @@ class Transition:
         Returns:
             True if the transition was executed.
         """
-        if not self.is_allowed(metadata=metadata, event=event):
+        if not self.is_allowed(event=event):
             return False
 
-        metadata.event = event
         metadata.transition = self
 
         if event:
@@ -100,9 +99,7 @@ class Transition:
             state.deactivate(metadata=metadata, event=event)
 
         if self.action:
-            for func in [partial(self.action, metadata=metadata, event=event),
-                         partial(self.action, metadata=metadata),
-                         partial(self.action, event=event),
+            for func in [partial(self.action, event=event),
                          self.action]:
                 try:
                     func()
@@ -116,16 +113,14 @@ class Transition:
             state.activate(metadata=metadata, event=event)
 
         metadata.transition = None
-        metadata.event = None
 
         return True
 
-    def is_allowed(self, metadata, event):
+    def is_allowed(self, event):
         """
         Check if the transition is allowed.
 
         Args:
-            metadata (Metadata): Common statechart metadata.
             event (Event): The event that fires the transition.
 
         Returns:
@@ -140,9 +135,7 @@ class Transition:
             return False
 
         if self.guard:
-            for func in [partial(self.guard, metadata=metadata, event=event),
-                         partial(self.guard, metadata=metadata),
-                         partial(self.guard, event=event),
+            for func in [partial(self.guard, event=event),
                          self.guard]:
                 try:
                     return func()
@@ -241,10 +234,10 @@ class InternalTransition(Transition):
         Returns:
             True if the transition was executed.
         """
-        if not self.is_allowed(metadata=metadata, event=event):
+        if not self.is_allowed(event=event):
             return False
 
         if self.action:
-            self.action.execute(metadata=metadata, event=event)
+            self.action.execute(event=event)
 
         return True

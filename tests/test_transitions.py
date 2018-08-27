@@ -27,7 +27,7 @@ class ActionSpy(Action):
     def __init__(self):
         self.executed = False
 
-    def execute(self, metadata, event):
+    def execute(self, event):
         self.executed = True
 
 
@@ -52,10 +52,10 @@ class TestTransition:
 
             Transition(start=init, end=self.default)
 
-        def entry(self, metadata, event):
+        def entry(self, event):
             self.entries += 1
 
-        def exit(self, metadata, event):
+        def exit(self, event):
             self.exits += 1
 
     def test_create_transition(self, empty_statechart):
@@ -341,7 +341,7 @@ class TestTransition:
 
         self.state = False
 
-        def set_state(metadata, event):
+        def set_state(event):
             self.state = sc.metadata.state
 
         initial = InitialState(sc)
@@ -365,13 +365,13 @@ class TestInternalTransition:
             self.do_executed = False
             self.exit_executed = False
 
-        def entry(self, metadata, event):
+        def entry(self, event):
             self.entry_executed = True
 
-        def do(self, metadata, event):
+        def do(self, event):
             self.do_executed = True
 
-        def exit(self, metadata, event):
+        def exit(self, event):
             self.exit_executed = True
 
     def test_execute(self, empty_statechart):

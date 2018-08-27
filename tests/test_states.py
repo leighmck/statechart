@@ -25,7 +25,7 @@ class ActionSpy(Action):
     def __init__(self):
         self.executed = False
 
-    def execute(self, metadata, event):
+    def execute(self, event):
         self.executed = True
 
 
