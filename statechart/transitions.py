@@ -38,7 +38,7 @@ class Transition:
         guard (Guard): A boolean predicate that  must be true for the
             transition to be fired. It is evaluated at the time the event is
             dispatched.
-        action (Action): An optional procedure to be performed when the
+        action (function): An optional procedure to be performed when the
             transition fires.
     """
 
@@ -213,7 +213,7 @@ class InternalTransition(Transition):
         event (Event|str): The event or event name that fires the transition.
         guard (Guard): A boolean predicate that  must be true for the transition to be fired.
             It is evaluated at the time the event is dispatched.
-        action (Action): An optional procedure to be performed when the transition fires.
+        action (function): An optional procedure to be performed when the transition fires.
     """
 
     def __init__(self, state, event=None, guard=None, action=None):
@@ -238,6 +238,6 @@ class InternalTransition(Transition):
             return False
 
         if self.action:
-            self.action.execute(event=event)
+            self.action(event=event)
 
         return True

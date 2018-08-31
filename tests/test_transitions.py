@@ -19,16 +19,8 @@ from functools import partial
 
 import pytest
 
-from statechart import (Action, CompositeState, Event, State, InitialState, InternalTransition,
+from statechart import (CompositeState, Event, State, InitialState, InternalTransition,
                         Statechart, Transition)
-
-
-class ActionSpy(Action):
-    def __init__(self):
-        self.executed = False
-
-    def execute(self, event):
-        self.executed = True
 
 
 @pytest.fixture
@@ -358,6 +350,9 @@ class TestTransition:
 
 
 class TestInternalTransition:
+    def action_spy(self, **kwargs):
+        self.action_executed = True
+
     class StateSpy(State):
         def __init__(self, name, context):
             super().__init__(name=name, context=context)
@@ -380,8 +375,9 @@ class TestInternalTransition:
         Transition(start=initial_state, end=default_state)
 
         internal_event = Event(name='internal-event')
-        internal_action = ActionSpy()
-        InternalTransition(state=default_state, event=internal_event, action=internal_action)
+        self.action_executed = False
+
+        InternalTransition(state=default_state, event=internal_event, action=self.action_spy)
         empty_statechart.start()
 
         assert empty_statechart.is_active('next')
@@ -400,7 +396,7 @@ class TestInternalTransition:
         assert default_state.do_executed is False
         assert default_state.exit_executed is False
 
-        assert internal_action.executed is True
+        assert self.action_executed is True
 
     def test_top_level_internal_transition(self, empty_statechart):
         sc = empty_statechart

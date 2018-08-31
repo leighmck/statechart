@@ -17,7 +17,7 @@
 
 import uuid
 
-from statechart import (CallAction, CallGuard, ChoiceState, ConcurrentState, CompositeState,
+from statechart import (CallGuard, ChoiceState, ConcurrentState, CompositeState,
                         ElseGuard, EqualGuard, FinalState, InitialState, ShallowHistoryState,
                         __version__)
 
@@ -98,29 +98,6 @@ class Display:
                                                           transitions=transitions)
 
         return (states, transitions)
-
-    def _gen_action_name(self, action):
-        """
-        Generate action name.
-
-        Extract the callback name for CallActions.
-
-        Extend to define action names for CallAction subclasses.
-
-        Args:
-            action (Action): Action used to generate name.s
-
-        Returns:
-            str: Generated action name.
-        """
-        name = ''
-
-        if isinstance(action, CallAction):
-            name = action.callback.__name__
-        else:
-            name = 'action'
-
-        return name
 
     def _gen_guard_name(self, guard):
         """
@@ -309,8 +286,8 @@ class Display:
                 event=' {}'.format(transition.event.name) if transition.event else '',
                 guard=' [{}]'.format(
                     self._gen_guard_name(transition.guard)) if transition.guard else '',
-                action=' / {}'.format(
-                    self._gen_action_name(transition.action)) if transition.action else '')
+                action=' / {}'.format(transition.action.__name__ if transition.action else '')
+            )
         ]
 
         return result

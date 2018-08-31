@@ -17,16 +17,8 @@
 
 import pytest
 
-from statechart import (Action, CompositeState, ConcurrentState, Event, FinalState,
+from statechart import (CompositeState, ConcurrentState, Event, FinalState,
                         InitialState, State, Statechart, Transition)
-
-
-class ActionSpy(Action):
-    def __init__(self):
-        self.executed = False
-
-    def execute(self, event):
-        self.executed = True
 
 
 class StateSpy(State):
