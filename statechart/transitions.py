@@ -35,7 +35,7 @@ class Transition:
         end (State): The target state (or pseudostate) that is reached when the
         transition is executed.
         event (Event|str): The event or event name that fires the transition.
-        guard (Guard): A boolean predicate that  must be true for the
+        guard (function): A boolean predicate that  must be true for the
             transition to be fired. It is evaluated at the time the event is
             dispatched.
         action (function): An optional procedure to be performed when the
@@ -211,7 +211,7 @@ class InternalTransition(Transition):
         state (State): The state which owns this transition. The transition executes without
             exiting or re-entering this state.
         event (Event|str): The event or event name that fires the transition.
-        guard (Guard): A boolean predicate that  must be true for the transition to be fired.
+        guard (function): A boolean predicate that  must be true for the transition to be fired.
             It is evaluated at the time the event is dispatched.
         action (function): An optional procedure to be performed when the transition fires.
     """

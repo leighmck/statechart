@@ -17,9 +17,8 @@
 
 import uuid
 
-from statechart import (CallGuard, ChoiceState, ConcurrentState, CompositeState,
-                        ElseGuard, EqualGuard, FinalState, InitialState, ShallowHistoryState,
-                        __version__)
+from statechart import (ChoiceState, ConcurrentState, CompositeState, FinalState, InitialState,
+                        ShallowHistoryState, __version__)
 
 
 class Display:
@@ -99,35 +98,6 @@ class Display:
 
         return (states, transitions)
 
-    def _gen_guard_name(self, guard):
-        """
-        Generate guard name.
-
-        Extract the callback name for CallGuards.
-
-        Extend to define action names for Guard subclasses.
-
-        Args:
-            guard (Guard): Guard used to generate name.
-
-        Returns:
-            str: Generated action name.
-        """
-        name = ''
-
-        if isinstance(guard, CallGuard):
-            name = guard.callback.__name__
-        elif isinstance(guard, ElseGuard):
-            name = 'else'
-        elif isinstance(guard, EqualGuard):
-            a = guard.a
-            b = guard.b
-            name = '{a}=={b}'.format(a=a, b=b)
-        else:
-            name = 'guard'
-
-        return name
-
     def _gen_state_name(self, state):
         """
         Generate state name.
@@ -138,7 +108,7 @@ class Display:
         Extend to define state names for State subclasses.
 
         Args:
-            guard (Guard): Guard used to generate name.
+            state (Statae): Guard used to generate name.
 
         Returns:
             str: Generated state name.
@@ -284,8 +254,7 @@ class Display:
                 end=end,
                 div=' :' if transition.event or transition.action or transition.guard else '',
                 event=' {}'.format(transition.event.name) if transition.event else '',
-                guard=' [{}]'.format(
-                    self._gen_guard_name(transition.guard)) if transition.guard else '',
+                guard=' [{}]'.format(transition.guard) if transition.guard else '',
                 action=' / {}'.format(transition.action.__name__ if transition.action else '')
             )
         ]

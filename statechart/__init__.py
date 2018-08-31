@@ -17,9 +17,7 @@
 
 import logging
 
-from statechart.action import Action, CallAction  # NOQA
 from statechart.event import Event, KwEvent  # NOQA
-from statechart.guard import CallGuard, EqualGuard, ElseGuard, Guard, NotGuard  # NOQA
 from statechart.states import CompositeState, ConcurrentState, FinalState, State, Statechart  # NOQA
 from statechart.pseudostates import ChoiceState, InitialState, ShallowHistoryState  # NOQA
 from statechart.transitions import InternalTransition, Transition  # NOQA

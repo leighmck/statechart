@@ -17,8 +17,8 @@
 
 import pytest
 
-from statechart import (ChoiceState, CompositeState, ElseGuard, Event, Guard, InitialState,
-                        ShallowHistoryState, State, Statechart, Transition)
+from statechart import (ChoiceState, CompositeState, Event, InitialState, ShallowHistoryState,
+                        State, Statechart, Transition)
 
 
 class TestInitialState:
@@ -61,16 +61,15 @@ class TestInitialState:
             Transition(start=initial_state, end=default_state, event=Event('event'))
 
     def test_transition_from_initial_state_with_guard_condition(self):
-        class MyGuard(Guard):
-            def check(self, metadata, event):
-                return False
-
         startchart = Statechart(name='statechart')
         initial_state = InitialState(startchart)
         default_state = State(name='default', context=startchart)
 
+        def my_guard(**kwargs):
+            return False
+
         with pytest.raises(RuntimeError):
-            Transition(start=initial_state, end=default_state, event=None, guard=MyGuard())
+            Transition(start=initial_state, end=default_state, event=None, guard=my_guard)
 
 
 class TestShallowHistoryState:
@@ -335,9 +334,8 @@ class TestChoiceState:
                              [('a', 'a'),
                               ('b', 'b')])
     def test_choice_state_transitions(self, state_name, expected_state_name):
-        class IsA(Guard):
-            def check(self, event):
-                return state_name == 'a'
+        def is_a(**kwargs):
+            return state_name == 'a'
 
         statechart = Statechart(name='statechart')
         init = InitialState(statechart)
@@ -349,8 +347,8 @@ class TestChoiceState:
 
         Transition(start=init, end=choice)
 
-        Transition(start=choice, end=state_a, event=None, guard=IsA())
-        Transition(start=choice, end=state_b, event=None, guard=ElseGuard())
+        Transition(start=choice, end=state_a, event=None, guard=is_a)
+        Transition(start=choice, end=state_b, event=None, guard=None)  # else
 
         statechart.start()
 
