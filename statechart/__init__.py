@@ -20,7 +20,7 @@ import logging
 from statechart.event import Event, KwEvent  # NOQA
 from statechart.states import CompositeState, ConcurrentState, FinalState, State, Statechart  # NOQA
 from statechart.pseudostates import ChoiceState, InitialState, ShallowHistoryState  # NOQA
-from statechart.transitions import InternalTransition, Transition  # NOQA
+from statechart.transitions import Transition  # NOQA
 
 __author__ = 'Leigh McKenzie'
 __copyright__ = 'Copyright 2016, Leigh McKenzie'

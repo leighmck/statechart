@@ -19,8 +19,7 @@ from functools import partial
 
 import pytest
 
-from statechart import (CompositeState, Event, State, InitialState, InternalTransition,
-                        Statechart, Transition)
+from statechart import (CompositeState, Event, State, InitialState, Statechart, Transition)
 
 
 @pytest.fixture
@@ -347,75 +346,3 @@ class TestTransition:
         sc.dispatch(Event('next'))
 
         assert self.state
-
-
-class TestInternalTransition:
-    def action_spy(self, **kwargs):
-        self.action_executed = True
-
-    class StateSpy(State):
-        def __init__(self, name, context):
-            super().__init__(name=name, context=context)
-            self.entry_executed = False
-            self.do_executed = False
-            self.exit_executed = False
-
-        def entry(self, event):
-            self.entry_executed = True
-
-        def do(self, event):
-            self.do_executed = True
-
-        def exit(self, event):
-            self.exit_executed = True
-
-    def test_execute(self, empty_statechart):
-        initial_state = InitialState(empty_statechart)
-        default_state = self.StateSpy(name='next', context=empty_statechart)
-        Transition(start=initial_state, end=default_state)
-
-        internal_event = Event(name='internal-event')
-        self.action_executed = False
-
-        InternalTransition(state=default_state, event=internal_event, action=self.action_spy)
-        empty_statechart.start()
-
-        assert empty_statechart.is_active('next')
-        assert default_state.entry_executed is True
-        assert default_state.do_executed is True
-        assert default_state.exit_executed is False
-
-        # Ensure we don't leave and re-enter the default state after triggering
-        # the internal transition.
-        default_state.entry_executed = False
-        default_state.do_executed = False
-
-        empty_statechart.dispatch(internal_event)
-
-        assert default_state.entry_executed is False
-        assert default_state.do_executed is False
-        assert default_state.exit_executed is False
-
-        assert self.action_executed is True
-
-    def test_top_level_internal_transition(self, empty_statechart):
-        sc = empty_statechart
-        sc_init = InitialState(sc)
-
-        cs = CompositeState(name='cs', context=sc)
-        cs_init = InitialState(cs)
-        cs_default = State(name='cs_default', context=cs)
-
-        Transition(start=sc_init, end=cs)
-        Transition(start=cs_init, end=cs_default)
-
-        test_event = Event('internal-event-trigger')
-        InternalTransition(state=cs, event=test_event)
-
-        sc.start()
-
-        assert sc.is_active('cs_default')
-
-        sc.dispatch(test_event)
-
-        assert sc.is_active('cs_default')

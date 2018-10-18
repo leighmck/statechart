@@ -25,6 +25,7 @@ class StateSpy(State):
     def __init__(self, name, context):
         State.__init__(self, name=name, context=context)
         self.dispatch_called = False
+        self.dispatch_internal_called = False
         self.metadata = None
         self.event = None
 
@@ -33,6 +34,9 @@ class StateSpy(State):
         self.metadata = metadata
         self.event = event
         return True
+
+    def handle_internal(self, event):
+        self.dispatch_internal_called = True
 
 
 class TestStatechart:
@@ -84,6 +88,25 @@ class TestStatechart:
         statechart.dispatch(finish)
 
         assert statechart.finished
+
+    def test_active_states(self):
+        statechart = Statechart(name='a')
+        statechart_init = InitialState(statechart)
+
+        b = CompositeState(name='b', context=statechart)
+        b_init = InitialState(b)
+
+        c = CompositeState(name='c', context=b)
+        c_init = InitialState(c)
+
+        d = State(name='d', context=c)
+
+        Transition(start=statechart_init, end=b)
+        Transition(start=b_init, end=c)
+        Transition(start=c_init, end=d)
+
+        statechart.start()
+        assert statechart.active_states() == [statechart, b, c, d]
 
 
 class TestState:

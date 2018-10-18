@@ -177,6 +177,8 @@ class State:
             True if transition executed, False if transition not allowed,
             due to mismatched event trigger or failed guard condition.
         """
+        self.handle_internal(event)
+
         status = False
 
         for transition in self.transitions:
@@ -185,6 +187,23 @@ class State:
                 break
 
         return status
+
+    def handle_internal(self, event):
+        """
+        Handle an internal event. Override to provide specific behaviour for
+        a state.
+
+        Events are routed to all active states from the outside-in before
+        processing transitions.
+
+        This is a lightweight implementation of an internal transition without
+        strict guard and action semantics.
+
+        Filter internal transitions by checking the event name.
+
+        event (Event): Incoming event to handle.
+        """
+        pass
 
     def is_active(self, state_name):
         return self.active and self.name == state_name
@@ -335,6 +354,8 @@ class ConcurrentState(State):
         if not self.active:
             raise RuntimeError('Inactive composite state attempting to dispatch transition')
 
+        self.handle_internal(event)
+
         dispatched = False
 
         """ Check if any of the child regions can handle the event """
@@ -446,6 +467,8 @@ class CompositeState(Context):
         if not self.active:
             raise RuntimeError('Inactive composite state attempting to dispatch transition')
 
+        self.handle_internal(event)
+
         # See if the current child state can handle the event
         if self.current_state is None and self.initial_state:
             self.initial_state.activate(metadata=metadata, event=None)
@@ -552,7 +575,26 @@ class Statechart(Context):
         Returns:
             True if transition executed.
         """
+        self.handle_internal(event=event)
+
         return self.current_state.dispatch(metadata=self.metadata, event=event)
+
+    def active_states(self):
+        states = []
+
+        if self.active:
+            states.append(self)
+            node = self.current_state
+
+            while node is not None:
+                states.append(node)
+
+                if isinstance(node, Context):
+                    node = node.current_state
+                else:
+                    break
+
+        return states
 
     def is_finished(self):
         return self.finished
