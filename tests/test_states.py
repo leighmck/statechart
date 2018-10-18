@@ -127,6 +127,55 @@ class TestState:
 
         assert default_transition in initial_state.transitions
 
+    def test_light_switch(self):
+        """
+                      --Flick-->
+        init ---> Off            On
+                      <--Flick--   Entry: Light = ON
+                                   Exit: Light = OFF
+                                   Internal:
+                                     Flick: Count++
+        """
+
+        class On(State):
+            def __init__(self, name, context, data):
+                State.__init__(self, name=name, context=context)
+                self.data = data
+
+            def entry(self, event):
+                self.data['light'] = 'on'
+
+            def exit(self, event):
+                self.data['light'] = 'off'
+
+            def handle_internal(self, event):
+                if event.name == 'flick':
+                    self.data['on_count'] += 1
+
+        sm = Statechart(name='sm')
+        data = dict(light='off', on_count=0)
+        sm.initial_state = InitialState(context=sm)
+        off = State(name='off', context=sm)
+        on = On(name='on', context=sm, data=data)
+
+        Transition(start=sm.initial_state, end=off)
+        Transition(start=off, end=on, event=Event('flick'))
+        Transition(start=on, end=off, event=Event('flick'))
+
+        sm.start()
+
+        assert data['light'] == 'off'
+
+        sm.dispatch(Event('flick'))
+        assert data['light'] == 'on'
+
+        assert data['on_count'] == 0
+
+        sm.dispatch(Event('flick'))
+        assert data['light'] == 'off'
+
+        assert data['on_count'] == 1
+
 
 class TestFinalState:
     def test_add_transition(self):
