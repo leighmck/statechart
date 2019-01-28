@@ -17,7 +17,7 @@
 
 import logging
 
-from statechart.event import Event, KwEvent  # NOQA
+from statechart.event import Event  # NOQA
 from statechart.states import CompositeState, ConcurrentState, FinalState, State, Statechart  # NOQA
 from statechart.pseudostates import ChoiceState, InitialState, ShallowHistoryState  # NOQA
 from statechart.transitions import Transition  # NOQA

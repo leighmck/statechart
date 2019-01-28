@@ -39,6 +39,7 @@ class Event:
 
     Args:
         name (str): An identifier for the event.
+        data Optional[dict]: Optional data dict.
     """
 
     def __init__(self, name, data=None):
@@ -61,34 +62,3 @@ class Event:
 
     def __repr__(self):
         return 'Event(name="%s", data=%r)' % (self.name, self.data)
-
-
-class KwEvent(Event):
-    """
-    Extension of the Event base class to facilitate passing kwargs with event.
-
-    When an event is fired, it's data is made available to transition guard and
-    actions. If the transition is executed the event data is also made
-    available to state entry, do and exit actions.
-
-    Generally, specialised Event classes should be defined to define the data
-    structure as actions & guards need to unpack it.
-
-    Example:
-        Create an instance of an event:
-        my_event = Event(name='my event', a=1, b='2', c=[])
-
-        Add the event trigger to a transition:
-        Transition(start=a, end=b, event=my_event)
-
-        Fire the event:
-        statechart.dispatch(event=my_event)
-
-    Args:
-        name (str): An identifier for the event.
-        **kwargs: Arbitrary keyword arguments.
-    """
-
-    def __init__(self, name, **kwargs):
-        super().__init__(name=name)
-        self.kwargs = kwargs
