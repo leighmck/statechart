@@ -15,10 +15,11 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import logging
 
-from statechart import Event
-from statechart import Statechart
+import logging
+from functools import partial
+
+from statechart import Event, Statechart
 
 
 class Transition:
@@ -34,10 +35,10 @@ class Transition:
         end (State): The target state (or pseudostate) that is reached when the
         transition is executed.
         event (Event|str): The event or event name that fires the transition.
-        guard (Guard): A boolean predicate that  must be true for the
+        guard (function): A boolean predicate that  must be true for the
             transition to be fired. It is evaluated at the time the event is
             dispatched.
-        action (Action): An optional procedure to be performed when the
+        action (function): An optional procedure to be performed when the
             transition fires.
     """
 
@@ -51,6 +52,12 @@ class Transition:
 
         if isinstance(event, str):
             self.event = Event(event)
+
+        if guard is not None and not callable(guard):
+            raise ValueError('Guard must be callable')
+
+        if action is not None and not callable(action):
+            raise ValueError('Action must be callable')
 
         """ Used to store the states that will get activated """
         self.activate = list()
@@ -76,10 +83,9 @@ class Transition:
         Returns:
             True if the transition was executed.
         """
-        if not self.is_allowed(metadata=metadata, event=event):
+        if not self.is_allowed(event=event):
             return False
 
-        metadata.event = event
         metadata.transition = self
 
         if event:
@@ -93,33 +99,50 @@ class Transition:
             state.deactivate(metadata=metadata, event=event)
 
         if self.action:
-            self.action.execute(metadata=metadata, event=event)
+            for func in [partial(self.action, event=event),
+                         self.action]:
+                try:
+                    func()
+                    break
+                except TypeError:
+                    pass
+            else:
+                raise RuntimeError('Unable to call action function')
 
         for state in self.activate:
             state.activate(metadata=metadata, event=event)
 
         metadata.transition = None
-        metadata.event = None
 
         return True
 
-    def is_allowed(self, metadata, event):
-        """"
+    def is_allowed(self, event):
+        """
         Check if the transition is allowed.
 
         Args:
-            metadata (Metadata): Common statechart metadata.
             event (Event): The event that fires the transition.
 
         Returns:
             True if the transition is allowed.
         """
-        if self.event != event:
+        try:
+            if (not self.event and not event) or (self.event.name == event.name):
+                pass
+            else:
+                return False
+        except AttributeError:
             return False
 
-        if self.guard and not self.guard.check(metadata=metadata, event=event):
-            return False
-
+        if self.guard:
+            for func in [partial(self.guard, event=event),
+                         self.guard]:
+                try:
+                    return func()
+                except TypeError:
+                    pass
+            else:
+                raise RuntimeError('Unable to call guard function')
         return True
 
     def _calculate_state_set(self, start, end):
@@ -177,44 +200,3 @@ class Transition:
         while i < len(end_states):
             self.activate.append(end_states[i])
             i += 1
-
-
-class InternalTransition(Transition):
-    """
-    A transition that executes without exiting or re-entering the state in which it is defined.
-    This is true even if the state machine is in a nested state within this state.
-
-    Args:
-        state (State): The state which owns this transition. The transition executes without
-            exiting or re-entering this state.
-        event (Event|str): The event or event name that fires the transition.
-        guard (Guard): A boolean predicate that  must be true for the transition to be fired.
-            It is evaluated at the time the event is dispatched.
-        action (Action): An optional procedure to be performed when the transition fires.
-    """
-
-    def __init__(self, state, event=None, guard=None, action=None):
-        super().__init__(start=state, end=state, event=event, guard=guard, action=action)
-        self.deactivate.clear()
-        self.activate.clear()
-
-    def execute(self, metadata, event):
-        """
-        Attempt to execute the transition.
-        Evaluate if the transition is allowed by checking the guard condition.
-        If the transition is allowed perform transition action.
-
-        Args:
-            metadata (Metadata): Common statechart metadata.
-            event (Event): The event that fires the transition.
-
-        Returns:
-            True if the transition was executed.
-        """
-        if not self.is_allowed(metadata=metadata, event=event):
-            return False
-
-        if self.action:
-            self.action.execute(metadata=metadata, event=event)
-
-        return True

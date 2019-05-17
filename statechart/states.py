@@ -59,15 +59,15 @@ class State:
 
         self.name = name
 
-        """ Context can be null only for the statechart """
+        """Context can be null only for the statechart"""
         if context is None and (not isinstance(self, Statechart)):
             raise RuntimeError('Context cannot be null')
 
         self.context = context
+        self.transitions = []
+        self.active = False
 
-        self._transitions = []
-
-    def entry(self, metadata, event):
+    def entry(self, event):
         """
         An optional action that is executed whenever this state is
         entered, regardless of the transition taken to reach the state. If
@@ -75,12 +75,11 @@ class State:
         internal activity or transitions performed within the state.
 
         Args:
-            metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
         """
         pass
 
-    def do(self, metadata, event):
+    def do(self, event):
         """
         An optional action that is executed whilst this state is active.
         The execution starts after this state is entered, and stops either by
@@ -91,12 +90,11 @@ class State:
         this state is deactivated it will be cancelled.
 
         Args:
-            metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
         """
         pass
 
-    def exit(self, metadata, event):
+    def exit(self, event):
         """
         An optional action that is executed upon deactivation of this state
         regardless of which transition was taken out of the state. If defined,
@@ -105,7 +103,6 @@ class State:
         Initiates cancellation of the state do action if it is still running.
 
         Args:
-            metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
         """
         pass
@@ -126,9 +123,9 @@ class State:
             raise RuntimeError('Cannot add null transition')
 
         if transition.guard:
-            self._transitions.insert(0, transition)
+            self.transitions.insert(0, transition)
         else:
-            self._transitions.append(transition)
+            self.transitions.append(transition)
 
     def activate(self, metadata, event):
         """
@@ -137,24 +134,22 @@ class State:
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
-
-        Returns:
-            True if the state was activated.
         """
         self._logger.info('Activate "%s"', self.name)
 
-        if not metadata.is_active(self):
-            metadata.activate(self)
+        self.active = True
 
-            if self.entry:
-                self.entry(metadata=metadata, event=event)
+        if self.context:
+            if not self.context.active:
+                raise RuntimeError('Parent state not activated')
 
-            if self.do:
-                self.do(metadata=metadata, event=event)
+            self.context.current_state = self
 
-            return True
+        if self.entry:
+            self.entry(event=event)
 
-        return False
+        if self.do:
+            self.do(event=event)
 
     def deactivate(self, metadata, event):
         """
@@ -163,18 +158,12 @@ class State:
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition out of this state.
-
-        Returns:
-            True if state deactivated, False if already inactive.
         """
         self._logger.info('Deactivate "%s"', self.name)
 
-        if metadata.is_active(self):
+        self.exit(event=event)
 
-            if self.exit:
-                self.exit(metadata=metadata, event=event)
-
-            metadata.deactivate(self)
+        self.active = False
 
     def dispatch(self, metadata, event):
         """
@@ -188,14 +177,39 @@ class State:
             True if transition executed, False if transition not allowed,
             due to mismatched event trigger or failed guard condition.
         """
+        self.handle_internal(event)
+
         status = False
 
-        for transition in self._transitions:
+        for transition in self.transitions:
             if transition.execute(metadata=metadata, event=event):
                 status = True
                 break
 
         return status
+
+    def handle_internal(self, event):
+        """
+        Handle an internal event. Override to provide specific behaviour for
+        a state.
+
+        Events are routed to all active states from the outside-in before
+        processing transitions.
+
+        This is a lightweight implementation of an internal transition without
+        strict guard and action semantics.
+
+        Filter internal transitions by checking the event name.
+
+        event (Event): Incoming event to handle.
+        """
+        pass
+
+    def is_active(self, state_name):
+        return self.active and self.name == state_name
+
+    def __repr__(self):
+        return '%s(name="%s", active="%r")' % (self.__class__.__name__, self.name, self.active)
 
 
 class Context(State):
@@ -211,6 +225,32 @@ class Context(State):
     def __init__(self, name, context):
         super().__init__(name=name, context=context)
         self.initial_state = None
+        self.current_state = None
+        self.finished = False
+
+    def deactivate(self, metadata, event):
+        """
+        Deactivate the state.
+
+        Args:
+            metadata (Metadata): Common statechart metadata.
+            event (Event): Event which led to the transition out of this state.
+        """
+        super().deactivate(metadata=metadata, event=event)
+        self.current_state = None
+        self.finished = False
+
+    def is_active(self, state_name):
+        if not self.active:
+            return False
+        elif self.name == state_name:
+            return True
+        else:
+            return self.current_state.is_active(state_name)
+
+    def __repr__(self):
+        return '%s(name="%s", active="%s", current state=%r, finished="%s")' % (
+            self.__class__.__name__, self.name, self.active, self.current_state, self.finished)
 
 
 class FinalState(State):
@@ -234,8 +274,16 @@ class FinalState(State):
     def add_transition(self, transition):
         raise RuntimeError('Cannot add a transition from the final state')
 
+    def activate(self, metadata, event):
+        super().activate(metadata=metadata, event=event)
+        self.context.finished = True
 
-class ConcurrentState(Context):
+    def deactivate(self, metadata, event):
+        super().deactivate(metadata=metadata, event=event)
+        self.context.finished = False
+
+
+class ConcurrentState(State):
     """
     A concurrent state is a state that contains composite state regions,
     activated concurrently.
@@ -247,17 +295,17 @@ class ConcurrentState(Context):
 
     def __init__(self, name, context):
         super().__init__(name, context)
-        self._regions = []
+        self.regions = []
 
     def add_region(self, region):
         """
         Add a new region to the concurrent state.
 
-        Arsg:
+        Args:
             region (CompositeState): Region to add.
         """
         if isinstance(region, CompositeState):
-            self._regions.append(region)
+            self.regions.append(region)
         else:
             raise RuntimeError('A concurrent state can only add composite state regions')
 
@@ -268,22 +316,12 @@ class ConcurrentState(Context):
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
-
-        Returns:
-            True if state activated, False if already active.
         """
-        if super().activate(metadata, event):
-            rdata = metadata.active_states[self]
-
-            for region in self._regions:
-                if not (region in rdata.state_set):
-                    # Check if region is activated implicitly via incoming transition.
-                    region.activate(metadata=metadata, event=event)
-                    region.initial_state.activate(metadata=metadata, event=event)
-
-            return True
-
-        return False
+        super().activate(metadata, event)
+        for inactive in [region for region in self.regions if not region.active]:
+            # Check if region is activated implicitly via incoming transition.
+            inactive.activate(metadata=metadata, event=event)
+            inactive.initial_state.activate(metadata=metadata, event=event)
 
     def deactivate(self, metadata, event):
         """
@@ -292,14 +330,11 @@ class ConcurrentState(Context):
         Args:
             metadata (Metadata): Common statechart metadata.
             event: Event which led to the transition out of this state.
-
-        Returns:
-            True if state deactivated, False if already inactive.
         """
         self._logger.info('Deactivate "%s"', self.name)
 
-        for region in self._regions:
-            if metadata.is_active(region):
+        for region in self.regions:
+            if region.active:
                 region.deactivate(metadata=metadata, event=event)
 
         super().deactivate(metadata=metadata, event=event)
@@ -316,13 +351,15 @@ class ConcurrentState(Context):
             True if transition executed, False if transition not allowed,
             due to mismatched event trigger or failed guard condition.
         """
-        if not metadata.active_states[self]:
+        if not self.active:
             raise RuntimeError('Inactive composite state attempting to dispatch transition')
+
+        self.handle_internal(event)
 
         dispatched = False
 
         """ Check if any of the child regions can handle the event """
-        for region in self._regions:
+        for region in self.regions:
             if region.dispatch(metadata=metadata, event=event):
                 dispatched = True
 
@@ -330,24 +367,34 @@ class ConcurrentState(Context):
             return True
 
         """ Check if this state can handle the event by itself """
-        for transition in self._transitions:
+        for transition in self.transitions:
             if transition.execute(metadata=metadata, event=event):
                 dispatched = True
                 break
 
         return dispatched
 
-    def is_finished(self, metadata):
-        """"
+    @property
+    def finished(self):
+        """
         Check if all regions within the concurrent state are finished.
 
-        Args:
-            metadata (Metadata): Common statechart metadata.
-
         Returns:
-            True if the concurrent state is finished.
+            True if all regions are finished.
         """
-        return all(region.is_finished(metadata) for region in self._regions)
+        return all(region.finished for region in self.regions)
+
+    def is_active(self, state_name):
+        if not self.active:
+            return False
+        elif self.name == state_name:
+            return True
+        else:
+            return any(region.is_active(state_name) for region in self.regions)
+
+    def __repr__(self):
+        return '%s(name="%s", active="%s", regions=%r, finished="%s")' % (
+            self.__class__.__name__, self.name, self.active, self.regions, self.finished)
 
 
 class CompositeState(Context):
@@ -362,7 +409,7 @@ class CompositeState(Context):
 
     def __init__(self, name, context):
         super().__init__(name=name, context=context)
-        self.history = None
+        self.history_state = None
 
         if isinstance(context, ConcurrentState):
             context.add_region(self)
@@ -395,16 +442,13 @@ class CompositeState(Context):
             metadata (Metadata): Common statechart metadata.
             event: Event which led to the transition out of this state.
         """
-        state_runtime_data = metadata.active_states[self]
-
         # If the composite state contains a history pseudostate, preserve the current active child
         # state in history, unless that state is a final state.
-        if self.history and not (isinstance(state_runtime_data.current_state, FinalState)):
-            metadata.store_history_info(history_state=self.history,
-                                        actual_state=state_runtime_data.current_state)
+        if self.history_state and not (isinstance(self.current_state, FinalState)):
+            self.history_state.state = self.current_state
 
-        if metadata.is_active(state_runtime_data.current_state):
-            state_runtime_data.current_state.deactivate(metadata=metadata, event=event)
+        if self.current_state.active:
+            self.current_state.deactivate(metadata=metadata, event=event)
 
         super().deactivate(metadata=metadata, event=event)
 
@@ -420,56 +464,44 @@ class CompositeState(Context):
             True if transition executed, False if transition not allowed,
             due to mismatched event trigger or failed guard condition.
         """
-        if not metadata.active_states[self]:
+        if not self.active:
             raise RuntimeError('Inactive composite state attempting to dispatch transition')
 
+        self.handle_internal(event)
+
         # See if the current child state can handle the event
-        data = metadata.active_states[self]
-        if data.current_state is None and self.initial_state:
-            metadata.activate(self.initial_state)
-            data.current_state.activate(metadata=metadata, event=event)
+        if self.current_state is None and self.initial_state:
+            self.initial_state.activate(metadata=metadata, event=None)
+            self.current_state.activate(metadata=metadata, event=event)
 
         dispatched = False
 
-        if data.current_state and data.current_state.dispatch(metadata=metadata, event=event):
+        if self.current_state and self.current_state.dispatch(metadata=metadata, event=event):
             dispatched = True
 
         if dispatched:
             # If the substate dispatched the event and this state is no longer active, return.
-            if not metadata.is_active(self):
+            if not self.active:
                 return True
 
             # If the substate dispatched the event and reached a final state, continue to dispatch
             # any default transitions from this state.
-            if isinstance(metadata.active_states[self].current_state, FinalState):
+            if isinstance(self.current_state, FinalState):
                 event = None
             else:
                 return True
 
         # Since none of the child states can handle the event, let this state
         # try handling the event.
-        for transition in self._transitions:
+        for transition in self.transitions:
             # If transition is local, deactivate current state if transition is allowed.
-            if self._is_local_transition(transition) and transition.is_allowed(metadata=metadata,
-                                                                               event=event):
-                data.current_state.deactivate(metadata=metadata, event=event)
+            if self._is_local_transition(transition) and transition.is_allowed(event=event):
+                self.current_state.deactivate(metadata=metadata, event=event)
 
             if transition.execute(metadata=metadata, event=event):
                 return True
 
         return False
-
-    def is_finished(self, metadata):
-        """"
-        Check if the composite state has reached it's final state.
-
-        Args:
-            metadata (Metadata): Common statechart metadata.
-
-        Returns:
-            True if the composite state is finished.
-        """
-        return isinstance(metadata.active_states[self].current_state, FinalState)
 
     def _is_local_transition(self, transition):
         """
@@ -495,12 +527,11 @@ class Statechart(Context):
 
     Args:
         name (str): An identifier for the model element.
-        metadata (Metadata): Common statechart metadata.
     """
 
-    def __init__(self, name, metadata=None):
+    def __init__(self, name):
         super().__init__(name=name, context=None)
-        self._metadata = metadata or Metadata()
+        self.metadata = Metadata()
 
     def start(self):
         """
@@ -512,17 +543,27 @@ class Statechart(Context):
             RuntimeError if the statechart had already been started.
         """
         self._logger.info('Start "%s"', self.name)
-        self._metadata.reset()
-        self._metadata.activate(self)
-        self._metadata.activate(self.initial_state)
-        self.dispatch(None)
+        self.active = True
+        self.initial_state.activate(metadata=self.metadata, event=None)
 
     def stop(self):
         """
         Stops the statemachine by deactivating statechart and thus all it's child states.
         """
         self._logger.info('Stop "%s"', self.name)
-        self.deactivate(metadata=self._metadata, event=None)
+        self.deactivate(metadata=self.metadata, event=None)
+
+    def deactivate(self, metadata, event):
+        """
+        Deactivate the statechart.
+
+        Args:
+            metadata (Metadata): Common statechart metadata.
+            event (Event): Event which led to the transition out of this state.
+        """
+        self._logger.info('Deactivate "%s"', self.name)
+        self.active = False
+        self.current_state = None
 
     def dispatch(self, event):
         """
@@ -534,36 +575,38 @@ class Statechart(Context):
         Returns:
             True if transition executed.
         """
-        current_state = self._metadata.active_states[self].current_state
-        return current_state.dispatch(metadata=self._metadata, event=event)
+        self.handle_internal(event=event)
+
+        return self.current_state.dispatch(metadata=self.metadata, event=event)
+
+    def active_states(self):
+        states = []
+
+        if self.active:
+            states.append(self)
+            node = self.current_state
+
+            while node is not None:
+                states.append(node)
+
+                if isinstance(node, Context):
+                    node = node.current_state
+                else:
+                    break
+
+        return states
+
+    def is_finished(self):
+        return self.finished
 
     def add_transition(self, transition):
         raise RuntimeError('Cannot add transition to a statechart')
 
-    def is_active(self, state_name):
-        """
-        Check if the state name is active
+    def entry(self, event):
+        raise RuntimeError('Cannot define an entry action for a statechart')
 
-        Args:
-            state_name (str): State name to check.
+    def do(self, event):
+        raise RuntimeError('Cannot define an do action for a statechart')
 
-        Returns:
-            True if the state name is currently active.
-        """
-        for state in self._metadata.active_states:
-            if state.name == state_name:
-                return True
-
-        return False
-
-    def is_finished(self):
-        """"
-        Check if the statechart has finished
-
-        Returns:
-            True if the statechart has finished.
-        """
-        if isinstance(self._metadata.active_states[self].current_state, FinalState):
-            return True
-        else:
-            return False
+    def exit(self, event):
+        raise RuntimeError('Cannot define an exit action for a statechart')

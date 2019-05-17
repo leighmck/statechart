@@ -17,22 +17,15 @@
 
 import pytest
 
-from statechart import (Action, CompositeState, ConcurrentState, Event, FinalState,
+from statechart import (CompositeState, ConcurrentState, Event, FinalState,
                         InitialState, State, Statechart, Transition)
-
-
-class ActionSpy(Action):
-    def __init__(self):
-        self.executed = False
-
-    def execute(self, metadata, event):
-        self.executed = True
 
 
 class StateSpy(State):
     def __init__(self, name, context):
         State.__init__(self, name=name, context=context)
         self.dispatch_called = False
+        self.dispatch_internal_called = False
         self.metadata = None
         self.event = None
 
@@ -41,6 +34,9 @@ class StateSpy(State):
         self.metadata = metadata
         self.event = event
         return True
+
+    def handle_internal(self, event):
+        self.dispatch_internal_called = True
 
 
 class TestStatechart:
@@ -60,11 +56,11 @@ class TestStatechart:
         statechart.start()
 
         assert statechart.is_active('default')
-        assert not statechart.is_finished()
+        assert not statechart.finished
 
         statechart.dispatch(finish)
 
-        assert statechart.is_finished()
+        assert statechart.finished
 
     def test_composite_statechart_finished(self):
         statechart = Statechart(name='statechart')
@@ -87,11 +83,30 @@ class TestStatechart:
 
         assert statechart.is_active('composite')
         assert statechart.is_active('composite_default')
-        assert not statechart.is_finished()
+        assert not statechart.finished
 
         statechart.dispatch(finish)
 
-        assert statechart.is_finished()
+        assert statechart.finished
+
+    def test_active_states(self):
+        statechart = Statechart(name='a')
+        statechart_init = InitialState(statechart)
+
+        b = CompositeState(name='b', context=statechart)
+        b_init = InitialState(b)
+
+        c = CompositeState(name='c', context=b)
+        c_init = InitialState(c)
+
+        d = State(name='d', context=c)
+
+        Transition(start=statechart_init, end=b)
+        Transition(start=b_init, end=c)
+        Transition(start=c_init, end=d)
+
+        statechart.start()
+        assert statechart.active_states() == [statechart, b, c, d]
 
 
 class TestState:
@@ -110,7 +125,56 @@ class TestState:
 
         default_transition = Transition(start=initial_state, end=default_state)
 
-        assert default_transition in initial_state._transitions
+        assert default_transition in initial_state.transitions
+
+    def test_light_switch(self):
+        """
+                      --Flick-->
+        init ---> Off            On
+                      <--Flick--   Entry: Light = ON
+                                   Exit: Light = OFF
+                                   Internal:
+                                     Flick: Count++
+        """
+
+        class On(State):
+            def __init__(self, name, context, data):
+                State.__init__(self, name=name, context=context)
+                self.data = data
+
+            def entry(self, event):
+                self.data['light'] = 'on'
+
+            def exit(self, event):
+                self.data['light'] = 'off'
+
+            def handle_internal(self, event):
+                if event.name == 'flick':
+                    self.data['on_count'] += 1
+
+        sm = Statechart(name='sm')
+        data = dict(light='off', on_count=0)
+        sm.initial_state = InitialState(context=sm)
+        off = State(name='off', context=sm)
+        on = On(name='on', context=sm, data=data)
+
+        Transition(start=sm.initial_state, end=off)
+        Transition(start=off, end=on, event=Event('flick'))
+        Transition(start=on, end=off, event=Event('flick'))
+
+        sm.start()
+
+        assert data['light'] == 'off'
+
+        sm.dispatch(Event('flick'))
+        assert data['light'] == 'on'
+
+        assert data['on_count'] == 0
+
+        sm.dispatch(Event('flick'))
+        assert data['light'] == 'off'
+
+        assert data['on_count'] == 1
 
 
 class TestFinalState:

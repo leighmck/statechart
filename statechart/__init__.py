@@ -15,16 +15,25 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from statechart.action import Action, CallAction  # NOQA
-from statechart.event import Event, KwEvent  # NOQA
-from statechart.guard import CallGuard, EqualGuard, ElseGuard, Guard  # NOQA
+import logging
+
+from statechart.event import Event  # NOQA
 from statechart.states import CompositeState, ConcurrentState, FinalState, State, Statechart  # NOQA
 from statechart.pseudostates import ChoiceState, InitialState, ShallowHistoryState  # NOQA
-from statechart.runtime import Metadata  # NOQA
-from statechart.transitions import InternalTransition, Transition  # NOQA
+from statechart.transitions import Transition  # NOQA
 
 __author__ = 'Leigh McKenzie'
 __copyright__ = 'Copyright 2016, Leigh McKenzie'
 __email__ = 'maccarav0@gmail.com'
 __license__ = 'ISCL'
-__version__ = '0.2.4'
+__version__ = '0.4.0'
+
+# Set default logging handler to avoid "No handler found" warnings.
+try:
+    from logging import NullHandler
+except ImportError:
+    class NullHandler(logging.Handler):
+        def emit(self, record):
+            pass
+
+logging.getLogger(__name__).addHandler(NullHandler())

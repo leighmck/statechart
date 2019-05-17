@@ -15,18 +15,11 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+from functools import partial
+
 import pytest
 
-from statechart import (Action, CompositeState, Event, State, InitialState, InternalTransition,
-                        Statechart, Transition)
-
-
-class ActionSpy(Action):
-    def __init__(self):
-        self.executed = False
-
-    def execute(self, metadata, event):
-        self.executed = True
+from statechart import (CompositeState, Event, State, InitialState, Statechart, Transition)
 
 
 @pytest.fixture
@@ -50,10 +43,10 @@ class TestTransition:
 
             Transition(start=init, end=self.default)
 
-        def entry(self, metadata, event):
+        def entry(self, event):
             self.entries += 1
 
-        def exit(self, metadata, event):
+        def exit(self, event):
             self.exits += 1
 
     def test_create_transition(self, empty_statechart):
@@ -63,7 +56,7 @@ class TestTransition:
 
         # The transition should be added to the initial state's list of
         # outgoing transitions
-        assert transition in initial_state._transitions
+        assert transition in initial_state.transitions
 
         # When executed, the transition should be setup to deactivate the
         # initial state and to activate the next state
@@ -76,7 +69,7 @@ class TestTransition:
 
         # The transition should be added to the initial state's list of
         # outgoing transitions.
-        assert transition in next_state._transitions
+        assert transition in next_state.transitions
 
         # When executed, the transition should be setup to deactivate the
         # next state and to re-activate it.
@@ -293,70 +286,63 @@ class TestTransition:
 
         assert sc.is_active('cs b')
 
+    def test_transition_action_function(self, empty_statechart):
+        self.state = False
 
-class TestInternalTransition:
-    class StateSpy(State):
-        def __init__(self, name, context):
-            super().__init__(name=name, context=context)
-            self.entry_executed = False
-            self.do_executed = False
-            self.exit_executed = False
+        def set_state(state):
+            self.state = bool(state)
 
-        def entry(self, metadata, event):
-            self.entry_executed = True
+        set_true = partial(set_state, True)
 
-        def do(self, metadata, event):
-            self.do_executed = True
-
-        def exit(self, metadata, event):
-            self.exit_executed = True
-
-    def test_execute(self, empty_statechart):
-        initial_state = InitialState(empty_statechart)
-        default_state = self.StateSpy(name='next', context=empty_statechart)
-        Transition(start=initial_state, end=default_state)
-
-        internal_event = Event(name='internal-event')
-        internal_action = ActionSpy()
-        InternalTransition(state=default_state, event=internal_event, action=internal_action)
-        empty_statechart.start()
-
-        assert empty_statechart.is_active('next')
-        assert default_state.entry_executed is True
-        assert default_state.do_executed is True
-        assert default_state.exit_executed is False
-
-        # Ensure we don't leave and re-enter the default state after triggering
-        # the internal transition.
-        default_state.entry_executed = False
-        default_state.do_executed = False
-
-        empty_statechart.dispatch(internal_event)
-
-        assert default_state.entry_executed is False
-        assert default_state.do_executed is False
-        assert default_state.exit_executed is False
-
-        assert internal_action.executed is True
-
-    def test_top_level_internal_transition(self, empty_statechart):
         sc = empty_statechart
-        sc_init = InitialState(sc)
+        initial = InitialState(sc)
+        default = State(name='default', context=sc)
+        next = State(name='next', context=sc)
 
-        cs = CompositeState(name='cs', context=sc)
-        cs_init = InitialState(cs)
-        cs_default = State(name='cs_default', context=cs)
-
-        Transition(start=sc_init, end=cs)
-        Transition(start=cs_init, end=cs_default)
-
-        test_event = Event('internal-event-trigger')
-        InternalTransition(state=cs, event=test_event)
+        Transition(start=initial, end=default)
+        Transition(start=default, end=next, event='next', action=set_true)
 
         sc.start()
+        sc.dispatch(Event('next'))
 
-        assert sc.is_active('cs_default')
+        assert self.state
 
-        sc.dispatch(test_event)
+    def test_transition_action_function_with_event(self, empty_statechart):
+        self.state = False
 
-        assert sc.is_active('cs_default')
+        def set_state(event):
+            self.state = event.data['state']
+
+        sc = empty_statechart
+        initial = InitialState(sc)
+        default = State(name='default', context=sc)
+        next = State(name='next', context=sc)
+
+        Transition(start=initial, end=default)
+        Transition(start=default, end=next, event='next', action=set_state)
+
+        sc.start()
+        sc.dispatch(Event(name='next', data={'state': True}))
+
+        assert self.state
+
+    def test_transition_action_function_with_metadata(self, empty_statechart):
+        sc = empty_statechart
+        sc.metadata.state = True
+
+        self.state = False
+
+        def set_state(event):
+            self.state = sc.metadata.state
+
+        initial = InitialState(sc)
+        default = State(name='default', context=sc)
+        next = State(name='next', context=sc)
+
+        Transition(start=initial, end=default)
+        Transition(start=default, end=next, event='next', action=set_state)
+
+        sc.start()
+        sc.dispatch(Event('next'))
+
+        assert self.state

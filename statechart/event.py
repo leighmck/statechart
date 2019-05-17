@@ -39,66 +39,26 @@ class Event:
 
     Args:
         name (str): An identifier for the event.
+        data Optional[dict]: Optional data dict.
     """
 
-    def __init__(self, name):
+    def __init__(self, name, data=None):
         self._logger = logging.getLogger(self.__class__.__name__)
         self.name = name
+        self.data = data or {}
 
-    def __eq__(self, event):
-        """
-        Determine if an event is equal to this event by comparing names.
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        return NotImplemented
 
-        Args:
-            event (Event): Event to compare.
+    def __ne__(self, other):
+        if isinstance(other, self.__class__):
+            return not self.__eq__(other)
+        return NotImplemented
 
-        Returns:
-            True if events are equal.
-        """
-        if event is None:
-            return False
+    def __hash__(self):
+        return hash(tuple(sorted(self.__dict__.items())))
 
-        return self.name == event.name
-
-    def __ne__(self, event):
-        """
-        Determine if an event is not equal to this event by comparing names.
-
-        Args:
-            event (Event): Event to compare.
-
-        Returns:
-            True if events are not equal.
-        """
-        return not self.__eq__(event)
-
-
-class KwEvent(Event):
-    """
-    Extension of the Event base class to facilitate passing kwargs with event.
-
-    When an event is fired, it's data is made available to transition guard and
-    actions. If the transition is executed the event data is also made
-    available to state entry, do and exit actions.
-
-    Generally, specialised Event classes should be defined to define the data
-    structure as actions & guards need to unpack it.
-
-    Example:
-        Create an instance of an event:
-        my_event = Event(name='my event', a=1, b='2', c=[])
-
-        Add the event trigger to a transition:
-        Transition(start=a, end=b, event=my_event)
-
-        Fire the event:
-        statechart.dispatch(event=my_event)
-
-    Args:
-        name (str): An identifier for the event.
-        **kwargs: Arbitrary keyword arguments.
-    """
-
-    def __init__(self, name, **kwargs):
-        super().__init__(name=name)
-        self.kwargs = kwargs
+    def __repr__(self):
+        return 'Event(name="%s", data=%r)' % (self.name, self.data)

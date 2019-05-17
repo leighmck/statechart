@@ -29,9 +29,6 @@ class PseudoState(State):
         context (Context): The parent context that contains this state.
     """
 
-    def __init__(self, name, context):
-        super().__init__(name=name, context=context)
-
     def activate(self, metadata, event):
         """
         Activate the state.
@@ -39,16 +36,14 @@ class PseudoState(State):
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
-
-        Returns:
-            True if the state was activated.
         """
-        metadata.activate(self)
+        self.active = True
 
-        if self.entry:
-            self.entry(metadata=metadata, event=event)
+        if self.context:
+            if not self.context.active:
+                raise RuntimeError('Parent state not activated')
 
-        return True
+            self.context.current_state = self
 
 
 class InitialState(PseudoState):
@@ -79,13 +74,9 @@ class InitialState(PseudoState):
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
-
-        Returns:
-            True if the state was activated.
         """
+        super().activate(metadata=metadata, event=event)
         self.dispatch(metadata=metadata, event=None)
-
-        return True
 
     def dispatch(self, metadata, event):
         """
@@ -119,7 +110,7 @@ class InitialState(PseudoState):
         Raises:
             RuntimeError: If transition is invalid, or if transition already exists.
         """
-        if len(self._transitions) is not 0:
+        if len(self.transitions) is not 0:
             raise RuntimeError('There can only be a single transition from an initial state')
         elif transition.event is not None:
             raise RuntimeError('Transition from initial state must not require an event trigger')
@@ -148,10 +139,10 @@ class ShallowHistoryState(PseudoState):
         self.state = None
 
         if isinstance(self.context, CompositeState):
-            if self.context.history:
+            if self.context.history_state:
                 raise RuntimeError('"History state already present')
             else:
-                self.context.history = self
+                self.context.history_state = self
         else:
             raise RuntimeError('Parent not a composite state')
 
@@ -163,25 +154,20 @@ class ShallowHistoryState(PseudoState):
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
-
-        Returns:
-            True if the state was activated.
         """
-        if len(self._transitions) > 1:
+        super().activate(metadata=metadata, event=event)
+
+        if len(self.transitions) > 1:
             raise RuntimeError('History state cannot have more than 1 transition')
 
-        if metadata.has_history_info(self):
-            state = metadata.get_history_state(self)
-
+        if self.state:
             # Setup transition to the history's target state
             metadata.transition.start = self
-            metadata.transition.end = state
+            metadata.transition.end = self.state
 
-            state.activate(metadata=metadata, event=event)
+            self.state.activate(metadata=metadata, event=event)
         else:
             self.dispatch(metadata=metadata, event=None)
-
-        return True
 
 
 class ChoiceState(PseudoState):
@@ -214,16 +200,15 @@ class ChoiceState(PseudoState):
         Args:
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
-
-        Returns:
-            True if the state was activated.
         """
-        for transition in self._transitions:
-            if transition.execute(metadata=metadata, event=None):
-                return True
+        super().activate(metadata=metadata, event=event)
 
-        raise RuntimeError('No choice made due to guard conditions, '
-                           'suggest to add transition with "Else" guard')
+        for transition in self.transitions:
+            if transition.execute(metadata=metadata, event=None):
+                break
+        else:
+            raise RuntimeError('No choice made due to guard conditions, '
+                               'add a transition with an "Else" guard')
 
     def add_transition(self, transition):
         """Add a transition from this state.
@@ -239,4 +224,4 @@ class ChoiceState(PseudoState):
         if transition is None:
             raise RuntimeError('Cannot add null transition')
 
-        self._transitions.append(transition)
+        self.transitions.append(transition)

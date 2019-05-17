@@ -17,8 +17,8 @@
 
 import pytest
 
-from statechart import (ChoiceState, CompositeState, ElseGuard, Event, Guard, InitialState,
-                        Metadata, ShallowHistoryState, State, Statechart, Transition)
+from statechart import (ChoiceState, CompositeState, Event, InitialState, ShallowHistoryState,
+                        State, Statechart, Transition)
 
 
 class TestInitialState:
@@ -33,7 +33,7 @@ class TestInitialState:
         Transition(start=initial_state, end=default_state)
         startchart.start()
 
-        initial_state.activate(metadata=startchart._metadata, event=None)
+        initial_state.activate(metadata=startchart.metadata, event=None)
         assert startchart.is_active('default')
 
     def test_missing_transition_from_initial_state(self):
@@ -61,16 +61,15 @@ class TestInitialState:
             Transition(start=initial_state, end=default_state, event=Event('event'))
 
     def test_transition_from_initial_state_with_guard_condition(self):
-        class MyGuard(Guard):
-            def check(self, metadata, event):
-                return False
-
         startchart = Statechart(name='statechart')
         initial_state = InitialState(startchart)
         default_state = State(name='default', context=startchart)
 
+        def my_guard(**kwargs):
+            return False
+
         with pytest.raises(RuntimeError):
-            Transition(start=initial_state, end=default_state, event=None, guard=MyGuard())
+            Transition(start=initial_state, end=default_state, event=None, guard=my_guard)
 
 
 class TestShallowHistoryState:
@@ -331,22 +330,14 @@ class TestChoiceState:
         composite_state = CompositeState(name='composite', context=startchart)
         ShallowHistoryState(composite_state)
 
-    @pytest.mark.parametrize('choice, expected_state_name',
+    @pytest.mark.parametrize('state_name, expected_state_name',
                              [('a', 'a'),
                               ('b', 'b')])
-    def test_choice_state_transitions(self, choice, expected_state_name):
-        class MyMetadata(Metadata):
-            def __init__(self):
-                super().__init__()
-                self.value = None
+    def test_choice_state_transitions(self, state_name, expected_state_name):
+        def is_a(**kwargs):
+            return state_name == 'a'
 
-        class IsA(Guard):
-            def check(self, metadata, event):
-                return metadata.value == 'a'
-
-        myMetadata = MyMetadata()
-        myMetadata.value = choice
-        statechart = Statechart(name='statechart', metadata=myMetadata)
+        statechart = Statechart(name='statechart')
         init = InitialState(statechart)
 
         state_a = State(name='a', context=statechart)
@@ -356,8 +347,8 @@ class TestChoiceState:
 
         Transition(start=init, end=choice)
 
-        Transition(start=choice, end=state_a, event=None, guard=IsA())
-        Transition(start=choice, end=state_b, event=None, guard=ElseGuard())
+        Transition(start=choice, end=state_a, event=None, guard=is_a)
+        Transition(start=choice, end=state_b, event=None, guard=None)  # else
 
         statechart.start()
 
