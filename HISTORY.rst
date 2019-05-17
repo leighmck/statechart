@@ -37,3 +37,10 @@ History
 ------------------
 
 * Implement specific statechart deactivate function.
+
+0.4.0 (2019-05-18)
+------------------
+
+* Add support for functional action and guard definitions.
+* Deprecate KwEvent, Internal Transitions, Actions and Guard
+* Add support for generating PlantUML diagrams.
