@@ -254,7 +254,7 @@ class Display:
                 end=end,
                 div=' :' if transition.event or transition.action or transition.guard else '',
                 event=' {}'.format(transition.event.name) if transition.event else '',
-                guard=' [{}]'.format(transition.guard) if transition.guard else '',
+                guard=' [{}]'.format(transition.guard.__name__) if transition.guard else '',
                 action='{}'.format(' / ' + transition.action.__name__ if transition.action else '')
             )
         ]
