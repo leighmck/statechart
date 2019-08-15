@@ -45,7 +45,7 @@ class Event:
     def __init__(self, name, data=None):
         self._logger = logging.getLogger(self.__class__.__name__)
         self.name = name
-        self.data = data or {}
+        self.data = {} if data is None else data
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
