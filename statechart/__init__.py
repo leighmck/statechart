@@ -26,7 +26,7 @@ __author__ = 'Leigh McKenzie'
 __copyright__ = 'Copyright 2016, Leigh McKenzie'
 __email__ = 'maccarav0@gmail.com'
 __license__ = 'ISCL'
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 
 # Set default logging handler to avoid "No handler found" warnings.
 try:

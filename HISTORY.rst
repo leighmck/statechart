@@ -44,3 +44,9 @@ History
 * Add support for functional action and guard definitions.
 * Deprecate KwEvent, Internal Transitions, Actions and Guard
 * Add support for generating PlantUML diagrams.
+
+0.4.0 (2019-08-15)
+------------------
+
+* Fix display of guard function names in PlantUML diagrams.
+* Allow any type of value to be used for event data.
