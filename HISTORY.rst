@@ -45,7 +45,7 @@ History
 * Deprecate KwEvent, Internal Transitions, Actions and Guard
 * Add support for generating PlantUML diagrams.
 
-0.4.0 (2019-08-15)
+0.4.1 (2019-08-15)
 ------------------
 
 * Fix display of guard function names in PlantUML diagrams.
