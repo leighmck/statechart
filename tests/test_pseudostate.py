@@ -104,54 +104,54 @@ class TestShallowHistoryState:
 
         # Top level states
         statechart = Statechart(name='statechart')
-        csa = CompositeState(name='csa', context=statechart)
-        csb = CompositeState(name='csb', context=statechart)
+        csa_state = CompositeState(name='csa', context=statechart)
+        csb_state = CompositeState(name='csb', context=statechart)
 
         # Child states
         # statechart
         statechart_init = InitialState(statechart)
         # csa
-        csa_init = InitialState(csa)
-        csa_hist = ShallowHistoryState(context=csa)
-        A = State(name='A', context=csa)
-        B = State(name='B', context=csa)
+        csa_initial_state = InitialState(csa_state)
+        csa_history_state = ShallowHistoryState(context=csa_state)
+        csa_state_a = State(name='A', context=csa_state)
+        csa_state_b = State(name='B', context=csa_state)
         # csb
-        csb_init = InitialState(csb)
-        C = State(name='C', context=csb)
-        D = State(name='D', context=csb)
+        csb_init = InitialState(csb_state)
+        csb_state_c = State(name='C', context=csb_state)
+        csa_state_d = State(name='D', context=csb_state)
 
         # Events
-        I = Event(name='I')
-        J = Event(name='J')
-        K = Event(name='K')
-        L = Event(name='L')
+        csa_a_to_b = Event(name='csa_a_to_b')
+        csa_to_csb = Event(name='csa_to_csb')
+        csb_to_csa = Event(name='csb_to_csa')
+        csb_c_to_d = Event(name='csb_c_to_d')
 
         # Transitions between states & event triggers
-        Transition(start=statechart_init, end=csa)
-        Transition(start=csa_init, end=csa_hist)
-        Transition(start=csa_hist, end=A)
-        Transition(start=A, end=B, event=I)
-        Transition(start=csa, end=csb, event=J)
-        Transition(start=csb, end=csa, event=K)
-        Transition(start=csb_init, end=C)
-        Transition(start=C, end=D, event=L)
+        Transition(start=statechart_init, end=csa_state)
+        Transition(start=csa_initial_state, end=csa_history_state)
+        Transition(start=csa_history_state, end=csa_state_a)
+        Transition(start=csa_state_a, end=csa_state_b, event=csa_a_to_b)
+        Transition(start=csa_state, end=csb_state, event=csa_to_csb)
+        Transition(start=csb_state, end=csa_state, event=csb_to_csa)
+        Transition(start=csb_init, end=csb_state_c)
+        Transition(start=csb_state_c, end=csa_state_d, event=csb_c_to_d)
 
         # Execute statechart
         statechart.start()
-        statechart.dispatch(I)
+        statechart.dispatch(csa_a_to_b)
 
-        # Assert we have reached state B, history should restore this state
-        assert statechart.is_active('B')
+        # Assert we have reached CSA child state B, history should restore this state
+        assert statechart.is_active(csa_state_b.name)
 
-        statechart.dispatch(J)
+        statechart.dispatch(csa_to_csb)
 
-        # Assert we have reached state C
-        assert statechart.is_active('C')
+        # Assert we have reached CSB child state C
+        assert statechart.is_active(csb_state_c.name)
 
-        statechart.dispatch(K)
+        statechart.dispatch(csb_to_csa)
 
-        # Assert the history state has restored state B
-        assert statechart.is_active('B')
+        # Assert the history state has restored CSA child state B,
+        assert statechart.is_active(csa_state_b.name)
 
     def test_activate_shallow_history_given_deep_history_scenario(self):
         """
@@ -172,7 +172,7 @@ class TestShallowHistoryState:
         *                          *********************  *
         *                                                 *
         ***************************************************
-        """
+        """  # noqa
         # Top level states
         statechart = Statechart(name='statechart')
         csa = CompositeState(name='csa', context=statechart)
@@ -184,55 +184,55 @@ class TestShallowHistoryState:
         statechart_init = InitialState(statechart)
 
         # csa
-        csa_init = InitialState(csa)
-        csa_hist = ShallowHistoryState(context=csa)
-        A = State(name='A', context=csa)
+        csa_initial_state = InitialState(csa)
+        csa_history_state = ShallowHistoryState(context=csa)
+        csa_state_a = State(name='A', context=csa)
         # csb
         csb_init = InitialState(csb)
-        B = State(name='B', context=csb)
-        C = State(name='C', context=csb)
+        csb_state_b = State(name='csb_state_b', context=csb)
+        csb_state_c = State(name='csb_state_c', context=csb)
         # csc
-        csc_init = InitialState(csc)
-        D = State(name='D', context=csc)
-        E = State(name='E', context=csc)
+        csc_initial_state = InitialState(csc)
+        csc_state_d = State(name='csc_state_d', context=csc)
+        csc_state_e = State(name='csc_state_e', context=csc)
 
         # Events
-        I = Event(name='I')
-        J = Event(name='J')
-        K = Event(name='K')
-        L = Event(name='L')
-        M = Event(name='M')
+        csa_state_b_to_csb = Event(name='csa_state_b_to_csb')
+        csb_state_b_to_csb_state_b = Event(name='csb_state_b_to_csb_state_b')
+        csa_to_csc = Event(name='csa_to_csc')
+        csc_to_csa = Event(name='csc_to_csa')
+        csc_state_d_to_csc_state_d = Event(name='csc_state_d_to_csc_state_d')
 
         # Transitions between states & event triggers
         Transition(start=statechart_init, end=csa)
-        Transition(start=csa_init, end=csa_hist)
-        Transition(start=csa_hist, end=A)
-        Transition(start=A, end=csb, event=I)
-        Transition(start=csb_init, end=B)
-        Transition(start=B, end=C, event=J)
-        Transition(start=csa, end=csc, event=K)
-        Transition(start=csc, end=csa, event=L)
-        Transition(start=csc_init, end=D)
-        Transition(start=D, end=E, event=M)
+        Transition(start=csa_initial_state, end=csa_history_state)
+        Transition(start=csa_history_state, end=csa_state_a)
+        Transition(start=csa_state_a, end=csb, event=csa_state_b_to_csb)
+        Transition(start=csb_init, end=csb_state_b)
+        Transition(start=csb_state_b, end=csb_state_c, event=csb_state_b_to_csb_state_b)
+        Transition(start=csa, end=csc, event=csa_to_csc)
+        Transition(start=csc, end=csa, event=csc_to_csa)
+        Transition(start=csc_initial_state, end=csc_state_d)
+        Transition(start=csc_state_d, end=csc_state_e, event=csc_state_d_to_csc_state_d)
 
         # Execute statechart
         statechart.start()
-        statechart.dispatch(I)
+        statechart.dispatch(csa_state_b_to_csb)
 
-        assert statechart.is_active('B')
+        assert statechart.is_active('csb_state_b')
 
-        statechart.dispatch(J)
+        statechart.dispatch(csb_state_b_to_csb_state_b)
 
-        # Assert we have reached state C, history should restore C's parent
+        # Assert we have reached state csb_state_c, history should restore csb_state_c's parent
         # state csb
-        assert statechart.is_active('C')
+        assert statechart.is_active('csb_state_c')
 
-        statechart.dispatch(K)
+        statechart.dispatch(csa_to_csc)
 
-        # Assert we have reached state D
-        assert statechart.is_active('D')
+        # Assert we have reached state csc_state_d
+        assert statechart.is_active('csc_state_d')
 
-        statechart.dispatch(L)
+        statechart.dispatch(csc_to_csa)
 
         # Assert the history state has restored state csb
         assert statechart.is_active('csb')
@@ -268,60 +268,60 @@ class TestShallowHistoryState:
         statechart_init = InitialState(statechart)
 
         # csa
-        csa_init = InitialState(csa)
-        csa_hist = ShallowHistoryState(context=csa)
-        A = State(name='A', context=csa)
+        csa_initial_state = InitialState(csa)
+        csa_history_state = ShallowHistoryState(context=csa)
+        csa_state_a = State(name='csa_state_a', context=csa)
         # csb
-        csb_init = InitialState(csb)
-        csb_hist = ShallowHistoryState(context=csb)
-        B = State(name='B', context=csb)
-        C = State(name='C', context=csb)
+        csb_initial_state = InitialState(csb)
+        csb_history_state = ShallowHistoryState(context=csb)
+        csb_state_b = State(name='csb_state_b', context=csb)
+        csb_state_c = State(name='csb_state_c', context=csb)
         # csc
-        csc_init = InitialState(csc)
-        D = State(name='D', context=csc)
-        E = State(name='E', context=csc)
+        csc_initial_state = InitialState(csc)
+        csc_state_d = State(name='csc_state_d', context=csc)
+        csc_state_e = State(name='csc_state_e', context=csc)
 
         # Events
-        I = Event(name='I')
-        J = Event(name='J')
-        K = Event(name='K')
-        L = Event(name='L')
-        M = Event(name='M')
+        csa_state_a_to_csb = Event(name='csa_state_a_to_csb')
+        csb_state_b_to_csb_state_b = Event(name='csb_state_b_to_csb_state_b')
+        csa_to_csc = Event(name='csa_to_csc')
+        csc_to_sca = Event(name='csc_to_sca')
+        csc_state_d_to_csc_state_e = Event(name='csc_state_d_to_csc_state_e')
 
         # Transitions between states & event triggers
         Transition(start=statechart_init, end=csa)
-        Transition(start=csa_init, end=csa_hist)
-        Transition(start=csa_hist, end=A)
-        Transition(start=A, end=csb, event=I)
-        Transition(start=csb_init, end=csb_hist)
-        Transition(start=csb_hist, end=B)
-        Transition(start=B, end=C, event=J)
-        Transition(start=csa, end=csc, event=K)
-        Transition(start=csc, end=csa, event=L)
-        Transition(start=csc_init, end=D)
-        Transition(start=D, end=E, event=M)
+        Transition(start=csa_initial_state, end=csa_history_state)
+        Transition(start=csa_history_state, end=csa_state_a)
+        Transition(start=csa_state_a, end=csb, event=csa_state_a_to_csb)
+        Transition(start=csb_initial_state, end=csb_history_state)
+        Transition(start=csb_history_state, end=csb_state_b)
+        Transition(start=csb_state_b, end=csb_state_c, event=csb_state_b_to_csb_state_b)
+        Transition(start=csa, end=csc, event=csa_to_csc)
+        Transition(start=csc, end=csa, event=csc_to_sca)
+        Transition(start=csc_initial_state, end=csc_state_d)
+        Transition(start=csc_state_d, end=csc_state_e, event=csc_state_d_to_csc_state_e)
 
         # Execute statechart
         statechart.start()
-        statechart.dispatch(I)
+        statechart.dispatch(csa_state_a_to_csb)
 
-        assert statechart.is_active('B')
+        assert statechart.is_active('csb_state_b')
 
-        statechart.dispatch(J)
+        statechart.dispatch(csb_state_b_to_csb_state_b)
 
-        # Assert we have reached state C, csb's history state should restore
+        # Assert we have reached state csb_state_c, csb's history state should restore
         # this state
-        assert statechart.is_active('C')
+        assert statechart.is_active('csb_state_c')
 
-        statechart.dispatch(K)
+        statechart.dispatch(csa_to_csc)
 
-        # Assert we have reached state D
-        assert statechart.is_active('D')
+        # Assert we have reached state csc_state_d
+        assert statechart.is_active('csc_state_d')
 
-        statechart.dispatch(L)
+        statechart.dispatch(csc_to_sca)
 
-        # Assert the history state has restored state C
-        assert statechart.is_active('C')
+        # Assert the history state has restored state csb_state_c
+        assert statechart.is_active('csb_state_c')
 
 
 class TestChoiceState:

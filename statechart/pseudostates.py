@@ -110,7 +110,7 @@ class InitialState(PseudoState):
         Raises:
             RuntimeError: If transition is invalid, or if transition already exists.
         """
-        if len(self.transitions) is not 0:
+        if len(self.transitions) != 0:
             raise RuntimeError('There can only be a single transition from an initial state')
         elif transition.event is not None:
             raise RuntimeError('Transition from initial state must not require an event trigger')
