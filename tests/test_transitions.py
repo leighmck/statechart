@@ -86,16 +86,16 @@ class TestTransition:
         empty_statechart.start()
 
         assert empty_statechart.is_active('spy')
-        assert state_spy.entries is 1
-        assert state_spy.exits is 0
+        assert state_spy.entries == 1
+        assert state_spy.exits == 0
 
         empty_statechart.dispatch(Event('extern'))
 
         # After dispatching the external event from the state spy, the
         # state should be deactivated and activated again.
         assert empty_statechart.is_active('spy')
-        assert state_spy.entries is 2
-        assert state_spy.exits is 1
+        assert state_spy.entries == 2
+        assert state_spy.exits == 1
 
     def test_local_transition(self, empty_statechart):
         init = InitialState(empty_statechart)
@@ -108,16 +108,16 @@ class TestTransition:
 
         assert empty_statechart.is_active('spy')
         assert empty_statechart.is_active('default')
-        assert state_spy.entries is 1
-        assert state_spy.exits is 0
+        assert state_spy.entries == 1
+        assert state_spy.exits == 0
 
         empty_statechart.dispatch(Event('local'))
 
         assert empty_statechart.is_active('spy')
         assert not empty_statechart.is_active('default')
         assert empty_statechart.is_active('local')
-        assert state_spy.entries is 1
-        assert state_spy.exits is 0
+        assert state_spy.entries == 1
+        assert state_spy.exits == 0
 
     def test_deep_local_transitions(self, empty_statechart):
         sc = empty_statechart
