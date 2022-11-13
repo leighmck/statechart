@@ -1,6 +1,6 @@
-=============
+=================
 Python Statechart
-=============
+=================
 
 
 .. image:: https://img.shields.io/pypi/v/statechart.svg
