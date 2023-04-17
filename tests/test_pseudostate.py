@@ -26,22 +26,24 @@ class TestInitialState:
         startchart = Statechart(name='statechart')
         InitialState(startchart)
 
-    def test_activate_initial_state(self):
+    @pytest.mark.asyncio
+    async def test_activate_initial_state(self):
         startchart = Statechart(name='statechart')
         initial_state = InitialState(startchart)
         default_state = State(name='default', context=startchart)
         Transition(start=initial_state, end=default_state)
-        startchart.start()
+        await startchart.start()
 
-        initial_state.activate(metadata=startchart.metadata, event=None)
+        await initial_state.activate(metadata=startchart.metadata, event=None)
         assert startchart.is_active('default')
 
-    def test_missing_transition_from_initial_state(self):
+    @pytest.mark.asyncio
+    async def test_missing_transition_from_initial_state(self):
         startchart = Statechart(name='statechart')
         InitialState(startchart)
 
         with pytest.raises(RuntimeError):
-            startchart.start()
+            await startchart.start()
 
     def test_multiple_transitions_from_initial_state(self):
         startchart = Statechart(name='statechart')
@@ -87,7 +89,8 @@ class TestShallowHistoryState:
         with pytest.raises(RuntimeError):
             ShallowHistoryState(composite_state)
 
-    def test_activate_shallow_history_state(self):
+    @pytest.mark.asyncio
+    async def test_activate_shallow_history_state(self):
         """
         statechart:
 
@@ -137,23 +140,24 @@ class TestShallowHistoryState:
         Transition(start=csb_state_c, end=csa_state_d, event=csb_c_to_d)
 
         # Execute statechart
-        statechart.start()
-        statechart.dispatch(csa_a_to_b)
+        await statechart.start()
+        await statechart.dispatch(csa_a_to_b)
 
         # Assert we have reached CSA child state B, history should restore this state
         assert statechart.is_active(csa_state_b.name)
 
-        statechart.dispatch(csa_to_csb)
+        await statechart.dispatch(csa_to_csb)
 
         # Assert we have reached CSB child state C
         assert statechart.is_active(csb_state_c.name)
 
-        statechart.dispatch(csb_to_csa)
+        await statechart.dispatch(csb_to_csa)
 
         # Assert the history state has restored CSA child state B,
         assert statechart.is_active(csa_state_b.name)
 
-    def test_activate_shallow_history_given_deep_history_scenario(self):
+    @pytest.mark.asyncio
+    async def test_activate_shallow_history_given_deep_history_scenario(self):
         """
         statechart:
 
@@ -216,28 +220,29 @@ class TestShallowHistoryState:
         Transition(start=csc_state_d, end=csc_state_e, event=csc_state_d_to_csc_state_d)
 
         # Execute statechart
-        statechart.start()
-        statechart.dispatch(csa_state_b_to_csb)
+        await statechart.start()
+        await statechart.dispatch(csa_state_b_to_csb)
 
         assert statechart.is_active('csb_state_b')
 
-        statechart.dispatch(csb_state_b_to_csb_state_b)
+        await statechart.dispatch(csb_state_b_to_csb_state_b)
 
         # Assert we have reached state csb_state_c, history should restore csb_state_c's parent
         # state csb
         assert statechart.is_active('csb_state_c')
 
-        statechart.dispatch(csa_to_csc)
+        await statechart.dispatch(csa_to_csc)
 
         # Assert we have reached state csc_state_d
         assert statechart.is_active('csc_state_d')
 
-        statechart.dispatch(csc_to_csa)
+        await statechart.dispatch(csc_to_csa)
 
         # Assert the history state has restored state csb
         assert statechart.is_active('csb')
 
-    def test_activate_multiple_shallow_history_states(self):
+    @pytest.mark.asyncio
+    async def test_activate_multiple_shallow_history_states(self):
         """
         statechart:
 
@@ -302,23 +307,23 @@ class TestShallowHistoryState:
         Transition(start=csc_state_d, end=csc_state_e, event=csc_state_d_to_csc_state_e)
 
         # Execute statechart
-        statechart.start()
-        statechart.dispatch(csa_state_a_to_csb)
+        await statechart.start()
+        await statechart.dispatch(csa_state_a_to_csb)
 
         assert statechart.is_active('csb_state_b')
 
-        statechart.dispatch(csb_state_b_to_csb_state_b)
+        await statechart.dispatch(csb_state_b_to_csb_state_b)
 
         # Assert we have reached state csb_state_c, csb's history state should restore
         # this state
         assert statechart.is_active('csb_state_c')
 
-        statechart.dispatch(csa_to_csc)
+        await statechart.dispatch(csa_to_csc)
 
         # Assert we have reached state csc_state_d
         assert statechart.is_active('csc_state_d')
 
-        statechart.dispatch(csc_to_sca)
+        await statechart.dispatch(csc_to_sca)
 
         # Assert the history state has restored state csb_state_c
         assert statechart.is_active('csb_state_c')
@@ -333,7 +338,8 @@ class TestChoiceState:
     @pytest.mark.parametrize('state_name, expected_state_name',
                              [('a', 'a'),
                               ('b', 'b')])
-    def test_choice_state_transitions(self, state_name, expected_state_name):
+    @pytest.mark.asyncio
+    async def test_choice_state_transitions(self, state_name, expected_state_name):
         def is_a(**kwargs):
             return state_name == 'a'
 
@@ -350,6 +356,6 @@ class TestChoiceState:
         Transition(start=choice, end=state_a, event=None, guard=is_a)
         Transition(start=choice, end=state_b, event=None, guard=None)  # else
 
-        statechart.start()
+        await statechart.start()
 
         assert statechart.is_active(expected_state_name)

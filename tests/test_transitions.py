@@ -19,11 +19,11 @@ from functools import partial
 
 import pytest
 
-from statechart import (CompositeState, Event, State, InitialState, Statechart, Transition)
+from statechart import CompositeState, Event, State, InitialState, Statechart, Transition
 
 
 @pytest.fixture
-def empty_statechart():
+def empty_statechart() -> Statechart:
     statechart = Statechart(name='statechart')
     return statechart
 
@@ -43,13 +43,13 @@ class TestTransition:
 
             Transition(start=init, end=self.default)
 
-        def entry(self, event):
+        async def entry(self, event):
             self.entries += 1
 
-        def exit(self, event):
+        async def exit(self, event):
             self.exits += 1
 
-    def test_create_transition(self, empty_statechart):
+    def test_create_transition(self, empty_statechart: Statechart):
         initial_state = InitialState(empty_statechart)
         next_state = State(name='next', context=empty_statechart)
         transition = Transition(start=initial_state, end=next_state)
@@ -63,7 +63,7 @@ class TestTransition:
         assert initial_state in transition.deactivate
         assert next_state in transition.activate
 
-    def test_create_cyclic_transition(self, empty_statechart):
+    def test_create_cyclic_transition(self, empty_statechart: Statechart):
         next_state = State(name='next', context=empty_statechart)
         transition = Transition(start=next_state, end=next_state)
 
@@ -76,20 +76,21 @@ class TestTransition:
         assert next_state in transition.deactivate
         assert next_state in transition.activate
 
-    def test_external_transition(self, empty_statechart):
+    @pytest.mark.asyncio
+    async def test_external_transition(self, empty_statechart: Statechart):
         init = InitialState(empty_statechart)
         state_spy = self.StateSpy(name='spy', context=empty_statechart)
 
         Transition(start=init, end=state_spy)
         Transition(start=state_spy, end=state_spy, event='extern')
 
-        empty_statechart.start()
+        await empty_statechart.start()
 
         assert empty_statechart.is_active('spy')
         assert state_spy.entries == 1
         assert state_spy.exits == 0
 
-        empty_statechart.dispatch(Event('extern'))
+        await empty_statechart.dispatch(Event('extern'))
 
         # After dispatching the external event from the state spy, the
         # state should be deactivated and activated again.
@@ -97,21 +98,22 @@ class TestTransition:
         assert state_spy.entries == 2
         assert state_spy.exits == 1
 
-    def test_local_transition(self, empty_statechart):
+    @pytest.mark.asyncio
+    async def test_local_transition(self, empty_statechart: Statechart):
         init = InitialState(empty_statechart)
         state_spy = self.StateSpy(name='spy', context=empty_statechart)
 
         Transition(start=init, end=state_spy)
         Transition(start=state_spy, end=state_spy.local, event=Event('local'))
 
-        empty_statechart.start()
+        await empty_statechart.start()
 
         assert empty_statechart.is_active('spy')
         assert empty_statechart.is_active('default')
         assert state_spy.entries == 1
         assert state_spy.exits == 0
 
-        empty_statechart.dispatch(Event('local'))
+        await empty_statechart.dispatch(Event('local'))
 
         assert empty_statechart.is_active('spy')
         assert not empty_statechart.is_active('default')
@@ -119,7 +121,8 @@ class TestTransition:
         assert state_spy.entries == 1
         assert state_spy.exits == 0
 
-    def test_deep_local_transitions(self, empty_statechart):
+    @pytest.mark.asyncio
+    async def test_deep_local_transitions(self, empty_statechart: Statechart):
         sc = empty_statechart
         init = InitialState(sc)
 
@@ -168,43 +171,44 @@ class TestTransition:
         Transition(start=middle_b, end=bottom_b1, event=middle_b_to_b1)
         Transition(start=middle_b, end=bottom_b2, event=middle_b_to_b2)
 
-        sc.start()
+        await sc.start()
 
         assert sc.is_active('top')
         assert sc.is_active('middle_a')
         assert sc.is_active('bottom_a1')
 
-        sc.dispatch(middle_a_to_a2)
+        await sc.dispatch(middle_a_to_a2)
 
         assert sc.is_active('top')
         assert sc.is_active('middle_a')
         assert sc.is_active('bottom_a2')
 
-        sc.dispatch(top_to_middle_b)
+        await sc.dispatch(top_to_middle_b)
 
         assert sc.is_active('top')
         assert sc.is_active('middle_b')
         assert sc.is_active('bottom_b1')
 
-        sc.dispatch(top_to_middle_a)
+        await sc.dispatch(top_to_middle_a)
 
         assert sc.is_active('top')
         assert sc.is_active('middle_a')
         assert sc.is_active('bottom_a1')
 
-        sc.dispatch(a_to_b)
+        await sc.dispatch(a_to_b)
 
         assert sc.is_active('top')
         assert sc.is_active('middle_b')
         assert sc.is_active('bottom_b1')
 
-        sc.dispatch(middle_b_to_b2)
+        await sc.dispatch(middle_b_to_b2)
 
         assert sc.is_active('top')
         assert sc.is_active('middle_b')
         assert sc.is_active('bottom_b2')
 
-    def test_transition_hierarchy(self, empty_statechart):
+    @pytest.mark.asyncio
+    async def test_transition_hierarchy(self, empty_statechart: Statechart):
         sc = empty_statechart
         init = InitialState(sc)
 
@@ -235,31 +239,32 @@ class TestTransition:
         Transition(start=bottom_a2, end=middle_b, event=up)
         Transition(start=middle_b, end=middle_a, event=across)
 
-        sc.start()
+        await sc.start()
 
         assert sc.is_active('top')
         assert sc.is_active('middle_a')
         assert sc.is_active('bottom_a1')
 
-        sc.dispatch(across)
+        await sc.dispatch(across)
 
         assert sc.is_active('top')
         assert sc.is_active('middle_a')
         assert sc.is_active('bottom_a2')
 
-        sc.dispatch(up)
+        await sc.dispatch(up)
 
         assert sc.is_active('top')
         assert sc.is_active('middle_b')
         assert sc.is_active('bottom_b1')
 
-        sc.dispatch(across)
+        await sc.dispatch(across)
 
         assert sc.is_active('top')
         assert sc.is_active('middle_a')
         assert sc.is_active('bottom_a1')
 
-    def test_transition_event_consumed(self, empty_statechart):
+    @pytest.mark.asyncio
+    async def test_transition_event_consumed(self, empty_statechart: Statechart):
         sc = empty_statechart
         init = InitialState(sc)
 
@@ -278,15 +283,16 @@ class TestTransition:
         Transition(start=cs_a, end=cs_b, event='home')
         Transition(start=cs, end=b, event='home')
 
-        sc.start()
+        await sc.start()
 
         assert sc.is_active('cs a')
 
-        sc.dispatch(Event('home'))
+        await sc.dispatch(Event('home'))
 
         assert sc.is_active('cs b')
 
-    def test_transition_action_function(self, empty_statechart):
+    @pytest.mark.asyncio
+    async def test_transition_action_function(self, empty_statechart: Statechart):
         self.state = False
 
         def set_state(state):
@@ -302,12 +308,13 @@ class TestTransition:
         Transition(start=initial, end=default)
         Transition(start=default, end=next, event='next', action=set_true)
 
-        sc.start()
-        sc.dispatch(Event('next'))
+        await sc.start()
+        await sc.dispatch(Event('next'))
 
         assert self.state
 
-    def test_transition_action_function_with_event(self, empty_statechart):
+    @pytest.mark.asyncio
+    async def test_transition_action_function_with_event(self, empty_statechart: Statechart):
         self.state = False
 
         def set_state(event):
@@ -321,12 +328,13 @@ class TestTransition:
         Transition(start=initial, end=default)
         Transition(start=default, end=next, event='next', action=set_state)
 
-        sc.start()
-        sc.dispatch(Event(name='next', data={'state': True}))
+        await sc.start()
+        await sc.dispatch(Event(name='next', data={'state': True}))
 
         assert self.state
 
-    def test_transition_action_function_with_metadata(self, empty_statechart):
+    @pytest.mark.asyncio
+    async def test_transition_action_function_with_metadata(self, empty_statechart: Statechart):
         sc = empty_statechart
         sc.metadata.state = True
 
@@ -342,7 +350,7 @@ class TestTransition:
         Transition(start=initial, end=default)
         Transition(start=default, end=next, event='next', action=set_state)
 
-        sc.start()
-        sc.dispatch(Event('next'))
+        await sc.start()
+        await sc.dispatch(Event('next'))
 
         assert self.state

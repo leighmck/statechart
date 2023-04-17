@@ -43,7 +43,8 @@ class TestStatechart:
     def test_create_statechart(self):
         Statechart(name='statechart')
 
-    def test_simple_statechart_finished(self):
+    @pytest.mark.asyncio
+    async def test_simple_statechart_finished(self):
         statechart = Statechart(name='statechart')
         init = InitialState(statechart)
         default = State(name='default', context=statechart)
@@ -53,16 +54,17 @@ class TestStatechart:
 
         Transition(start=init, end=default)
         Transition(start=default, end=final, event=finish)
-        statechart.start()
+        await statechart.start()
 
         assert statechart.is_active('default')
         assert not statechart.finished
 
-        statechart.dispatch(finish)
+        await statechart.dispatch(finish)
 
         assert statechart.finished
 
-    def test_composite_statechart_finished(self):
+    @pytest.mark.asyncio
+    async def test_composite_statechart_finished(self):
         statechart = Statechart(name='statechart')
         init = InitialState(statechart)
         final = FinalState(statechart)
@@ -79,17 +81,18 @@ class TestStatechart:
         Transition(start=composite_default, end=composite_final, event=finish)
         Transition(start=composite, end=final)
 
-        statechart.start()
+        await statechart.start()
 
         assert statechart.is_active('composite')
         assert statechart.is_active('composite_default')
         assert not statechart.finished
 
-        statechart.dispatch(finish)
+        await statechart.dispatch(finish)
 
         assert statechart.finished
 
-    def test_active_states(self):
+    @pytest.mark.asyncio
+    async def test_active_states(self):
         statechart = Statechart(name='a')
         statechart_init = InitialState(statechart)
 
@@ -105,7 +108,7 @@ class TestStatechart:
         Transition(start=b_init, end=c)
         Transition(start=c_init, end=d)
 
-        statechart.start()
+        await statechart.start()
         assert statechart.active_states() == [statechart, b, c, d]
 
 
@@ -127,7 +130,8 @@ class TestState:
 
         assert default_transition in initial_state.transitions
 
-    def test_light_switch(self):
+    @pytest.mark.asyncio
+    async def test_light_switch(self):
         """
                       --Flick-->
         init ---> Off            On
@@ -142,10 +146,10 @@ class TestState:
                 State.__init__(self, name=name, context=context)
                 self.data = data
 
-            def entry(self, event):
+            async def entry(self, event):
                 self.data['light'] = 'on'
 
-            def exit(self, event):
+            async def exit(self, event):
                 self.data['light'] = 'off'
 
             def handle_internal(self, event):
@@ -162,16 +166,16 @@ class TestState:
         Transition(start=off, end=on, event=Event('flick'))
         Transition(start=on, end=off, event=Event('flick'))
 
-        sm.start()
+        await sm.start()
 
         assert data['light'] == 'off'
 
-        sm.dispatch(Event('flick'))
+        await sm.dispatch(Event('flick'))
         assert data['light'] == 'on'
 
         assert data['on_count'] == 0
 
-        sm.dispatch(Event('flick'))
+        await sm.dispatch(Event('flick'))
         assert data['light'] == 'off'
 
         assert data['on_count'] == 1
@@ -185,7 +189,8 @@ class TestFinalState:
         with pytest.raises(RuntimeError):
             Transition(start=final_state, end=statechart)
 
-    def test_transition_from_finished_composite_state(self):
+    @pytest.mark.asyncio
+    async def test_transition_from_finished_composite_state(self):
         statechart = Statechart(name='statechart')
         statechart_init = InitialState(statechart)
 
@@ -201,12 +206,13 @@ class TestFinalState:
         b = State(name='b', context=statechart)
         Transition(start=composite_state, end=b)
 
-        statechart.start()
+        await statechart.start()
         assert statechart.is_active('a')
-        statechart.dispatch(Event('e'))
+        await statechart.dispatch(Event('e'))
         assert statechart.is_active('b')
 
-    def test_default_transition_from_finished_composite_state(self):
+    @pytest.mark.asyncio
+    async def test_default_transition_from_finished_composite_state(self):
         statechart = Statechart(name='statechart')
         statechart_init = InitialState(statechart)
 
@@ -227,15 +233,16 @@ class TestFinalState:
         Transition(start=composite_state, end=b, event=Event('e'))
         Transition(start=composite_state, end=d)
 
-        statechart.start()
+        await statechart.start()
 
         assert statechart.is_active('a')
 
-        statechart.dispatch(Event('e'))
+        await statechart.dispatch(Event('e'))
 
         assert statechart.is_active('d')
 
-    def test_default_transition_isnt_executed_from_unfinished_composite_state(self):
+    @pytest.mark.asyncio
+    async def test_default_transition_isnt_executed_from_unfinished_composite_state(self):
         statechart = Statechart(name='statechart')
         statechart_init = InitialState(statechart)
 
@@ -250,11 +257,11 @@ class TestFinalState:
 
         Transition(start=composite_state, end=b)
 
-        statechart.start()
+        await statechart.start()
 
         assert statechart.is_active('a')
 
-        statechart.dispatch(Event('e'))
+        await statechart.dispatch(Event('e'))
 
         assert statechart.is_active('a')
 
@@ -264,7 +271,8 @@ class TestFinalState:
 # TOOD(lam) Add test for transition directly into a concurrent, composite sub
 # state.
 class TestConcurrentState:
-    def test_keyboard_example(self):
+    @pytest.mark.asyncio
+    async def test_keyboard_example(self):
         """
         Test classic concurrent state keyboard example with concurrent states
         for caps, num and scroll lock.
@@ -337,29 +345,29 @@ class TestConcurrentState:
         Transition(start=scroll_lock_on, end=scroll_lock_off, event=scroll_lock_pressed)
         Transition(start=scroll_lock_off, end=scroll_lock_on, event=scroll_lock_pressed)
 
-        statechart.start()
+        await statechart.start()
 
         assert statechart.is_active('keyboard')
         assert statechart.is_active('caps_lock_off')
         assert statechart.is_active('num_lock_off')
         assert statechart.is_active('scroll_lock_off')
 
-        statechart.dispatch(event=caps_lock_pressed)
+        await statechart.dispatch(event=caps_lock_pressed)
         assert statechart.is_active('caps_lock_on')
 
-        statechart.dispatch(event=num_lock_pressed)
+        await statechart.dispatch(event=num_lock_pressed)
         assert statechart.is_active('num_lock_on')
 
-        statechart.dispatch(event=scroll_lock_pressed)
+        await statechart.dispatch(event=scroll_lock_pressed)
         assert statechart.is_active('scroll_lock_on')
 
-        statechart.dispatch(event=caps_lock_pressed)
+        await statechart.dispatch(event=caps_lock_pressed)
         assert statechart.is_active('caps_lock_off')
 
-        statechart.dispatch(event=num_lock_pressed)
+        await statechart.dispatch(event=num_lock_pressed)
         assert statechart.is_active('num_lock_off')
 
-        statechart.dispatch(event=scroll_lock_pressed)
+        await statechart.dispatch(event=scroll_lock_pressed)
         assert statechart.is_active('scroll_lock_off')
 
 
@@ -376,7 +384,8 @@ class TestCompositeState:
             Transition(start=init, end=self.state_a)
             Transition(start=self.state_a, end=self.state_b, event=self.sub_a_to_b)
 
-    def test_submachines(self):
+    @pytest.mark.asyncio
+    async def test_submachines(self):
         statechart = Statechart(name='statechart')
 
         init = InitialState(statechart)
@@ -387,22 +396,22 @@ class TestCompositeState:
         Transition(start=init, end=top_a)
         Transition(start=top_a, end=top_b, event=top_a_to_b)
 
-        statechart.start()
+        await statechart.start()
 
         assert statechart.is_active('top a')
         assert statechart.is_active('sub state a')
 
-        statechart.dispatch(top_a.sub_a_to_b)
+        await statechart.dispatch(top_a.sub_a_to_b)
 
         assert statechart.is_active('top a')
         assert statechart.is_active('sub state b')
 
-        statechart.dispatch(top_a_to_b)
+        await statechart.dispatch(top_a_to_b)
 
         assert statechart.is_active('top b')
         assert statechart.is_active('sub state a')
 
-        statechart.dispatch(top_a.sub_a_to_b)
+        await statechart.dispatch(top_a.sub_a_to_b)
 
         assert statechart.is_active('top b')
         assert statechart.is_active('sub state b')

@@ -15,8 +15,8 @@ requirements = [ ]
 test_requirements = ['pytest>=3', ]
 
 setup(
-    author="Leigh McKenzie",
-    author_email='maccarav0@gmail.com',
+    author="Andrew Leech, Leigh McKenzie",
+    author_email="andrew.leech@planetinnovation.com.au",
     python_requires='>=3.7',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
@@ -29,7 +29,7 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
     ],
-    description="Python Boilerplate contains all the boilerplate you need to create a Python package.",
+    description="State charts management library with asyncio runtime.",
     install_requires=requirements,
     license="ISC license",
     long_description=readme + '\n\n' + history,
@@ -39,7 +39,7 @@ setup(
     packages=find_packages(include=['statechart', 'statechart.*']),
     test_suite='tests',
     tests_require=test_requirements,
-    url="https://github.com/leighmck/statechart",
+    url="https://github.com/andrewleech/aio-statechart",
     version="0.5.0",
     zip_safe=False,
 )

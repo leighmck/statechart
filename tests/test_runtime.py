@@ -20,10 +20,10 @@ from statechart import InitialState, State, Statechart, Transition
 
 
 @pytest.fixture
-def state():
+async def state():
     statechart = Statechart(name='statechart')
     initial_state = InitialState(statechart)
     next_state = State(name='next', context=statechart)
     Transition(initial_state, next_state)
-    statechart.start()
+    await statechart.start()
     return next_state

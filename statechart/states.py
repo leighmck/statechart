@@ -16,6 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import logging
+from typing import List, Optional
 
 from statechart.runtime import Metadata
 
@@ -44,11 +45,6 @@ class State:
         event triggers, actions or guard conditions.
         Transition(start=a, end=b)
 
-    Note:
-        Do not dispatch a synchronous event within the action (enter, do or
-        exit) functions. If you need to dispatch an event, do so using the
-        async_dispatch function of the statechart.
-
     Raises:
         RuntimeError: If the parent context is invalid.
             Only a state chart can have no parent context.
@@ -67,7 +63,7 @@ class State:
         self.transitions = []
         self.active = False
 
-    def entry(self, event):
+    async def entry(self, event):
         """
         An optional action that is executed whenever this state is
         entered, regardless of the transition taken to reach the state. If
@@ -79,7 +75,7 @@ class State:
         """
         pass
 
-    def do(self, event):
+    async def do(self, event):
         """
         An optional action that is executed whilst this state is active.
         The execution starts after this state is entered, and stops either by
@@ -94,7 +90,7 @@ class State:
         """
         pass
 
-    def exit(self, event):
+    async def exit(self, event):
         """
         An optional action that is executed upon deactivation of this state
         regardless of which transition was taken out of the state. If defined,
@@ -127,7 +123,7 @@ class State:
         else:
             self.transitions.append(transition)
 
-    def activate(self, metadata, event):
+    async def activate(self, metadata, event):
         """
         Activate the state.
 
@@ -145,13 +141,13 @@ class State:
 
             self.context.current_state = self
 
-        if self.entry:
-            self.entry(event=event)
+        if self.entry is not None:
+            await self.entry(event=event)
 
-        if self.do:
-            self.do(event=event)
+        if self.do is not None:
+            await self.do(event=event)
 
-    def deactivate(self, metadata, event):
+    async def deactivate(self, metadata, event):
         """
         Deactivate the state.
 
@@ -161,11 +157,11 @@ class State:
         """
         self._logger.info('Deactivate "%s"', self.name)
 
-        self.exit(event=event)
+        await self.exit(event=event)
 
         self.active = False
 
-    def dispatch(self, metadata, event):
+    async def dispatch(self, metadata, event):
         """
         Dispatch transition.
 
@@ -182,7 +178,7 @@ class State:
         status = False
 
         for transition in self.transitions:
-            if transition.execute(metadata=metadata, event=event):
+            if await transition.execute(metadata=metadata, event=event):
                 status = True
                 break
 
@@ -224,11 +220,11 @@ class Context(State):
 
     def __init__(self, name, context):
         super().__init__(name=name, context=context)
-        self.initial_state = None
-        self.current_state = None
+        self.initial_state: State = None  # type: ignore
+        self.current_state: State = None  # type: ignore
         self.finished = False
 
-    def deactivate(self, metadata, event):
+    async def deactivate(self, metadata, event):
         """
         Deactivate the state.
 
@@ -236,8 +232,8 @@ class Context(State):
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition out of this state.
         """
-        super().deactivate(metadata=metadata, event=event)
-        self.current_state = None
+        await super().deactivate(metadata=metadata, event=event)
+        self.current_state = None  # type: ignore
         self.finished = False
 
     def is_active(self, state_name):
@@ -274,12 +270,12 @@ class FinalState(State):
     def add_transition(self, transition):
         raise RuntimeError('Cannot add a transition from the final state')
 
-    def activate(self, metadata, event):
-        super().activate(metadata=metadata, event=event)
+    async def activate(self, metadata, event):
+        await super().activate(metadata=metadata, event=event)
         self.context.finished = True
 
-    def deactivate(self, metadata, event):
-        super().deactivate(metadata=metadata, event=event)
+    async def deactivate(self, metadata, event):
+        await super().deactivate(metadata=metadata, event=event)
         self.context.finished = False
 
 
@@ -295,7 +291,7 @@ class ConcurrentState(State):
 
     def __init__(self, name, context):
         super().__init__(name, context)
-        self.regions = []
+        self.regions: List[CompositeState] = []
 
     def add_region(self, region):
         """
@@ -309,7 +305,7 @@ class ConcurrentState(State):
         else:
             raise RuntimeError('A concurrent state can only add composite state regions')
 
-    def activate(self, metadata, event):
+    async def activate(self, metadata, event):
         """
         Activate the state.
 
@@ -317,13 +313,13 @@ class ConcurrentState(State):
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
         """
-        super().activate(metadata, event)
+        await super().activate(metadata, event)
         for inactive in [region for region in self.regions if not region.active]:
             # Check if region is activated implicitly via incoming transition.
-            inactive.activate(metadata=metadata, event=event)
-            inactive.initial_state.activate(metadata=metadata, event=event)
+            await inactive.activate(metadata=metadata, event=event)
+            await inactive.initial_state.activate(metadata=metadata, event=event)
 
-    def deactivate(self, metadata, event):
+    async def deactivate(self, metadata, event):
         """
         Deactivate child states within regions, then overall state.
 
@@ -335,11 +331,11 @@ class ConcurrentState(State):
 
         for region in self.regions:
             if region.active:
-                region.deactivate(metadata=metadata, event=event)
+                await region.deactivate(metadata=metadata, event=event)
 
-        super().deactivate(metadata=metadata, event=event)
+        await super().deactivate(metadata=metadata, event=event)
 
-    def dispatch(self, metadata, event):
+    async def dispatch(self, metadata, event):
         """
         Dispatch transition.
 
@@ -360,7 +356,7 @@ class ConcurrentState(State):
 
         """ Check if any of the child regions can handle the event """
         for region in self.regions:
-            if region.dispatch(metadata=metadata, event=event):
+            if await region.dispatch(metadata=metadata, event=event):
                 dispatched = True
 
         if dispatched:
@@ -414,7 +410,7 @@ class CompositeState(Context):
         if isinstance(context, ConcurrentState):
             context.add_region(self)
 
-    def activate(self, metadata, event):
+    async def activate(self, metadata, event):
         """
         Activate the state.
 
@@ -425,12 +421,12 @@ class CompositeState(Context):
             metadata (Metadata): Common statechart metadata.
             event: Event which led to the transition into this state.
         """
-        super().activate(metadata=metadata, event=event)
+        await super().activate(metadata=metadata, event=event)
 
         if metadata.transition and metadata.transition.end is self:
-            self.initial_state.activate(metadata=metadata, event=event)
+            await self.initial_state.activate(metadata=metadata, event=event)
 
-    def deactivate(self, metadata, event):
+    async def deactivate(self, metadata, event):
         """
         Deactivate the state.
 
@@ -448,11 +444,11 @@ class CompositeState(Context):
             self.history_state.state = self.current_state
 
         if self.current_state.active:
-            self.current_state.deactivate(metadata=metadata, event=event)
+            await self.current_state.deactivate(metadata=metadata, event=event)
 
-        super().deactivate(metadata=metadata, event=event)
+        await super().deactivate(metadata=metadata, event=event)
 
-    def dispatch(self, metadata, event):
+    async def dispatch(self, metadata, event):
         """
         Dispatch transition.
 
@@ -471,12 +467,12 @@ class CompositeState(Context):
 
         # See if the current child state can handle the event
         if self.current_state is None and self.initial_state:
-            self.initial_state.activate(metadata=metadata, event=None)
-            self.current_state.activate(metadata=metadata, event=event)
+            await self.initial_state.activate(metadata=metadata, event=None)
+            await self.current_state.activate(metadata=metadata, event=event)
 
         dispatched = False
 
-        if self.current_state and self.current_state.dispatch(metadata=metadata, event=event):
+        if self.current_state and await self.current_state.dispatch(metadata=metadata, event=event):
             dispatched = True
 
         if dispatched:
@@ -496,9 +492,9 @@ class CompositeState(Context):
         for transition in self.transitions:
             # If transition is local, deactivate current state if transition is allowed.
             if self._is_local_transition(transition) and transition.is_allowed(event=event):
-                self.current_state.deactivate(metadata=metadata, event=event)
+                await self.current_state.deactivate(metadata=metadata, event=event)
 
-            if transition.execute(metadata=metadata, event=event):
+            if await transition.execute(metadata=metadata, event=event):
                 return True
 
         return False
@@ -533,7 +529,7 @@ class Statechart(Context):
         super().__init__(name=name, context=None)
         self.metadata = Metadata()
 
-    def start(self):
+    async def start(self):
         """
         Initialises the Statechart in the metadata. Sets the start state.
 
@@ -544,16 +540,16 @@ class Statechart(Context):
         """
         self._logger.info('Start "%s"', self.name)
         self.active = True
-        self.initial_state.activate(metadata=self.metadata, event=None)
+        await self.initial_state.activate(metadata=self.metadata, event=None)
 
-    def stop(self):
+    async def stop(self):
         """
         Stops the statemachine by deactivating statechart and thus all it's child states.
         """
         self._logger.info('Stop "%s"', self.name)
-        self.deactivate(metadata=self.metadata, event=None)
+        await self.deactivate(metadata=self.metadata, event=None)
 
-    def deactivate(self, metadata, event):
+    async def deactivate(self, metadata, event):
         """
         Deactivate the statechart.
 
@@ -563,9 +559,9 @@ class Statechart(Context):
         """
         self._logger.info('Deactivate "%s"', self.name)
         self.active = False
-        self.current_state = None
+        self.current_state = None  # type: ignore
 
-    def dispatch(self, event):
+    async def dispatch(self, event):
         """
         Calls the dispatch method on the current state.
 
@@ -577,7 +573,7 @@ class Statechart(Context):
         """
         self.handle_internal(event=event)
 
-        return self.current_state.dispatch(metadata=self.metadata, event=event)
+        return await self.current_state.dispatch(metadata=self.metadata, event=event)
 
     def active_states(self):
         states = []
@@ -602,11 +598,11 @@ class Statechart(Context):
     def add_transition(self, transition):
         raise RuntimeError('Cannot add transition to a statechart')
 
-    def entry(self, event):
+    async def entry(self, event):
         raise RuntimeError('Cannot define an entry action for a statechart')
 
-    def do(self, event):
+    async def do(self, event):
         raise RuntimeError('Cannot define an do action for a statechart')
 
-    def exit(self, event):
+    async def exit(self, event):
         raise RuntimeError('Cannot define an exit action for a statechart')

@@ -29,7 +29,7 @@ class PseudoState(State):
         context (Context): The parent context that contains this state.
     """
 
-    def activate(self, metadata, event):
+    async def activate(self, metadata, event):
         """
         Activate the state.
 
@@ -66,7 +66,7 @@ class InitialState(PseudoState):
         else:
             raise RuntimeError('Parent not a composite state or statechart')
 
-    def activate(self, metadata, event):
+    async def activate(self, metadata, event):
         """
         Activate the state and dispatch transition to the default state of the
         composite state.
@@ -75,10 +75,10 @@ class InitialState(PseudoState):
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
         """
-        super().activate(metadata=metadata, event=event)
-        self.dispatch(metadata=metadata, event=None)
+        await super().activate(metadata=metadata, event=event)
+        await self.dispatch(metadata=metadata, event=None)
 
-    def dispatch(self, metadata, event):
+    async def dispatch(self, metadata, event):
         """
         Dispatch transition.
 
@@ -93,7 +93,7 @@ class InitialState(PseudoState):
         Raises:
             RuntimeError: If the state could not dispatch transition
         """
-        if super().dispatch(metadata=metadata, event=event):
+        if await super().dispatch(metadata=metadata, event=event):
             return True
         else:
             raise RuntimeError('Initial state must be able to dispatch transition')
@@ -136,17 +136,17 @@ class ShallowHistoryState(PseudoState):
         """
         super().__init__(name='Shallow history', context=context)
 
-        self.state = None
+        self.state: State = None  # type: ignore
 
         if isinstance(self.context, CompositeState):
             if self.context.history_state:
-                raise RuntimeError('"History state already present')
+                raise RuntimeError('History state already present')
             else:
                 self.context.history_state = self
         else:
             raise RuntimeError('Parent not a composite state')
 
-    def activate(self, metadata, event):
+    async def activate(self, metadata, event):
         """
         Activate the state and dispatch transition to the default state of the
         composite state.
@@ -155,7 +155,7 @@ class ShallowHistoryState(PseudoState):
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
         """
-        super().activate(metadata=metadata, event=event)
+        await super().activate(metadata=metadata, event=event)
 
         if len(self.transitions) > 1:
             raise RuntimeError('History state cannot have more than 1 transition')
@@ -165,9 +165,9 @@ class ShallowHistoryState(PseudoState):
             metadata.transition.start = self
             metadata.transition.end = self.state
 
-            self.state.activate(metadata=metadata, event=event)
+            await self.state.activate(metadata=metadata, event=event)
         else:
-            self.dispatch(metadata=metadata, event=None)
+            await self.dispatch(metadata=metadata, event=None)
 
 
 class ChoiceState(PseudoState):
@@ -192,7 +192,7 @@ class ChoiceState(PseudoState):
     def __init__(self, context):
         super().__init__(name='Choice', context=context)
 
-    def activate(self, metadata, event):
+    async def activate(self, metadata, event):
         """
         Activate the state and dispatch transition to the default state of the
         composite state.
@@ -201,10 +201,10 @@ class ChoiceState(PseudoState):
             metadata (Metadata): Common statechart metadata.
             event (Event): Event which led to the transition into this state.
         """
-        super().activate(metadata=metadata, event=event)
+        await super().activate(metadata=metadata, event=event)
 
         for transition in self.transitions:
-            if transition.execute(metadata=metadata, event=None):
+            if await transition.execute(metadata=metadata, event=None):
                 break
         else:
             raise RuntimeError('No choice made due to guard conditions, '
