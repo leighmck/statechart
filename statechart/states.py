@@ -15,6 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import asyncio
 import logging
 from typing import List, Optional
 
@@ -62,6 +63,7 @@ class State:
         self.context = context
         self.transitions = []
         self.active = False
+        self.do_task = None
 
     async def entry(self, event):
         """
@@ -145,7 +147,7 @@ class State:
             await self.entry(event=event)
 
         if self.do is not None:
-            await self.do(event=event)
+            self.do_task = asyncio.create_task(self.do(event=event))
 
     async def deactivate(self, metadata, event):
         """
