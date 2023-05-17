@@ -100,9 +100,14 @@ class Transition:
 
         if self.action:
             try:
-                await self.action(event=event)
-            except TypeError:  # no event arg expected
-                await self.action()
+                coro = self.action(event=event)
+            except TypeError:
+                # attempt to re-run with no event arg expected
+                coro = self.action()
+
+            # If action is an async function, run it here.
+            if asyncio.iscoroutine(coro):
+                await coro
 
         for state in self.activate:
             await state.activate(metadata=metadata, event=event)

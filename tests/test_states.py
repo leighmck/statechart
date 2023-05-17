@@ -15,6 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import asyncio
 import pytest
 
 from statechart import (CompositeState, ConcurrentState, Event, FinalState,
@@ -60,6 +61,68 @@ class TestStatechart:
         assert not statechart.finished
 
         await statechart.dispatch(finish)
+
+        assert statechart.finished
+
+    @pytest.mark.asyncio
+    async def test_statechart_long_do(self):
+        flag = False
+
+        async def do_too_much(event):
+            nonlocal flag
+            flag = True
+            # This sleep means the function will be still running when the finish
+            # event is dispatched below, cancelling this task and preventing the
+            # `flag = False` from being run.
+            await asyncio.sleep(0.2)
+            flag = False
+
+        statechart = Statechart(name='statechart')
+        init = InitialState(statechart)
+        default = State(name='default', context=statechart)
+        default.do = do_too_much
+        final = FinalState(statechart)
+
+        finish = Event('finish')
+
+        Transition(start=init, end=default)
+        Transition(start=default, end=final, event=finish)
+        await statechart.start()
+
+        assert statechart.is_active('default')
+        assert not statechart.finished
+
+        await statechart.dispatch(finish)
+        assert flag
+
+        assert statechart.finished
+
+    @pytest.mark.asyncio
+    async def test_statechart_do_dispatch(self):
+        async def do_dispatch(event):
+            await statechart.dispatch(finish)
+            # Ensure this function is still running during deactivate and will
+            # be cancelled. This tests that cancelling the dispatching do function
+            # is safe.
+            await asyncio.sleep(0.5)
+
+        statechart = Statechart(name='statechart')
+        init = InitialState(statechart)
+        default = State(name='default', context=statechart)
+        default.do = do_dispatch
+        final = FinalState(statechart)
+
+        finish = Event('finish')
+
+        Transition(start=init, end=default)
+        Transition(start=default, end=final, event=finish)
+        await statechart.start()
+
+        assert statechart.is_active('default')
+        assert not statechart.finished
+
+        # Give time for background do function to run
+        await asyncio.sleep(0.1)
 
         assert statechart.finished
 

@@ -314,6 +314,26 @@ class TestTransition:
         assert self.state
 
     @pytest.mark.asyncio
+    async def test_transition_async_action_function(self, empty_statechart: Statechart):
+        self.state = False
+
+        async def set_state(event):
+            self.state = event
+
+        sc = empty_statechart
+        initial = InitialState(sc)
+        default = State(name='default', context=sc)
+        next = State(name='next', context=sc)
+
+        Transition(start=initial, end=default)
+        Transition(start=default, end=next, event='next', action=set_state)
+
+        await sc.start()
+        await sc.dispatch(Event('next'))
+
+        assert self.state
+
+    @pytest.mark.asyncio
     async def test_transition_action_function_with_event(self, empty_statechart: Statechart):
         self.state = False
 

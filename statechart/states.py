@@ -63,7 +63,7 @@ class State:
         self.context = context
         self.transitions = []
         self.active = False
-        self.do_task = None
+        self.do_task: Optional[asyncio.Task] = None
 
     async def entry(self, event):
         """
@@ -125,6 +125,15 @@ class State:
         else:
             self.transitions.append(transition)
 
+    async def _run_do_task(self, do_fn, event):
+        try:
+            return await do_fn(event=event)
+        except asyncio.CancelledError:
+            pass  # Task cancellation should not be logged as an error.
+        except Exception as exc:
+            self._logger.exception("Exception occurred within the do task", exc_info=exc)
+            raise
+
     async def activate(self, metadata, event):
         """
         Activate the state.
@@ -147,7 +156,7 @@ class State:
             await self.entry(event=event)
 
         if self.do is not None:
-            self.do_task = asyncio.create_task(self.do(event=event))
+            self.do_task = asyncio.create_task(self._run_do_task(self.do, event=event))
 
     async def deactivate(self, metadata, event):
         """
@@ -158,6 +167,11 @@ class State:
             event (Event): Event which led to the transition out of this state.
         """
         self._logger.info('Deactivate "%s"', self.name)
+
+        if self.do_task and not self.do_task.done():
+            self._logger.debug("Cancelling do task: %s", self.do_task)
+            self.do_task.cancel()
+            self.do_task = None
 
         await self.exit(event=event)
 
@@ -180,7 +194,9 @@ class State:
         status = False
 
         for transition in self.transitions:
-            if await transition.execute(metadata=metadata, event=event):
+            if transition.is_allowed(event=event):
+                # Execute the transition in a separate task
+                await asyncio.create_task(transition.execute(metadata=metadata, event=event))
                 status = True
                 break
 
@@ -598,13 +614,13 @@ class Statechart(Context):
         return self.finished
 
     def add_transition(self, transition):
-        raise RuntimeError('Cannot add transition to a statechart')
+        raise RuntimeError("Cannot add transition to a statechart")
 
     async def entry(self, event):
-        raise RuntimeError('Cannot define an entry action for a statechart')
+        raise RuntimeError("Cannot define an entry action for a statechart")
 
     async def do(self, event):
-        raise RuntimeError('Cannot define an do action for a statechart')
+        raise RuntimeError("Cannot define an do action for a statechart")
 
     async def exit(self, event):
-        raise RuntimeError('Cannot define an exit action for a statechart')
+        raise RuntimeError("Cannot define an exit action for a statechart")
