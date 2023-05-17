@@ -99,18 +99,10 @@ class Transition:
             await state.deactivate(metadata=metadata, event=event)
 
         if self.action:
-            for func in [partial(self.action, event=event),
-                         self.action]:
-                try:
-                    if asyncio.iscoroutine(func):
-                        await func()
-                    else:
-                        func()
-                    break
-                except TypeError:
-                    pass
-            else:
-                raise RuntimeError('Unable to call action function')
+            try:
+                await self.action(event=event)
+            except TypeError:  # no event arg expected
+                await self.action()
 
         for state in self.activate:
             await state.activate(metadata=metadata, event=event)
