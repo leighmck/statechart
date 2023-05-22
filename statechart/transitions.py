@@ -15,7 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-
+import asyncio
 import logging
 from functools import partial
 
@@ -69,7 +69,7 @@ class Transition:
 
         start.add_transition(self)
 
-    def execute(self, metadata, event):
+    async def execute(self, metadata, event):
         """
         Attempt to execute the transition.
         Evaluate if the transition is allowed by checking the guard condition.
@@ -96,21 +96,21 @@ class Transition:
                               self.start.name, self.end.name)
 
         for state in self.deactivate:
-            state.deactivate(metadata=metadata, event=event)
+            await state.deactivate(metadata=metadata, event=event)
 
         if self.action:
-            for func in [partial(self.action, event=event),
-                         self.action]:
-                try:
-                    func()
-                    break
-                except TypeError:
-                    pass
-            else:
-                raise RuntimeError('Unable to call action function')
+            try:
+                coro = self.action(event=event)
+            except TypeError:
+                # attempt to re-run with no event arg expected
+                coro = self.action()
+
+            # If action is an async function, run it here.
+            if asyncio.iscoroutine(coro):
+                await coro
 
         for state in self.activate:
-            state.activate(metadata=metadata, event=event)
+            await state.activate(metadata=metadata, event=event)
 
         metadata.transition = None
 

@@ -32,7 +32,7 @@ class Event:
         Transition(start=a, end=b, event=my_event)
 
         Fire the event:
-        statechart.dispatch(event=my_event)
+        await statechart.dispatch(event=my_event)
 
         If the current state has an outgoing transition associated
         with the event, it may be fired if the guard condition allows.
