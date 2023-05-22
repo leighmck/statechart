@@ -260,7 +260,7 @@ class Context(State):
         elif self.name == state_name:
             return True
         else:
-            return self.current_state.is_active(state_name)
+            return self.current_state and self.current_state.is_active(state_name)
 
     def __repr__(self):
         return '%s(name="%s", active="%s", current state=%r, finished="%s")' % (
